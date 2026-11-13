@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KRM Registry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<style>
+:root{
+  --bg:#fbfbfa;--panel:#fff;--ink:#1b1d21;--ink2:#555b66;--ink3:#8a909b;--line:#e6e6e3;--line2:#f0f0ed;
+  --acc:#4b3fd1;--acc-bg:#efedff;
+  --gcp:#1a73e8;--aws:#d4790f;--azure:#0a7bc2;
+  --off:#2f6f4f;--off-bg:#e7f3ec;--ext:#8a3ffc;--ext-bg:#f3ecff;
+  --alpha:#a2560a;--alpha-bg:#fdf1e3;--beta:#7a5d00;--beta-bg:#fbf6dc;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#141518;--panel:#1b1d21;--ink:#e9eaec;--ink2:#a9aeb8;--ink3:#737985;--line:#2c2f35;--line2:#23252a;
+  --acc:#a59cff;--acc-bg:#26234a;--off:#7fd1a5;--off-bg:#1b2e24;--ext:#c8a6ff;--ext-bg:#2a2140;
+  --alpha:#f0b06b;--alpha-bg:#35260f;--beta:#e6cf6a;--beta-bg:#302a10;
+}}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;font:14px/1.55 Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+code,.mono{font-family:var(--mono);font-size:12.5px}
+header{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:22px;padding:10px 28px}
+.logo{font-weight:700;font-size:16px;color:var(--ink);display:flex;gap:8px;align-items:center}
+.logo b{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:7px;background:var(--ink);color:var(--panel);font-size:12px}
+nav a{color:var(--ink2);margin-right:16px;font-weight:500}
+#q{flex:1;max-width:520px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+main{max-width:1180px;margin:0 auto;padding:28px}
+h1{font-size:26px;margin:0 0 4px;letter-spacing:-.01em}h2{font-size:17px;margin:30px 0 10px}h3{font-size:14px;margin:18px 0 6px}
+.sub{color:var(--ink2)}
+.muted{color:var(--ink3)}
+.grid{display:grid;gap:14px}.g3{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}.g4{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+a.card{color:inherit;display:block}a.card:hover{border-color:var(--acc);text-decoration:none}
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:99px;border:1px solid transparent;white-space:nowrap;vertical-align:1px}
+.b-official{background:var(--off-bg);color:var(--off)}.b-extension{background:var(--ext-bg);color:var(--ext)}
+.b-ga{background:var(--off-bg);color:var(--off)}.b-alpha,.b-preview{background:var(--alpha-bg);color:var(--alpha)}.b-beta{background:var(--beta-bg);color:var(--beta)}
+.b-plain{border-color:var(--line);color:var(--ink2)}
+.b-gcp{color:var(--gcp);border-color:currentColor}.b-aws{color:var(--aws);border-color:currentColor}.b-azure{color:var(--azure);border-color:currentColor}
+.stat{font-size:26px;font-weight:700}.stat small{font-size:12px;color:var(--ink3);font-weight:500;margin-left:4px}
+.bar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--line2);margin:10px 0 6px}
+.bar i{display:block}.bar .o{background:var(--off)}.bar .e{background:var(--ext)}
+table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line2);vertical-align:top}
+th{font-size:12px;color:var(--ink3);font-weight:600;background:var(--bg)}
+tr:last-child td{border-bottom:0}
+.hero{padding:26px 0 8px}.hero h1{font-size:32px}
+.big{width:100%;padding:14px 16px;font:inherit;font-size:16px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);margin:16px 0 6px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}header{flex-wrap:wrap}}
+.side .card{margin-bottom:14px}.side h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink3)}
+.kv{display:grid;grid-template-columns:90px 1fr;gap:4px 10px;font-size:13px}.kv div:nth-child(odd){color:var(--ink3)}
+.crumbs{font-size:13px;color:var(--ink3);margin-bottom:8px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:22px 0 0}
+.tabs button{font:inherit;font-weight:500;background:none;border:0;padding:8px 12px;color:var(--ink2);cursor:pointer;border-bottom:2px solid transparent}
+.tabs button.on{color:var(--ink);border-color:var(--acc)}
+.fields{background:var(--panel);border:1px solid var(--line);border-top:0;border-radius:0 0 10px 10px}
+.ff{display:flex;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line2)}
+.ff input{flex:1;padding:6px 10px;border:1px solid var(--line);border-radius:6px;font:inherit;background:var(--bg);color:var(--ink)}
+.f{padding:7px 12px 7px calc(12px + var(--d)*18px);border-bottom:1px solid var(--line2);cursor:pointer}
+.f:hover{background:var(--bg)}
+.f .n{font-family:var(--mono);font-size:12.5px;font-weight:500}.f .t{font-family:var(--mono);font-size:11.5px;color:var(--ink3);margin-left:6px}
+.f .d{color:var(--ink2);font-size:13px;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-line}
+.f.open .d{display:block}
+.f.add{box-shadow:inset 3px 0 0 var(--ext)}
+.f.rem{opacity:.55}
+.callout{border:1px solid var(--line);border-left:3px solid var(--ext);background:var(--panel);border-radius:8px;padding:12px 14px;margin:14px 0}
+.callout.o{border-left-color:var(--off)}
+.md{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px 20px;margin-top:14px;overflow:auto}
+.md table{font-size:13px}.md pre{background:var(--bg);padding:10px;border-radius:6px;overflow:auto}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:12.5px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:var(--panel);color:var(--ink2);cursor:pointer}
+.chip.on{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.res{padding:10px 14px;border-bottom:1px solid var(--line2);display:block;color:inherit}.res:hover{background:var(--bg);text-decoration:none}
+.res .k{font-weight:600}.res .g{font-family:var(--mono);font-size:12px;color:var(--ink3);margin-left:6px}
+.res .why{font-size:12.5px;color:var(--ink2)}
+.list{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.cols{columns:3 260px;column-gap:24px}.cols a{display:block;break-inside:avoid;padding:2px 0}
+.sec{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink3);margin:20px 0 6px;font-weight:600}
+.dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:0}
+.loading{color:var(--ink3);padding:40px 0}
+.fbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:16px 0 8px;position:sticky;top:57px;background:var(--bg);padding:8px 0;z-index:3}
+.fin{flex:1;min-width:220px;max-width:400px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:inherit}
+.tfeq{display:inline-block;font-family:var(--mono);font-size:11.5px;color:var(--ink2);border:1px dashed var(--ink3);border-radius:5px;padding:0 6px;margin:1px 0;cursor:help;white-space:nowrap}
+.tfeq::before{content:'≈ ';color:var(--ink3);font-family:Inter,sans-serif}
+.tfmap{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:3px 0}.tfmap .arr{color:var(--ink3)}
+.fcount{font-size:12.5px;margin-left:auto}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="#home"><b>K</b>KRM Registry</a>
+  <nav><a href="#surfaces">Clouds</a><a href="#providers">Providers</a><a href="#packages">Packages</a><a href="#about">About</a></nav>
+  <input id="q" placeholder="Search kinds and charts, or paste a Terraform type to find its equivalent…">
+</header>
+<main id="app"><div class="loading">Loading the index…</div></main>
+<script>
+const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let C, KBY={}, CBY={}, PBY={}, SHARDS={}, Q='';
+const SURF={gcp:'Google Cloud',aws:'Amazon Web Services',azure:'Microsoft Azure'};
+const kslug=k=>'k-'+k.provider+'--'+k.group.replace(/\./g,'-')+'--'+k.kind;
+const klink=(k,label)=>`<a href="#${kslug(k)}">${esc(label??k.kind)}</a>`;
+const cslug=c=>'p-'+c.cloud+'-'+c.name;
+const svcslug=(s,svc)=>'svc-'+s+'--'+svc.replace(/[^A-Za-z0-9-]/g,'-');
+const badge=(t,cls)=>`<span class="badge b-${cls||t}">${esc(t)}</span>`;
+const tierB=k=>badge(k.tier==='official'?'official':'extension',k.tier);
+const stabB=k=>badge(k.stability==='ga'?'GA':k.stability,k.stability);
+const surfB=s=>`<span class="badge b-${s}">${s.toUpperCase()}</span>`;
+const fmt=n=>n.toLocaleString();
+const md=s=>window.marked?marked.parse(s||''):`<pre>${esc(s)}</pre>`;
+const agentUrl=k=>`kinds/${k.provider}/${k.group}/${k.kind}.md`;
+const shardUrl=k=>C.packs?C.packs[k.provider+'/'+k.group]:`data/k/${k.provider}/${k.group}.json`;
+async function shard(k){const u=shardUrl(k); if(!SHARDS[u]) SHARDS[u]=fetch(u).then(r=>r.json()); const d=await SHARDS[u]; return (C.packs?d[k.group]:d).find(x=>x.kind===k.kind)}
+let CHARTS=null; async function chartData(c){ if(C.packs){CHARTS??=fetch('data/charts.json').then(r=>r.json()); return (await CHARTS)[c.cloud+'-'+c.name]} return fetch(`data/charts/${c.cloud}-${c.name}.json`).then(r=>r.json())}
+
+fetch('data/catalog.json').then(r=>r.json()).then(c=>{
+  C=c; c.kinds.forEach(k=>{KBY[kslug(k)]=k; k._id=k.id}); c.charts.forEach(ch=>CBY[cslug(ch)]=ch); c.providers.forEach(p=>PBY[p.id]=p);
+  C.byId={}; c.kinds.forEach(k=>C.byId[k.id]=k);
+  C.overlaidBy={}; c.kinds.forEach(k=>{if(k.overlays)(C.overlaidBy[k.overlays.id]??=[]).push(k)});
+  C.chartById={}; c.charts.forEach(ch=>C.chartById[ch.id]=ch);
+  route();
+});
+addEventListener('hashchange',()=>{route();scrollTo(0,0)});
+$('#q').addEventListener('input',e=>{Q=e.target.value; if(Q.trim()){ if(location.hash!=='#search') location.hash='search'; else route()} });
+addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement.tagName!=='INPUT'){e.preventDefault();($('#app .fin')||$('#q')).focus()}});
+
+const FIL={};
+function fbar(view,ph,chips){const st=FIL[view]??={q:'',tag:''};
+  return `<div class="fbar" data-view="${view}"><input class="fin" placeholder="${esc(ph)}" value="${esc(st.q)}" oninput="FIL['${view}'].q=this.value;applyF('${view}')">${chips?`<div class="chips">${chips.map(([v,l])=>`<button class="chip ${st.tag===v?'on':''}" onclick="FIL['${view}'].tag='${v}';this.parentNode.querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',b===this));applyF('${view}')">${l}</button>`).join('')}</div>`:''}<span class="fcount muted"></span></div>`}
+function applyF(view){const st=FIL[view]||{q:'',tag:''}, terms=st.q.toLowerCase().split(/\s+/).filter(Boolean); let n=0,t=0;
+  document.querySelectorAll('#app [data-f]').forEach(el=>{t++;const ok=terms.every(x=>el.dataset.f.includes(x))&&(!st.tag||(' '+(el.dataset.tags||'')+' ').includes(' '+st.tag+' '));el.hidden=!ok;if(ok)n++});
+  document.querySelectorAll('#app .fgroup').forEach(g=>g.hidden=!g.querySelector('[data-f]:not([hidden])'));
+  const c=$('#app .fcount'); if(c) c.textContent=(terms.length||st.tag)?`${fmt(n)} of ${fmt(t)}`:`${fmt(t)}`}
+const TFTIP='Terraform equivalent: this Terraform resource type manages the same cloud resource. It is not used here: the kind is a Kubernetes object that a controller keeps in sync, with no state file and no plan/apply.';
+const tfeq=t=>`<span class="tfeq" title="${TFTIP}">${esc(t)}</span>`;
+const modRepo=m=>esc(m.repoName||'');
+const modPath=m=>m.path&&m.path!=='.'?esc(m.path):'';
+const upB=c=>{const u=c.upstream||{};return !u.latest?'':u.behind?`<span class="badge b-alpha" title="Found via ${esc(u.via)}">${esc(u.latest)} out</span>`:`<span class="badge b-ga" title="Found via ${esc(u.via)}">latest</span>`};
+const famB=m=>`<span class="badge b-plain">${esc(m.family)}</span>`;
+const lc=(...a)=>esc(a.flat().filter(Boolean).join(' ').toLowerCase());
+const tfOf=k=>(k.api||[]).flatMap(a=>[a.api,...a.tf]);
+function route(){route0();const b=$('#app .fbar');if(b)applyF(b.dataset.view)}
+function route0(){
+  if(!C) return; const h=location.hash.slice(1)||'home', A=$('#app');
+  document.title='KRM Registry';
+  if(h==='home') return A.innerHTML=home();
+  if(h==='search') return A.innerHTML=search(Q);
+  if(h==='surfaces') return A.innerHTML=surfaces();
+  if(h==='providers') return A.innerHTML=providers();
+  if(h==='packages') return A.innerHTML=packages();
+  if(h==='about') return A.innerHTML=about();
+  if(h.startsWith('s-')) return A.innerHTML=surface(h.slice(2));
+  if(h.startsWith('svc-')) return service(h.slice(4));
+  if(h.startsWith('pr-')) return A.innerHTML=provider(h.slice(3));
+  if(h.startsWith('k-')&&KBY[h]) return kindPage(KBY[h]);
+  if(h.startsWith('p-')&&CBY[h]) return chartPage(CBY[h]);
+  A.innerHTML='<h1>Not found</h1>';
+}
+
+// ---------------------------------------------------------------- home
+function surfStats(s){const ks=C.kinds.filter(k=>k.surface===s);const o=ks.filter(k=>k.tier==='official').length,e=ks.length-o;
+  const svcs=new Set(ks.map(k=>k.service)).size, ch=C.charts.filter(c=>c.cloud===s).length;return {o,e,svcs,ch,n:ks.length}}
+function surfCard(s){const t=surfStats(s);return `<a class="card" href="#s-${s}">
+  <div>${surfB(s)} <b style="margin-left:6px">${SURF[s]}</b></div>
+  <div class="stat" style="margin-top:10px">${fmt(t.n)}<small>kinds · ${t.svcs} services</small></div>
+  <div class="bar"><i class="o" style="width:${100*t.o/t.n}%"></i><i class="e" style="width:${100*t.e/t.n}%"></i></div>
+  <div class="muted" style="font-size:12.5px"><span class="dot" style="background:var(--off)"></span>${fmt(t.o)} official &nbsp; <span class="dot" style="background:var(--ext)"></span>${fmt(t.e)} extension &nbsp;· ${t.ch} packages</div></a>`}
+function home(){
+  const nK=C.kinds.length, nTF=new Set(C.kinds.flatMap(k=>(k.api||[]).flatMap(a=>a.tf))).size;
+  return `<div class="hero"><h1>Every Kubernetes kind for every cloud, in one place.</h1>
+  <div class="sub">Providers are the controllers that turn KRM objects into cloud resources. Packages are Helm charts of those objects, ported from Terraform modules. ${fmt(nK)} kinds from ${C.providers.length} providers and ${C.charts.length} packages. No Terraform runs here: ${fmt(nTF)} Terraform resource types are mapped to the kinds that stand in for them, marked ${tfeq('like_this')}.</div>
+  <input class="big" placeholder="Try google_storage_bucket, aws_ec2_tag, ManagedCluster, Microsoft.App/managedEnvironments…" oninput="Q=this.value;$('#q').value=Q;location.hash='search'"></div>
+  <h2>Clouds</h2><div class="grid g3">${['gcp','aws','azure'].map(surfCard).join('')}</div>
+  <h2>Providers</h2>${provTable(C.providers)}
+  <h2>Packages</h2><div class="grid g3">${['gcp','aws','azure'].map(s=>{const cs=C.charts.filter(c=>c.cloud===s);return `<a class="card" href="#packages">${surfB(s)} <span class="stat" style="font-size:20px;margin-left:6px">${cs.length}</span><small class="muted"> charts</small><div class="muted" style="margin-top:6px;font-size:12.5px">${cs.slice(0,6).map(c=>esc(c.name)).join(', ')}…</div></a>`}).join('')}</div>
+  <h2>For agents</h2><div class="card">Start at <a href="llms.txt">llms.txt</a>. Each step is a small Markdown page with links to the next: cloud → service → kind, where a kind page has front matter, an example manifest and every spec and status field. Shortcuts: <code>kinds/&lt;provider&gt;/&lt;group&gt;/&lt;Kind&gt;.md</code>, and <code>terraform/&lt;type&gt;.md</code> to go from a Terraform type to the kinds that stand in for it.</div>`}
+function provTable(ps){return `<table><tr><th>Provider</th><th>Cloud</th><th>Publisher</th><th>Version</th><th style="text-align:right">Kinds</th></tr>${ps.map(p=>`<tr><td><a href="#pr-${p.id}"><b>${esc(p.title)}</b></a> ${badge(p.tier==='official'?'official':'extension',p.tier)}${p.extends?` <span class="muted">extends ${esc(PBY[p.extends].title)}</span>`:''}</td><td>${surfB(p.surface)}</td><td>${esc(p.publisher)}</td><td class="mono">${esc(p.version)}${p.controllers?` <span class="muted">(${p.controllers} controllers)</span>`:''}</td><td style="text-align:right">${fmt(p.nkinds)}</td></tr>`).join('')}</table>`}
+function providers(){return `<h1>Providers</h1><div class="sub">Official providers are the cloud vendors' own controllers. Extension providers add kinds the official ones lack, in their own API groups, and are documented beside them.</div><h2></h2>${provTable(C.providers)}`}
+function surfaces(){return `<h1>Clouds</h1><div class="sub">Each cloud's official provider and its extensions, merged by service.</div><h2></h2><div class="grid g3">${['gcp','aws','azure'].map(surfCard).join('')}</div>`}
+
+// ---------------------------------------------------------------- search
+function search(q){
+  q=q.trim().toLowerCase(); if(!q) return home();
+  const terms=q.split(/\s+/), R=[];
+  for(const k of C.kinds){let s=0,why='';const kn=k.kind.toLowerCase();
+    for(const t of terms){let ts=0;
+      if(kn===t) ts=100; else if(kn.startsWith(t)) ts=60; else if(kn.includes(t)) ts=35;
+      for(const a of k.api||[]){ for(const tf of a.tf){ if(tf===t){ts=Math.max(ts,120);why=`stands in for Terraform ${tfeq(tf)}`} else if(tf.includes(t)&&ts<45){ts=45;why=`stands in for Terraform ${tfeq(tf)}`}}
+        if(a.api.toLowerCase().includes(t)&&ts<40){ts=40;why=`API <code>${esc(a.api)}</code>`}}
+      if(!ts&&k.group.includes(t)) ts=15; if(!ts&&k.service.toLowerCase().includes(t)) ts=12; if(!ts&&(k.desc||'').toLowerCase().includes(t)) ts=3;
+      if(!ts){s=0;break} s+=ts}
+    if(s){ if(k.tier==='official') s+=2; if(k.cloudcontrol) s-=3; R.push([s,'k',k,why])}}
+  for(const c of C.charts){let s=0;const hay=(c.name+' '+c.desc+' '+(c.module.module||'')+' '+c.keywords.join(' ')).toLowerCase();
+    for(const t of terms){ if(c.name===t) s+=110; else if(c.name.includes(t)) s+=50; else if(hay.includes(t)) s+=10; else {s=0;break}}
+    if(s) R.push([s,'c',c])}
+  R.sort((a,b)=>b[0]-a[0]);
+  return `<h1>Results for “${esc(q)}”</h1><div class="sub">${R.length} matches${R.length>80?', showing 80':''}</div><h2></h2><div class="list">${R.slice(0,80).map(([s,t,x,why])=>t==='k'?
+    `<a class="res" href="#${kslug(x)}"><span class="k">${esc(x.kind)}</span><span class="g">${esc(x.group)}/${esc(x.version)}</span> &nbsp;${surfB(x.surface)} ${tierB(x)} ${stabB(x)}${x.overlays?' '+badge('overlay','plain'):''}<div class="why">${why?why+' · ':''}${esc(PBY[x.provider].title)}${x.usedBy?.length?` · used by ${x.usedBy.length} package${x.usedBy.length>1?'s':''}`:''}</div></a>`:
+    `<a class="res" href="#${cslug(x)}"><span class="k">${esc(x.name)}</span><span class="g">package ${esc(x.cloud)}/${esc(x.name)} ${esc(x.version)}</span> &nbsp;${surfB(x.cloud)} ${badge('package','plain')}<div class="why">${esc(x.desc)}</div></a>`).join('')||'<div class="res">Nothing matched.</div>'}</div>`}
+
+// ---------------------------------------------------------------- surface & service
+function servicesOf(s){const m={};for(const k of C.kinds.filter(k=>k.surface===s)){(m[k.service]??={o:0,e:0,ks:[]});m[k.service][k.tier==='official'?'o':'e']++;m[k.service].ks.push(k)}return m}
+function surface(s){
+  const m=servicesOf(s), names=Object.keys(m).sort(), t=surfStats(s);
+  const ps=C.providers.filter(p=>p.surface===s);
+
+  return `<div class="crumbs"><a href="#surfaces">Clouds</a> /</div><h1>${SURF[s]}</h1>
+  <div class="sub">${ps.map(p=>`<a href="#pr-${p.id}">${esc(p.title)}</a> ${badge(p.tier==='official'?'official':'extension',p.tier)}`).join(' &nbsp;+&nbsp; ')} — ${fmt(t.n)} kinds in ${names.length} services. Extension kinds sit beside the official kinds of the same service.</div>
+  ${fbar('s-'+s,'Filter services and kinds',[['','All'],['filled','Official + extension'],['new','Extension only'],['official','Official only']])}
+  <div class="grid g4">${names.map(n=>{const x=m[n],tot=x.o+x.e;return `<a class="card" href="#${svcslug(s,n)}" style="padding:12px 14px" data-f="${lc(n,x.ks.map(k=>[k.kind,k.group]))}" data-tags="${x.o&&x.e?'filled':x.e?'new':'official'}"><b>${esc(n)}</b><div class="bar" style="height:6px"><i class="o" style="width:${100*x.o/tot}%"></i><i class="e" style="width:${100*x.e/tot}%"></i></div><div class="muted" style="font-size:12px">${x.o} official · ${x.e} extension</div></a>`}).join('')}</div>`}
+function service(sl){
+  const [s,...rest]=sl.split('--'), m=servicesOf(s), name=Object.keys(m).find(n=>n.replace(/[^A-Za-z0-9-]/g,'-')===rest.join('--'));
+  if(!name) return $('#app').innerHTML='<h1>Not found</h1>';
+  const ks=m[name].ks, rows={};
+  for(const k of ks){(rows[k.kind]??={o:[],e:[]})[k.tier==='official'?'o':'e'].push(k)}
+  const tf=k=>[...new Set((k.api||[]).flatMap(a=>a.tf))];
+  $('#app').innerHTML=`<div class="crumbs"><a href="#surfaces">Clouds</a> / <a href="#s-${s}">${SURF[s]}</a> /</div><h1>${esc(name)}</h1>
+  <div class="sub">${ks.length} kinds. A row is one kind name; where an extension complements an official kind of the same name, both sit on the row.</div><h2></h2>
+  ${fbar('svc-'+sl,'Filter kinds, Terraform types',[['','All'],['both','Official + extension'],['official','Official'],['extension','Extension'],['overlay','Overlays']])}
+  <table><tr><th>Kind</th><th>Official</th><th>Extension</th><th title="${TFTIP}">Terraform equivalent</th></tr>${Object.keys(rows).sort().map(n=>{const r=rows[n];const all=[...r.o,...r.e];
+    const tags=[r.o.length&&'official',r.e.length&&'extension',r.o.length&&r.e.length&&'both',r.e.some(k=>k.overlays)&&'overlay'].filter(Boolean).join(' ');
+    return `<tr data-f="${lc(n,all.map(k=>[k.group,tfOf(k)]))}" data-tags="${tags}"><td><b>${esc(n)}</b></td><td>${r.o.map(k=>`${klink(k,k.version)} ${stabB(k)}`).join('<br>')||'<span class="muted">—</span>'}</td>
+    <td>${r.e.map(k=>`${klink(k,k.group.split('.').slice(0,-3).join('.')||k.group)}/${esc(k.version)} ${stabB(k)}${k.overlays?` <span class="muted">+${k.overlays.added} fields</span>`:''}${k.gap?`<div class="muted" style="font-size:12px;max-width:380px">${esc(k.gap.gap.slice(0,110))}…</div>`:''}`).join('<br>')||'<span class="muted">—</span>'}</td>
+    <td>${[...new Set(all.flatMap(tf))].map(tfeq).join('<br>')}</td></tr>`}).join('')}</table>`}
+
+// ---------------------------------------------------------------- provider
+function provider(id){const p=PBY[id];if(!p) return '<h1>Not found</h1>';
+  const ks=C.kinds.filter(k=>k.provider===id), by={};ks.forEach(k=>(by[k.service]??=[]).push(k));
+  const exts=C.providers.filter(x=>x.extends===id);
+  return `<div class="crumbs"><a href="#providers">Providers</a> /</div><div class="layout"><div>
+  <h1>${esc(p.title)}</h1><div class="sub">${surfB(p.surface)} ${badge(p.tier==='official'?'official':'extension',p.tier)} &nbsp;by ${esc(p.publisher)}${p.extends?` · extends <a href="#pr-${p.extends}">${esc(PBY[p.extends].title)}</a>`:''}${exts.length?` · extended by ${exts.map(x=>`<a href="#pr-${x.id}">${esc(x.title)}</a>`).join(', ')}`:''}</div>
+  ${fbar('pr-'+id,'Filter kinds, services, Terraform types',[['','All'],...['ga','beta','alpha','preview'].filter(x=>ks.some(k=>k.stability===x)).map(x=>[x,x==='ga'?'GA':x[0].toUpperCase()+x.slice(1)]),['packaged','In a package'],...(ks.some(k=>k.overlays)?[['overlay','Overlays']]:[]),...(ks.some(k=>k.cloudcontrol)?[['native','Not Cloud Control']]:[])])}
+  ${Object.keys(by).sort().map(svc=>`<div class="fgroup"><div class="sec"><a href="#${svcslug(p.surface,svc)}" style="color:inherit">${esc(svc)}</a> <span class="muted">${by[svc].length}</span></div><div class="cols">${by[svc].sort((a,b)=>a.kind.localeCompare(b.kind)).map(k=>`<a href="#${kslug(k)}" data-f="${lc(k.kind,svc,k.group,tfOf(k))}" data-tags="${[k.stability,k.usedBy?.length&&'packaged',k.overlays&&'overlay',!k.cloudcontrol&&'native'].filter(Boolean).join(' ')}">${esc(k.kind)}${k.stability!=='ga'?` <span class="muted" style="font-size:11px">${k.stability}</span>`:''}</a>`).join('')}</div></div>`).join('')}
+  </div><div class="side"><div class="card"><h4>Provider</h4><div class="kv"><div>Publisher</div><div>${esc(p.publisher)}</div><div>Version</div><div class="mono">${esc(p.version)}</div>${p.commit?`<div>Commit</div><div class="mono">${p.commit.slice(0,12)}</div>`:''}<div>Kinds</div><div>${fmt(p.nkinds)}</div><div>API groups</div><div>${p.ngroups}</div><div>Source</div><div><a href="${esc(p.repo)}">${esc(p.repo.replace('https://github.com/',''))}</a></div>${p.docs?`<div>Docs</div><div><a href="${esc(p.docs)}">${esc(p.docs.replace(/^https:\/\//,'').split('/')[0])} ↗</a></div>`:''}</div></div>
+  <div class="card"><h4>Stability</h4>${['ga','beta','alpha','preview'].map(s=>{const n=ks.filter(k=>k.stability===s).length;return n?`<div>${badge(s==='ga'?'GA':s,s)} ${fmt(n)}</div>`:''}).join('')}</div></div></div>`}
+
+// ---------------------------------------------------------------- kind
+let KTAB='spec', KFILTER='', KOVER=false;
+async function kindPage(k){
+  const A=$('#app'); A.innerHTML=`<div class="loading">Loading ${esc(k.kind)}…</div>`;
+  const full=await shard(k); if(location.hash.slice(1)!==kslug(k)) return;
+  document.title=k.kind+' · KRM Registry';
+  const p=PBY[k.provider], twin=k.overlays&&C.byId[k.overlays.id], exts=C.overlaidBy[k.id]||[];
+  let twinFull=null; const partner=twin||exts[0]; if(partner) twinFull=await shard(partner);
+  const tf=[...new Set((k.api||[]).flatMap(a=>a.tf))], apis=[...new Set((k.api||[]).map(a=>a.api).filter(Boolean))];
+  const others=C.kinds.filter(o=>o.id!==k.id&&o.surface===k.surface&&o.kind===k.kind&&o!==twin&&!exts.includes(o));
+  const yaml=`apiVersion: ${k.group}/${k.version}\nkind: ${k.kind}\nmetadata:\n  name: example\n${k.scope==='Namespaced'?'  namespace: default\n':''}spec:\n`+full.spec.filter(f=>f.r&&f.p.split('.').length===2).map(f=>`  ${f.p.split('.')[1]}: ${f.t.startsWith('[]')?'[]':f.t==='object'||f.t.startsWith('map')?'{}':f.e?f.e[0]:'…'}`).join('\n');
+  A.innerHTML=`<div class="crumbs"><a href="#s-${k.surface}">${SURF[k.surface]}</a> / <a href="#${svcslug(k.surface,k.service)}">${esc(k.service)}</a> / <a href="#pr-${k.provider}">${esc(p.title)}</a></div>
+  <div class="layout"><div>
+  <h1>${esc(k.kind)}</h1><div class="sub mono">${esc(k.group)}/${esc(k.version)}</div>
+  <div style="margin-top:8px">${surfB(k.surface)} ${tierB(k)} ${stabB(k)} ${badge(k.scope,'plain')}${k.cloudcontrol?' '+badge('Cloud Control API','plain'):''}</div>
+  ${k.desc&&!/is the Schema for/.test(k.desc)?`<p class="sub">${esc(full.desc)}</p>`:''}
+  ${full.gap?`<div class="callout"><b>Gap it fills.</b> ${md(full.gap.gap).replace(/^<p>|<\/p>\s*$/g,'')}${full.gap.upstream?`<div class="muted" style="margin-top:6px;font-size:13px"><b>Upstream:</b> ${md(full.gap.upstream).replace(/^<p>|<\/p>\s*$/g,'')}</div>`:''}</div>`:''}
+  ${twin?`<div class="callout"><b>Overlays ${klink(twin,twin.kind)}</b> <span class="mono muted">${esc(twin.group)}/${esc(twin.version)}</span> from ${esc(PBY[twin.provider].title)}: same kind, in this provider's own group, with <b>${full.overlays.added.length}</b> fields added${full.overlays.removed.length?` and ${full.overlays.removed.length} not carried`:''}. Turn on <i>overlay</i> below to see both field sets as one.</div>`:''}
+  ${exts.length?`<div class="callout"><b>Extended by</b> ${exts.map(e=>`${klink(e,e.group+'/'+e.version)} <span class="muted">(+${e.overlays.added} fields)</span>`).join(', ')}. Turn on <i>overlay</i> below to see the fields the extension adds.</div>`:''}
+  ${others.length?`<div class="callout o"><b>Same kind name elsewhere on ${k.surface.toUpperCase()}:</b> ${others.map(o=>`${klink(o,o.group+'/'+o.version)} ${tierB(o)}`).join(', ')}</div>`:''}
+  ${full.doc?`<div class="md">${md(full.doc.md)}</div>`:''}
+  <div class="tabs">${['spec','status','example'].map(t=>`<button class="${KTAB===t?'on':''}" onclick="KTAB='${t}';kindPage(KBY[location.hash.slice(1)])">${t==='spec'?`Spec <span class="muted">${full.spec.length}</span>`:t==='status'?`Status <span class="muted">${full.status.length}</span>`:'Example'}</button>`).join('')}</div>
+  <div class="fields">${KTAB==='example'?`<pre class="mono" style="margin:0;padding:14px">${esc(yaml)}</pre><div class="muted" style="padding:0 14px 12px;font-size:12.5px">Required top-level fields only.</div>`:`
+   <div class="ff"><input placeholder="Filter fields" value="${esc(KFILTER)}" oninput="KFILTER=this.value;renderFields()">${partner?`<label style="white-space:nowrap;font-size:13px"><input type="checkbox" ${KOVER?'checked':''} onchange="KOVER=this.checked;renderFields()"> overlay</label>`:''}</div><div id="fl"></div>`}</div>
+  </div><div class="side">
+   ${apis.length?`<div class="card"><h4>Cloud API resource</h4>${apis.map(a=>`<div class="mono" style="font-size:12px">${esc(a)}</div>`).join('')}</div>`:''}
+   ${tf.length?`<div class="card"><h4>Coming from Terraform</h4><div class="muted" style="font-size:12px;margin-bottom:4px">${esc(k.kind)} stands in for</div>${tf.map(t=>`<div>${tfeq(t)}</div>`).join('')}<div class="muted" style="font-size:12px;margin-top:8px">Same cloud resource, managed differently: a Kubernetes object a controller keeps in sync. No state file, no plan/apply.</div></div>`:''}
+   ${k.usedBy?.length?`<div class="card"><h4>Used by packages</h4>${k.usedBy.map(id=>{const c=C.chartById[id];return `<div><a href="#${cslug(c)}">${esc(id)}</a> <span class="muted mono">${esc(c.version)}</span></div>`}).join('')}</div>`:''}
+   ${full.refs?.length?`<div class="card"><h4>References</h4>${full.refs.map(r=>`<div style="margin-bottom:4px"><code style="font-size:11.5px">${esc(r.field.replace(/^spec\./,''))}</code> → ${r.kinds.map(n=>{const t=C.kinds.find(o=>o.surface===k.surface&&o.kind===n&&o.tier==='official')||C.kinds.find(o=>o.surface===k.surface&&o.kind===n);return t?klink(t):esc(n)}).join(', ')}</div>`).join('')}</div>`:''}
+   <div class="card"><h4>Details</h4><div class="kv"><div>Provider</div><div><a href="#pr-${p.id}">${esc(p.title)}</a></div>${k.controller?`<div>Controller</div><div class="mono">${esc(k.controller.repo)} ${esc(k.controller.release)}</div>`:''}<div>Versions</div><div class="mono">${k.versions.map(esc).join(', ')}</div><div>Plural</div><div class="mono">${esc(k.plural)}</div>${k.short.length?`<div>Short</div><div class="mono">${k.short.map(esc).join(', ')}</div>`:''}</div></div>
+   <div class="card"><h4>Links</h4>
+    ${k.docsUrl?`<div><a href="${esc(k.docsUrl)}">${esc(p.title)} reference ↗</a></div>`:k.tier==='official'?`<div class="muted" style="font-size:12.5px">${esc(p.title)} : no reference page linked for ${k.stability} kinds.</div>`:''}
+    <div><a href="${esc(k.repoUrl)}">${k.controller?esc(k.controller.repo)+' '+esc(k.controller.release):esc(p.repo.replace('https://github.com/',''))+' @ '+esc(p.version)} ↗</a></div>
+    <div><a href="${esc(k.srcUrl)}">CRD source ↗</a></div>
+    ${full.doc?`<div><a href="${esc(k.docRepoBase||'')}${esc(full.doc.file.split('/').slice(1).join('/'))}">Kind doc ↗</a></div>`:''}
+    <div>${C.packs?'':`<a href="${agentUrl(k)}">Markdown for agents</a> · `}<a href="${shardUrl(k)}">JSON</a></div></div>
+  </div></div>`;
+  window._KF={full,partner:twinFull,isExt:!!twin}; if(KTAB!=='example') renderFields();
+}
+function renderFields(){
+  const {full,partner,isExt}=window._KF, el=$('#fl'); if(!el) return;
+  let rows=KTAB==='spec'?full.spec:full.status, mark={};
+  if(KOVER&&partner){const mine=new Set(rows.map(f=>f.p)), theirs=KTAB==='spec'?partner.spec:partner.status, tset=new Set(theirs.map(f=>f.p));
+    // Overlay: union in tree order; fields only in the extension are marked "add", only in the official kind "rem".
+    const ext=isExt?rows:theirs, off=isExt?theirs:rows, eset=new Set(ext.map(f=>f.p)), oset=new Set(off.map(f=>f.p));
+    const out=[...off]; ext.forEach(f=>{if(!oset.has(f.p)){const parent=f.p.slice(0,f.p.lastIndexOf('.'));let i=out.findLastIndex(x=>x.p===parent||x.p.startsWith(parent+'.'));out.splice(i+1,0,f)}});
+    out.forEach(f=>mark[f.p]=!oset.has(f.p)?'add':!eset.has(f.p)?'rem':''); rows=out}
+  const q=KFILTER.toLowerCase(); if(q) rows=rows.filter(f=>f.p.toLowerCase().includes(q)||(f.d||'').toLowerCase().includes(q));
+  const lim=600;
+  el.innerHTML=(rows.slice(0,lim).map(f=>{const parts=f.p.split('.'),d=parts.length-2;
+    return `<div class="f ${mark[f.p]||''}" style="--d:${Math.max(0,d)}" onclick="this.classList.toggle('open')"><span class="n">${esc(parts[parts.length-1])}</span><span class="t">${esc(f.t)}</span>
+    ${f.r?' '+badge('required','alpha'):''}${f.im?' '+badge('immutable','plain'):''}${mark[f.p]==='add'?' '+badge('extension','extension'):''}${mark[f.p]==='rem'?' '+badge('official only','plain'):''}
+    ${f.e?`<span class="t">enum: ${esc(f.e.slice(0,8).join(' | '))}${f.e.length>8?' …':''}</span>`:''}${f.df!==undefined?`<span class="t">default: ${esc(JSON.stringify(f.df))}</span>`:''}
+    ${f.d?`<div class="d">${esc(f.d)}</div>`:''}</div>`}).join('')||'<div class="f muted">No fields.</div>')+(rows.length>lim?`<div class="f muted">${rows.length-lim} more; filter to narrow.</div>`:'');
+}
+
+// ---------------------------------------------------------------- packages
+function packages(){return `<h1>Packages</h1><div class="sub">Helm charts of provider objects, each a port of an open-source Terraform module that keeps its variables, names and outputs. The equivalent of Terraform's modules.</div>
+  ${fbar('packages','Filter packages, module repos, kinds',[['','All'],['gcp','GCP'],['aws','AWS'],['azure','Azure'],...[...new Set(C.charts.map(c=>c.module.family))].sort().map(f=>['fam-'+f.replace(/[^A-Za-z]/g,''),f]),['behind','Upstream moved'],['gaps','Has refused variables']])}
+  ${['gcp','aws','azure'].map(s=>`<div class="fgroup"><h2>${surfB(s)} ${SURF[s]}</h2><table><tr><th>Package</th><th>Ported from Terraform module</th><th>Upstream</th><th style="text-align:right">Kinds</th><th style="text-align:right">Refused vars</th></tr>${C.charts.filter(c=>c.cloud===s).map(c=>`<tr data-f="${lc(c.name,c.desc,c.module.path,c.module.module,c.module.repoName,c.module.family,c.keywords,c.uses.map(u=>u.split('/').pop()))}" data-tags="${c.cloud} ${c.nrefused?'gaps':'complete'} fam-${c.module.family.replace(/[^A-Za-z]/g,'')} ${c.upstream?.behind?'behind':''}"><td><a href="#${cslug(c)}"><b>${esc(c.name)}</b></a> <span class="mono muted">${esc(c.version)}</span><div class="muted" style="font-size:12.5px">${esc(c.desc.slice(0,150))}</div></td><td style="font-size:12.5px">${c.module.repo?'':'<span class="muted">original package</span>'}${c.module.repo?famB(c.module):''}<div class="mono" style="font-size:11.5px;margin-top:3px">${modRepo(c.module)}${modPath(c.module)?`<br>${modPath(c.module)}`:''}<br><span class="muted">@ ${esc(c.module.version||'')}</span></div></td><td>${upB(c)}</td><td style="text-align:right">${c.uses.length}</td><td style="text-align:right">${c.nrefused}</td></tr>`).join('')}</table></div>`).join('')}`}
+async function chartPage(c){
+  const A=$('#app'); A.innerHTML='<div class="loading">Loading…</div>';
+  const f=await chartData(c); document.title=c.name+' · KRM Registry';
+  const uses=c.uses.map(id=>C.byId[id]).filter(Boolean);
+  A.innerHTML=`<div class="crumbs"><a href="#packages">Packages</a> / ${esc(c.cloud)} /</div><div class="layout"><div>
+  <h1>${esc(c.name)}</h1><div class="sub">${esc(c.desc)}</div>
+  <div style="margin-top:8px">${surfB(c.cloud)} ${badge('v'+c.version,'plain')} ${c.package?badge('Bundt Package '+c.package,'plain'):''}</div>
+  <h2>Renders</h2><table><tr><th>Kind</th><th>Provider</th><th></th></tr>${uses.map(k=>`<tr><td>${klink(k)} <span class="mono muted">${esc(k.group)}/${esc(k.version)}</span></td><td>${esc(PBY[k.provider].title)}</td><td>${tierB(k)} ${stabB(k)}</td></tr>`).join('')}</table>
+  ${f.refused.length?`<h2>Module variables not yet carried</h2><table><tr><th>Variable</th><th>Why</th><th>Reason</th></tr>${f.refused.map(r=>`<tr><td class="mono">${esc(r.variable)}${r.partial?' <span class="muted">(partial)</span>':''}</td><td>${badge(r.kind,r.kind==='gap'?'alpha':r.kind==='alpha'?'beta':'plain')}</td><td style="font-size:13px">${esc(r.reason)}</td></tr>`).join('')}</table>`:''}
+  <div class="tabs">${['readme','values','outputs'].map(t=>`<button class="${CTAB===t?'on':''}" onclick="CTAB='${t}';chartPage(CBY[location.hash.slice(1)])">${t==='readme'?'README':t==='values'?`Values <span class="muted">${f.values.length}</span>`:`Outputs <span class="muted">${Object.keys(f.outputExprs).length}</span>`}</button>`).join('')}</div>
+  <div class="fields">${CTAB==='readme'?`<div class="md" style="border:0;margin:0">${md(f.readme)}</div>`:CTAB==='values'?f.values.map(v=>{const parts=v.p.split('.');return `<div class="f" style="--d:${parts.length-1}" onclick="this.classList.toggle('open')"><span class="n">${esc(parts.at(-1))}</span><span class="t">${esc(v.t)}</span>${v.df!==undefined?`<span class="t">default: ${esc(JSON.stringify(v.df))}</span>`:''}${v.d?`<div class="d">${esc(v.d)}</div>`:''}</div>`}).join(''):Object.entries(f.outputExprs).map(([n,e])=>`<div class="f open"><span class="n">${esc(n)}</span><div class="d mono" style="font-size:11.5px">${esc(e)}</div></div>`).join('')||'<div class="f muted">None</div>'}</div>
+  </div><div class="side">${!c.module.repo?`<div class="card"><h4>Origin</h4>An original package, not a port of a Terraform module.</div>`:''}${c.module.repo?`<div class="card"><h4>Ported from a Terraform module</h4><div style="margin-bottom:8px">${famB(c.module)}</div><div class="kv"><div>Repo</div><div><a href="${esc(c.module.repo)}">${modRepo(c.module)} ↗</a></div>${modPath(c.module)?`<div>Path</div><div class="mono">${modPath(c.module)}</div>`:''}<div>Release</div><div class="mono"><a href="${esc(c.module.module_url)}">${esc(c.module.version)} ↗</a></div>${c.module.commit?`<div>Commit</div><div class="mono">${esc(c.module.commit.slice(0,12))}</div>`:''}<div>License</div><div>${esc(c.module.license)}</div>${c.module.registry_url?`<div>Registry</div><div><a href="${esc(c.module.registry_url)}">Terraform Registry ↗</a></div>`:''}<div>Synced</div><div>${esc(c.module.synced)}</div><div>Upstream</div><div>${c.upstream?.latest?(c.upstream.behind?`<b>${esc(c.upstream.latest)}</b> is out ${upB(c)}`:`${esc(c.upstream.latest)} ${upB(c)}`)+`<div class="muted" style="font-size:11.5px">checked via ${esc(c.upstream.via)}</div>`:'<span class="muted">unknown</span>'}</div></div></div>`:''}</div>
+  <div class="card"><h4>Install</h4><pre class="mono" style="margin:0;overflow:auto;font-size:11.5px">helm install my-${esc(c.name)} \\\n  oci://ghcr.io/highfivelabs/charts/${esc(c.cloud)}/${esc(c.name)} \\\n  --version ${esc(c.version)} -f values.yaml</pre><div class="muted" style="font-size:11.5px;margin-top:6px">Illustrative OCI path.</div></div>
+  <div class="card"><h4>Source</h4><a href="https://github.com/highfivelabs/catalog/tree/main/charts/${esc(c.cloud)}/${esc(c.name)}">catalog/charts/${esc(c.cloud)}/${esc(c.name)}</a> ${C.packs?'':`· <a href="packages/${esc(c.cloud)}/${esc(c.name)}.md">Markdown</a> `}· <a href="${C.packs?'data/charts.json':`data/charts/${c.cloud}-${c.name}.json`}">JSON</a></div></div></div>`}
+let CTAB='readme';
+
+// ---------------------------------------------------------------- about
+function about(){return `<div style="max-width:760px"><h1>How the registry works</h1>
+<p class="sub">The Terraform Registry splits providers (resource types) from modules (compositions of them). This registry keeps that split for KRM: <b>providers</b> are controllers and their CRDs; <b>packages</b> are Helm charts of those CRDs' objects.</p>
+<h2>Three ideas</h2>
+<p><b>1. Providers publish CRDs; the registry reads them.</b> Every page is built from the CRDs at a pinned release: Config Connector's <code>config/crds</code>, each ACK controller's <code>helm/crds</code>, ASO's release CRD bundle. No hand-written docs are needed for a kind to get a page: fields, types, required, immutable, enums and defaults come from the OpenAPI schema.</p>
+<p><b>2. Extensions overlay a provider; they don't fork it.</b> An extension provider declares <code>extends: &lt;provider&gt;</code>. Its kinds live in its own API group but are listed in the same service as the official kinds. When it ships a kind of the same name as an official one, the page links the two and shows the fields it adds; the overlay switch merges both field trees. The <i>Clouds</i> view is the combined surface: one table per service, official and extension side by side.</p>
+<p><b>3. Terraform is a reference point, not a dependency.</b> Nothing here runs Terraform. Each kind carries its Cloud API resource and its Terraform equivalents, ${tfeq('marked_like_this')}: the Terraform resource types that manage the same cloud resource, and each package names the module it ports and the variables it can't carry yet. Searching <code>google_storage_bucket</code> lands on <code>StorageBucket</code>.</p>
+<h2>Publishing format for a provider</h2>
+<p>A repository joins the registry with a manifest at its root, read at each release tag:</p>
+<pre class="md mono" style="padding:14px">schema: 1
+id: aso-extensions
+surface: azure
+publisher: High Five Labs
+extends: aso                  # optional: the provider this one overlays
+crds: [config/crds/*.yaml]
+kind_docs: docs/kinds         # optional: docs/kinds/&lt;Kind&gt;.md
+coverage: docs/coverage/resources.csv   # optional: kind → API resource</pre>
+<p>A kind doc is Markdown with front matter naming the kinds it covers, the format config-connector-extensions already uses:</p>
+<pre class="md mono" style="padding:14px">---
+kinds: [VaultSecret]
+apiVersion: keyvault.azure.hfl.dev/v1
+---
+# VaultSecret
+**Gap it fills.** …
+## Notes …</pre>
+<p>Without kind docs, the registry falls back to the README's kind table (the <i>Gap it fills</i> column), then to the CRD alone.</p>
+<h2>For agents</h2>
+<p>The site is static JSON behind a thin page. <a href="llms.txt">llms.txt</a> explains the layout. Every kind is one fetch away, with every field and its description, so an agent writing a manifest never has to clone a provider repository.</p>
+<h2>This build</h2>
+<p class="sub">Official providers at their latest releases, found through the GitHub API at build time: Config Connector ${esc(PBY['config-connector'].version)}, ASO ${esc(PBY['aso'].version)}, ${PBY['ack'].controllers} ACK controllers each at its latest release. The extension repos and the catalog at main. Upstream module releases checked through the Terraform Registry API, or GitHub where a module isn't published there. Generated ${esc(C.generated)}.</p></div>`}
+</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+# The registry's sources: which providers and package catalogs it indexes,
+# where their CRDs and docs are, and how they relate. In the real registry
+# each repository publishes its own block of this (a `krm-registry.yaml` at
+# its root, like terraform-registry-manifest.json) and the registry reads it
+# at a release tag; here they are listed in one place for the prototype.
+schema: 1
+
+surfaces:
+  gcp:   {title: Google Cloud}
+  aws:   {title: Amazon Web Services}
+  azure: {title: Microsoft Azure}
+
+providers:
+  - id: config-connector
+    title: Config Connector
+    surface: gcp
+    publisher: Google
+    tier: official
+    repo: https://github.com/GoogleCloudPlatform/k8s-config-connector
+    docs: https://docs.cloud.google.com/config-connector/docs/overview
+    version: latest release   # resolved into registry.lock.json
+    crds: [upstream/kcc/config/crds/resources/*.yaml]
+    group_suffix: .cnrm.cloud.google.com
+
+  - id: ack
+    title: AWS Controllers for Kubernetes
+    surface: aws
+    publisher: Amazon Web Services
+    tier: official
+    repo: https://github.com/aws-controllers-k8s
+    docs: https://aws-controllers-k8s.github.io/community/
+    version: per controller   # each controller's latest release, resolved into registry.lock.json
+    crds: [upstream/ack/*/helm/crds/*.yaml]
+    group_suffix: .services.k8s.aws
+
+  - id: aso
+    title: Azure Service Operator v2
+    surface: azure
+    publisher: Microsoft
+    tier: official
+    repo: https://github.com/Azure/azure-service-operator
+    docs: https://azure.github.io/azure-service-operator/
+    version: latest v2 release
+    crds: [upstream/aso-crds.yaml]
+    group_suffix: .azure.com
+
+  - id: config-connector-extensions
+    title: config-connector-extensions
+    surface: gcp
+    publisher: High Five Labs
+    tier: extension
+    extends: config-connector
+    repo: https://github.com/highfivelabs/config-connector-extensions
+    version: main
+    crds: [src/config-connector-extensions/config/crds/*.yaml]
+    kind_docs: src/config-connector-extensions/docs/kinds
+    readme: src/config-connector-extensions/README.md
+    coverage: src/config-connector-extensions/docs/coverage/resources.csv
+    terraform: src/catalog/docs/terraform/config-connector-extensions/terraform-resources.csv
+    group_suffix: .gcp.hfl.dev
+
+  - id: ack-extensions
+    title: ack-extensions
+    surface: aws
+    publisher: High Five Labs
+    tier: extension
+    extends: ack
+    repo: https://github.com/highfivelabs/ack-extensions
+    version: main
+    crds: [src/ack-extensions/config/crds/bases/*.yaml, src/ack-extensions/cloudcontrol/config/crds/*.yaml]
+    readme: src/ack-extensions/README.md
+    coverage: src/ack-extensions/docs/coverage/resources.csv
+    terraform: src/catalog/docs/terraform/ack-extensions/terraform-resources.csv
+    group_suffix: .aws.hfl.dev
+
+  - id: aso-extensions
+    title: aso-extensions
+    surface: azure
+    publisher: High Five Labs
+    tier: extension
+    extends: aso
+    repo: https://github.com/highfivelabs/aso-extensions
+    version: main
+    crds: [src/aso-extensions/config/crds/*.yaml]
+    readme: src/aso-extensions/README.md
+    coverage: src/aso-extensions/docs/coverage/resources.csv
+    terraform: src/catalog/docs/terraform/aso-extensions/terraform-resources.csv
+    group_suffix: .azure.hfl.dev
+
+packages:
+  - id: catalog
+    title: High Five Labs catalog
+    publisher: High Five Labs
+    repo: https://github.com/highfivelabs/catalog
+    charts: src/catalog/charts/*/*
