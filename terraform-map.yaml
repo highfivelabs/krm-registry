@@ -1,0 +1,117 @@
+# Terraform resource types each operator kind stands in for, by provider id.
+# Hand-mapped from the operators' CRDs and the Terraform providers' resource lists.
+adyanth-cloudflare-operator:
+  ClusterTunnel:
+  - cloudflare_zero_trust_tunnel_cloudflared
+  - cloudflare_zero_trust_tunnel_cloudflared_config
+  Tunnel:
+  - cloudflare_zero_trust_tunnel_cloudflared
+  - cloudflare_zero_trust_tunnel_cloudflared_config
+  TunnelBinding:
+  - cloudflare_dns_record
+datadog-operator:
+  DatadogDashboard:
+  - datadog_dashboard
+  DatadogGenericResource:
+  - datadog_monitor
+  - datadog_dashboard
+  - datadog_service_level_objective
+  - datadog_synthetics_test
+  - datadog_downtime_schedule
+  DatadogMonitor:
+  - datadog_monitor
+  DatadogSLO:
+  - datadog_service_level_objective
+git-hubby:
+  Organization:
+  - github_organization_settings
+  - github_organization_ruleset
+  - github_organization_custom_properties
+  Repository:
+  - github_repository
+  - github_repository_ruleset
+  - github_repository_webhook
+  - github_repository_autolink_reference
+  Team:
+  - github_team
+  - github_team_members
+grafana-operator:
+  GrafanaAlertRuleGroup:
+  - grafana_rule_group
+  GrafanaContactPoint:
+  - grafana_contact_point
+  GrafanaDashboard:
+  - grafana_dashboard
+  GrafanaDatasource:
+  - grafana_data_source
+  GrafanaFolder:
+  - grafana_folder
+  GrafanaLibraryPanel:
+  - grafana_library_panel
+  GrafanaMuteTiming:
+  - grafana_mute_timing
+  GrafanaNotificationPolicy:
+  - grafana_notification_policy
+  GrafanaNotificationPolicyRoute:
+  - grafana_notification_policy
+  GrafanaNotificationTemplate:
+  - grafana_message_template
+  GrafanaServiceAccount:
+  - grafana_service_account
+  - grafana_service_account_token
+stringke-cloudflare-operator:
+  AccessApplication:
+  - cloudflare_zero_trust_access_application
+  AccessGroup:
+  - cloudflare_zero_trust_access_group
+  AccessIdentityProvider:
+  - cloudflare_zero_trust_access_identity_provider
+  AccessPolicy:
+  - cloudflare_zero_trust_access_policy
+  AccessServiceToken:
+  - cloudflare_zero_trust_access_service_token
+  CloudflareDomain:
+  - cloudflare_zone
+  ClusterTunnel:
+  - cloudflare_zero_trust_tunnel_cloudflared
+  - cloudflare_zero_trust_tunnel_cloudflared_config
+  DNSRecord:
+  - cloudflare_dns_record
+  DevicePostureRule:
+  - cloudflare_zero_trust_device_posture_rule
+  DeviceSettingsPolicy:
+  - cloudflare_zero_trust_device_custom_profile
+  - cloudflare_zero_trust_device_default_profile
+  GatewayConfiguration:
+  - cloudflare_zero_trust_gateway_settings
+  GatewayList:
+  - cloudflare_zero_trust_list
+  GatewayRule:
+  - cloudflare_zero_trust_gateway_policy
+  NetworkRoute:
+  - cloudflare_zero_trust_tunnel_cloudflared_route
+  OriginCACertificate:
+  - cloudflare_origin_ca_certificate
+  PagesDomain:
+  - cloudflare_pages_domain
+  PagesProject:
+  - cloudflare_pages_project
+  R2Bucket:
+  - cloudflare_r2_bucket
+  R2BucketDomain:
+  - cloudflare_r2_custom_domain
+  R2BucketNotification:
+  - cloudflare_r2_bucket_event_notification
+  RedirectRule:
+  - cloudflare_ruleset
+  TransformRule:
+  - cloudflare_ruleset
+  Tunnel:
+  - cloudflare_zero_trust_tunnel_cloudflared
+  - cloudflare_zero_trust_tunnel_cloudflared_config
+  VirtualNetwork:
+  - cloudflare_zero_trust_tunnel_cloudflared_virtual_network
+  WARPConnector:
+  - cloudflare_zero_trust_tunnel_warp_connector
+  ZoneRuleset:
+  - cloudflare_ruleset

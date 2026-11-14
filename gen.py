@@ -22,10 +22,23 @@ ROOT, OUT, LOCKF = sys.argv[1], sys.argv[2], sys.argv[3]
 LOCK = json.load(open(LOCKF))
 HERE = os.path.dirname(os.path.abspath(__file__))
 CFG = yaml.load(open(os.path.join(HERE, "registry.yaml")), Loader=L)
-for _p in CFG["providers"]:  # official providers document the release the lock resolved
+for _p in CFG["providers"]:  # providers document the release the lock resolved
     _l = LOCK["providers"].get(_p["id"])
     if _l and _p["id"] != "ack":
         _p["version"], _p["commit"] = _l["tag"], _l["commit"]
+TFMAP = yaml.load(open(os.path.join(HERE, CFG.get("terraform_map", "terraform-map.yaml"))), Loader=L) or {}
+TFLOCK = (LOCK.get("terraform") or {}).get("surfaces") or {}
+
+
+def tf_prefix(surface):
+    t = CFG["surfaces"][surface].get("terraform") or ""
+    return t.split("/")[-1].lower().replace("azurerm", "azurerm")
+
+
+def tf_area(surface, t):
+    rest = t[len(tf_prefix(surface)) + 1:]
+    w = rest.split("_")
+    return "zero_trust" if w[:2] == ["zero", "trust"] else w[0]
 FAMILIES = [(r"github\.com/GoogleCloudPlatform/cloud-foundation-fabric", "Cloud Foundation Fabric"),
             (r"github\.com/terraform-google-modules/", "Cloud Foundation Toolkit"),
             (r"github\.com/terraform-aws-modules/", "terraform-aws-modules"),
@@ -171,7 +184,12 @@ def src_url(prov, rel, ctrl, release):
         return f"https://github.com/aws-controllers-k8s/{ctrl}/blob/{release}/" + rel.split(f"/{ctrl}/", 1)[1]
     if prov["id"] == "aso":
         return f"{prov['repo']}/releases/tag/{prov['version']}"
-    return f"{prov['repo']}/blob/{prov['version']}/" + rel.split("/", 2)[2]
+    src = prov.get("source") or {}
+    if "asset" in src:
+        return src["asset"].format(tag=prov["version"])
+    inner = rel.split("/", 2)[2]
+    blob = "/-/blob/" if "gitlab.com" in prov["repo"] else "/blob/"
+    return f"{prov['repo']}{blob}{prov['version']}/" + inner
 
 
 # ---------------------------------------------------------------- docs
@@ -307,6 +325,17 @@ def build():
             k["repoUrl"] = (f"https://github.com/aws-controllers-k8s/{ctrl}/tree/{rel[0]}" if ctrl
                             else f"{prov['repo']}/tree/{prov['version']}")
             k["docRepoBase"] = f"{prov['repo']}/blob/{prov['version']}/"
+            ann = crd["metadata"].get("annotations") or {}
+            tfs = [t.strip() for t in (ann.get("hfl.dev/terraform") or "").split(",") if t.strip()]
+            tfs += (TFMAP.get(prov["id"]) or {}).get(kind) or []
+            if tfs:
+                k["api"] = [{"api": ann.get("hfl.dev/api-path", ""), "tf": sorted(set(tfs))}]
+            if ann.get("hfl.dev/readiness"):
+                k["readiness"] = ann["hfl.dev/readiness"]
+            if prov.get("manages"):
+                k["manages"] = prov["manages"]
+            if CFG["surfaces"][prov["surface"]].get("category", "cloud") != "cloud":
+                k["service"] = tf_area(prov["surface"], tfs[0]) if tfs else "other"
             kinds.append(k)
             shards[(prov["id"], group)].append(dict(k, spec=spec_fields, status=status_fields))
             n += 1
@@ -346,7 +375,7 @@ def build():
         docs, gaps = kind_docs(prov), readme_gaps(prov)
         tf = tf_index(prov)
         cov = coverage_index(prov, tf)
-        base = prov["extends"]
+        base = prov.get("extends")
         for (pid, group), ks in shards.items():
             for k in ks:
                 if k["surface"] != prov["surface"]:
@@ -365,6 +394,11 @@ def build():
                     k["doc"] = docs[(group, k["kind"])]
                 if (group, k["kind"]) in gaps:
                     k["gap"] = gaps[(group, k["kind"])]
+                elif k.get("readiness") == "fake" and k.get("api"):
+                    title = CFG["surfaces"][prov["surface"]]["title"]
+                    tfl = ", ".join(f"`{t}`" for t in k["api"][0]["tf"])
+                    k["gap"] = {"gap": f"Stands in for {tfl}, which {title}'s own operators do not cover. Generated from {title}'s OpenAPI spec "
+                                       f"(`{k['api'][0]['api']}`); proven against a fake API only, not yet run against {title}'s.", "upstream": ""}
                 # Overlay: the official kind this one complements (same name, same surface).
                 twins = [o for o in by_name[(k["surface"], k["kind"])] if o["provider"] == base
                          and (o["service"] == k["service"] or prov["surface"] != "aws")]
@@ -477,10 +511,31 @@ def build():
     provs = []
     for p in CFG["providers"]:
         mine = [k for k in kinds if k["provider"] == p["id"]]
-        provs.append({x: p.get(x) for x in ("id", "title", "surface", "publisher", "tier", "extends", "repo", "docs", "version", "commit")} |
+        provs.append({x: p.get(x) for x in ("id", "title", "surface", "publisher", "tier", "extends", "repo", "docs", "version", "commit", "manages")} |
                      {"nkinds": len(mine), "ngroups": len({k["group"] for k in mine}), "nservices": len({k["service"] for k in mine}),
                       "controllers": len({k["controller"]["repo"] for k in mine if k.get("controller")}) or None})
-    cat = {"generated": os.environ.get("GEN_DATE", ""), "lock": {"aso": LOCK["providers"]["aso"]["tag"], "config-connector": LOCK["providers"]["config-connector"]["tag"]}, "surfaces": CFG["surfaces"], "providers": provs,
+    # Terraform, by the numbers: how much of each surface's provider the kinds cover.
+    terraform = {"surfaces": {}, "top": (LOCK.get("terraform") or {}).get("top", [])}
+    for sid, tfp in TFLOCK.items():
+        if not tfp:
+            continue
+        res = set(tfp["resources"])
+        cov = {}
+        for k in kinds:
+            if k["surface"] != sid:
+                continue
+            for a in k.get("api") or []:
+                for t in a["tf"]:
+                    if t in res:
+                        cov.setdefault(t, set()).add(k["tier"])
+        tiers = {}
+        for t, ts in cov.items():
+            best = "official" if "official" in ts else ("community" if "community" in ts else "extension")
+            tiers[best] = tiers.get(best, 0) + 1
+        terraform["surfaces"][sid] = {k: tfp[k] for k in ("name", "rank", "downloads", "version", "tier")} | {
+            "total": len(res), "covered": len(cov), "byTier": tiers,
+            "uncovered": sorted(res - set(cov))}
+    cat = {"terraform": terraform, "generated": os.environ.get("GEN_DATE", ""), "lock": {"aso": LOCK["providers"]["aso"]["tag"], "config-connector": LOCK["providers"]["config-connector"]["tag"]}, "surfaces": CFG["surfaces"], "providers": provs,
            "kinds": kinds, "charts": charts}
     write_json("data/catalog.json", cat)
     for cf in charts_full:

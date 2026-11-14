@@ -29,6 +29,14 @@ build.sh <root> <site>
 
 `resolve.py` asks the sources' APIs instead of keeping pins here:
 
+- **Operators** (any provider with `release:` in registry.yaml): newest tag
+  matching the pattern, from GitHub's Releases API or git tags (GitLab);
+  `fetch_sources.py` takes their CRDs from a release asset or a repo path.
+- **Terraform, by the numbers.** For each surface's Terraform provider: rank,
+  downloads, latest version and full resource list (Terraform Registry API),
+  plus the top 200 providers for the long-tail table. Operator kinds map to
+  Terraform types in `terraform-map.yaml`; generated kinds carry theirs in the
+  CRD's `hfl.dev/terraform` annotation.
 - **Official providers.** Config Connector and ASO: latest stable release from
   GitHub's Releases API. ACK: every non-archived `*-controller` repository in
   `aws-controllers-k8s` (org listing API), each at its latest release.

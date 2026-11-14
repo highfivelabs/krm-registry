@@ -18,7 +18,7 @@ Terraform Registry's public API. Without a token it falls back to reading tags
 over git (`git ls-remote`), which needs no API at all, and to the ACK
 controller list that ack-extensions pins.
 """
-import glob, json, os, re, subprocess, sys, urllib.request
+import glob, json, os, re, subprocess, sys, urllib.parse, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
 import yaml
@@ -52,8 +52,8 @@ def owner_repo(url):
     return m.group(1), m.group(2)
 
 
-def git_tags(url):
-    """{tag: commit} for semver release tags, by git (no API)."""
+def git_tags(url, pattern=None):
+    """{tag: commit} for release tags (semver, or matching pattern), by git (no API)."""
     out = subprocess.run(["git", "ls-remote", "--tags", url], capture_output=True, text=True, timeout=120).stdout
     tags = {}
     for line in out.splitlines():
@@ -61,9 +61,65 @@ def git_tags(url):
         name = ref.removeprefix("refs/tags/")
         deref = name.endswith("^{}")
         name = name.removesuffix("^{}")
-        if SEMVER.match(name) and (deref or name not in tags):
+        ok = re.match(pattern, name) if pattern else SEMVER.match(name)
+        if ok and (deref or name not in tags):
             tags[name] = sha
     return tags
+
+
+def version_key(tag):
+    return tuple(int(x) for x in re.findall(r"[0-9]+", tag))
+
+
+def latest_tag(repo, pattern):
+    """Newest release tag matching pattern: GitHub's Releases API for GitHub repos with a
+    token, git tags otherwise (and for GitLab)."""
+    if TOKEN and "github.com" in repo:
+        try:
+            o, r = owner_repo(repo)
+            rels = [x for x in gh(f"repos/{o}/{r}/releases?per_page=100") if not x["draft"] and not x["prerelease"] and re.match(pattern, x["tag_name"])]
+            if rels:
+                best = max(rels, key=lambda x: version_key(x["tag_name"]))
+                ref = gh(f"repos/{o}/{r}/commits/{best['tag_name']}")
+                return {"tag": best["tag_name"], "commit": ref["sha"], "published": best["published_at"][:10], "via": "github-api"}
+        except Exception as e:
+            warn(f"github api {repo}", e)
+    tags = git_tags(repo + ".git", pattern)
+    if not tags:
+        return None
+    t = max(tags, key=version_key)
+    return {"tag": t, "commit": tags[t], "via": "git-tags"}
+
+
+def terraform_provider(name, top):
+    """Rank, downloads, latest version and resource list of a Terraform provider (Registry API)."""
+    p = next((x for x in top if x["name"].lower() == name.lower()), None)
+    if p is None:
+        return None
+    d = get(f"https://registry.terraform.io/v2/providers/{p['id']}?include=provider-versions")
+    v = max(d["included"], key=lambda v: v["attributes"]["published-at"])
+    res, page = [], 1
+    while True:
+        q = urllib.parse.urlencode({"filter[provider-version]": v["id"], "filter[category]": "resources", "page[size]": 100, "page[number]": page})
+        dd = get("https://registry.terraform.io/v2/provider-docs?" + q)
+        res += [x["attributes"]["slug"] for x in dd["data"] if x["attributes"].get("language", "hcl") == "hcl"]
+        if len(dd["data"]) < 100:
+            break
+        page += 1
+    prefix = name.split("/")[1].lower()
+    return {"name": p["name"], "rank": p["rank"], "downloads": p["downloads"], "tier": p["tier"],
+            "version": v["attributes"]["version"], "resources": sorted({f"{prefix}_{s}" for s in res})}
+
+
+def terraform_top(n=200):
+    out = []
+    for page in range(1, n // 100 + 1):
+        d = get(f"https://registry.terraform.io/v2/providers?page%5Bsize%5D=100&page%5Bnumber%5D={page}&sort=-downloads")
+        for p in d["data"]:
+            a = p["attributes"]
+            out.append({"id": p["id"], "name": a["full-name"], "downloads": a["downloads"], "tier": a["tier"],
+                        "rank": len(out) + 1, "description": (a.get("description") or "")[:160]})
+    return out
 
 
 def newest(tags, prefix=None):
@@ -147,6 +203,23 @@ def main():
                       and tuple(map(int, SEMVER.match(lt["version"]).groups())) > tuple(map(int, SEMVER.match(pin).groups())))
         lock["modules"][cid] = {"pinned": pin, "latest": lt.get("version"), "published": lt.get("published"),
                                 "via": lt.get("via"), "behind": behind}
+    # Operators and other providers that name a release pattern.
+    cfg = yaml.safe_load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "registry.yaml")))
+    for p in cfg["providers"]:
+        if p.get("release"):
+            rel = latest_tag(p["repo"], p["release"]["tags"])
+            if rel:
+                lock["providers"][p["id"]] = rel
+            else:
+                print(f"{p['id']}: no release matching {p['release']['tags']}", file=sys.stderr)
+
+    # Terraform, by the numbers: every surface's provider, and the top providers overall.
+    top = terraform_top()
+    lock["terraform"] = {"top": top, "surfaces": {}}
+    for sid, s in cfg["surfaces"].items():
+        if s.get("terraform"):
+            lock["terraform"]["surfaces"][sid] = terraform_provider(s["terraform"], top)
+
     json.dump(lock, open(LOCK, "w"), indent=1)
     n = len(lock["providers"]["ack"]["controllers"])
     print(f"kcc {kcc['tag']} · aso {aso['tag']} · {n} ACK controllers · "

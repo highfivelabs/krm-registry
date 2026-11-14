@@ -16,7 +16,7 @@ from collections import defaultdict
 
 import yaml
 
-SURF = {"gcp": "Google Cloud", "aws": "Amazon Web Services", "azure": "Microsoft Azure"}
+SURF = {}  # filled from the catalog's surfaces
 TFNOTE = ("Terraform equivalents manage the same cloud resource. They are not used here: "
           "a kind is a Kubernetes object that its provider's controller keeps in sync, with no state file and no plan/apply.")
 
@@ -181,6 +181,7 @@ def kind_page(k, providers, charts):
 
 
 def write_agent_tree(out, cat, full_kinds, charts_full):
+    SURF.update({k: v["title"] for k, v in cat["surfaces"].items()})
     w = Writer(out)
     providers = {p["id"]: p for p in cat["providers"]}
     by_surf_svc = defaultdict(lambda: defaultdict(list))
@@ -268,6 +269,17 @@ def write_agent_tree(out, cat, full_kinds, charts_full):
         L += [f"- {link(me, kind_path(k), k['kind'])} `{k['group']}/{k['version']}`, {k['provider']} ({k['tier']}, {k['stability']})" for k in ks]
         w(me, "\n".join(L))
 
+    # Terraform coverage.
+    me = "terraform/index.md"
+    L = ["# Terraform, by the numbers", "", TFNOTE, "",
+         "| Surface | Terraform provider | Rank by downloads | Resources | Covered | Official | Community | Extension |",
+         "| --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for sid, t in cat["terraform"]["surfaces"].items():
+        b = t["byTier"]
+        L.append(f"| {link(me, f'{sid}/index.md', SURF[sid])} | `{t['name']}` {t['version']} | #{t['rank']} ({t['downloads']:,}) | {t['total']} | "
+                 f"{t['covered']} ({100 * t['covered'] // max(t['total'], 1)}%) | {b.get('official', 0)} | {b.get('community', 0)} | {b.get('extension', 0)} |")
+    w(me, "\n".join(L))
+
     # Entry point.
     nk, nc = len(full_kinds), len(charts_full)
     L = ["# KRM Registry", "",
@@ -275,7 +287,8 @@ def write_agent_tree(out, cat, full_kinds, charts_full):
          f"Azure Service Operator, and High Five Labs' extensions that fill their gaps), and {nc} Helm chart packages built from them.", "",
          "Every page below is Markdown. A kind page has front matter, an example manifest, and tables of every spec and status field.", "",
          "## Start here", "",
-         *[f"- [{SURF[s]}]({s}/index.md): services, then the kinds in each" for s in ("gcp", "aws", "azure")],
+         *[f"- [{SURF[s]}]({s}/index.md): services, then the kinds in each" for s in cat["surfaces"] if any(k["surface"] == s for k in full_kinds)],
+         "- [Terraform, by the numbers](terraform/index.md): how much of each Terraform provider the kinds cover",
          "- [Providers](providers/index.md): each provider's kinds by service",
          "- [Packages](packages/index.md): charts, the Terraform module each ports, the kinds each renders", "",
          "## Look up directly", "",
