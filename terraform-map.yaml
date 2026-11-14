@@ -1,5 +1,6 @@
 # Terraform resource types each operator kind stands in for, by provider id.
 # Hand-mapped from the operators' CRDs and the Terraform providers' resource lists.
+# Keys are Kind, or group/Kind where a kind name repeats across groups (OSOK).
 adyanth-cloudflare-operator:
   ClusterTunnel:
   - cloudflare_zero_trust_tunnel_cloudflared
@@ -9,6 +10,80 @@ adyanth-cloudflare-operator:
   - cloudflare_zero_trust_tunnel_cloudflared_config
   TunnelBinding:
   - cloudflare_dns_record
+atlas-kubernetes-operator:
+  AtlasBackupCompliancePolicy:
+  - mongodbatlas_backup_compliance_policy
+  AtlasBackupPolicy:
+  - mongodbatlas_cloud_backup_schedule
+  AtlasBackupSchedule:
+  - mongodbatlas_cloud_backup_schedule
+  AtlasCustomRole:
+  - mongodbatlas_custom_db_role
+  AtlasDataFederation:
+  - mongodbatlas_federated_database_instance
+  AtlasDatabaseUser:
+  - mongodbatlas_database_user
+  - mongodbatlas_x509_authentication_database_user
+  AtlasDeployment:
+  - mongodbatlas_advanced_cluster
+  - mongodbatlas_cluster
+  - mongodbatlas_serverless_instance
+  - mongodbatlas_flex_cluster
+  - mongodbatlas_search_index
+  AtlasFederatedAuth:
+  - mongodbatlas_federated_settings_org_config
+  - mongodbatlas_federated_settings_org_role_mapping
+  - mongodbatlas_federated_settings_identity_provider
+  AtlasIPAccessList:
+  - mongodbatlas_project_ip_access_list
+  AtlasNetworkContainer:
+  - mongodbatlas_network_container
+  AtlasNetworkPeering:
+  - mongodbatlas_network_peering
+  AtlasPrivateEndpoint:
+  - mongodbatlas_privatelink_endpoint
+  - mongodbatlas_privatelink_endpoint_service
+  AtlasProject:
+  - mongodbatlas_project
+  - mongodbatlas_maintenance_window
+  - mongodbatlas_auditing
+  - mongodbatlas_encryption_at_rest
+  - mongodbatlas_alert_configuration
+  - mongodbatlas_cloud_provider_access_setup
+  - mongodbatlas_cloud_provider_access_authorization
+  - mongodbatlas_custom_dns_configuration_cluster_aws
+  - mongodbatlas_team_project_assignment
+  AtlasSearchIndexConfig:
+  - mongodbatlas_search_index
+  AtlasStreamConnection:
+  - mongodbatlas_stream_connection
+  AtlasStreamInstance:
+  - mongodbatlas_stream_instance
+  AtlasTeam:
+  - mongodbatlas_team
+  AtlasThirdPartyIntegration:
+  - mongodbatlas_third_party_integration
+  Cluster:
+  - mongodbatlas_advanced_cluster
+  DatabaseUser:
+  - mongodbatlas_database_user
+  FlexCluster:
+  - mongodbatlas_flex_cluster
+  Group:
+  - mongodbatlas_project
+  IPAccessListEntry:
+  - mongodbatlas_project_ip_access_list
+databricks-kube-operator:
+  DatabricksJob:
+  - databricks_job
+  DatabricksSecret:
+  - databricks_secret
+  DatabricksSecretScope:
+  - databricks_secret_scope
+  GitCredential:
+  - databricks_git_credential
+  Repo:
+  - databricks_repo
 datadog-operator:
   DatadogDashboard:
   - datadog_dashboard
@@ -59,6 +134,649 @@ grafana-operator:
   GrafanaServiceAccount:
   - grafana_service_account
   - grafana_service_account_token
+oci-service-operator:
+  adm.oracle.com/KnowledgeBase:
+  - oci_adm_knowledge_base
+  aidataplatform.oracle.com/AiDataPlatform:
+  - oci_ai_data_platform_ai_data_platform
+  aidocument.oracle.com/Project:
+  - oci_ai_document_project
+  ailanguage.oracle.com/Project:
+  - oci_ai_language_project
+  aivision.oracle.com/Project:
+  - oci_ai_vision_project
+  analytics.oracle.com/AnalyticsInstance:
+  - oci_analytics_analytics_instance
+  announcementsservice.oracle.com/AnnouncementSubscription:
+  - oci_announcements_service_announcement_subscription
+  apiaccesscontrol.oracle.com/PrivilegedApiControl:
+  - oci_apiaccesscontrol_privileged_api_control
+  apigateway.oracle.com/ApiGatewayDeployment:
+  - oci_apigateway_deployment
+  apiplatform.oracle.com/ApiPlatformInstance:
+  - oci_api_platform_api_platform_instance
+  apmconfig.oracle.com/Config:
+  - oci_apm_config_config
+  apmsynthetics.oracle.com/Script:
+  - oci_apm_synthetics_script
+  apmtraces.oracle.com/ScheduledQuery:
+  - oci_apm_traces_scheduled_query
+  artifacts.oracle.com/ContainerImageSignature:
+  - oci_artifacts_container_image_signature
+  artifacts.oracle.com/ContainerRepository:
+  - oci_artifacts_container_repository
+  artifacts.oracle.com/Repository:
+  - oci_artifacts_repository
+  autoscaling.oracle.com/AutoScalingConfiguration:
+  - oci_autoscaling_auto_scaling_configuration
+  bastion.oracle.com/Bastion:
+  - oci_bastion_bastion
+  bastion.oracle.com/Session:
+  - oci_bastion_session
+  batch.oracle.com/BatchContext:
+  - oci_batch_batch_context
+  batch.oracle.com/BatchJobPool:
+  - oci_batch_batch_job_pool
+  batch.oracle.com/BatchTaskEnvironment:
+  - oci_batch_batch_task_environment
+  batch.oracle.com/BatchTaskProfile:
+  - oci_batch_batch_task_profile
+  bds.oracle.com/BdsInstance:
+  - oci_bds_bds_instance
+  blockchain.oracle.com/BlockchainPlatform:
+  - oci_blockchain_blockchain_platform
+  blockchain.oracle.com/Osn:
+  - oci_blockchain_osn
+  blockchain.oracle.com/Peer:
+  - oci_blockchain_peer
+  budget.oracle.com/Budget:
+  - oci_budget_budget
+  capacitymanagement.oracle.com/OccCapacityRequest:
+  - oci_capacity_management_occ_capacity_request
+  certificatesmanagement.oracle.com/CaBundle:
+  - oci_certificates_management_ca_bundle
+  cloudbridge.oracle.com/Agent:
+  - oci_cloud_bridge_agent
+  cloudbridge.oracle.com/AgentDependency:
+  - oci_cloud_bridge_agent_dependency
+  cloudbridge.oracle.com/Asset:
+  - oci_cloud_bridge_asset
+  cloudbridge.oracle.com/AssetSource:
+  - oci_cloud_bridge_asset_source
+  cloudbridge.oracle.com/DiscoverySchedule:
+  - oci_cloud_bridge_discovery_schedule
+  cloudbridge.oracle.com/Environment:
+  - oci_cloud_bridge_environment
+  cloudbridge.oracle.com/Inventory:
+  - oci_cloud_bridge_inventory
+  cloudguard.oracle.com/AdhocQuery:
+  - oci_cloud_guard_adhoc_query
+  cloudguard.oracle.com/DataMaskRule:
+  - oci_cloud_guard_data_mask_rule
+  cloudguard.oracle.com/DataSource:
+  - oci_cloud_guard_data_source
+  cloudguard.oracle.com/DetectorRecipe:
+  - oci_cloud_guard_detector_recipe
+  cloudguard.oracle.com/ManagedList:
+  - oci_cloud_guard_managed_list
+  cloudguard.oracle.com/ResponderRecipe:
+  - oci_cloud_guard_responder_recipe
+  cloudguard.oracle.com/SavedQuery:
+  - oci_cloud_guard_saved_query
+  cloudguard.oracle.com/SecurityRecipe:
+  - oci_cloud_guard_security_recipe
+  cloudguard.oracle.com/SecurityZone:
+  - oci_cloud_guard_security_zone
+  cloudguard.oracle.com/Target:
+  - oci_cloud_guard_target
+  cloudguard.oracle.com/WlpAgent:
+  - oci_cloud_guard_wlp_agent
+  cloudmigrations.oracle.com/Migration:
+  - oci_cloud_migrations_migration
+  cloudmigrations.oracle.com/MigrationAsset:
+  - oci_cloud_migrations_migration_asset
+  cloudmigrations.oracle.com/MigrationPlan:
+  - oci_cloud_migrations_migration_plan
+  cloudmigrations.oracle.com/ReplicationSchedule:
+  - oci_cloud_migrations_replication_schedule
+  cloudmigrations.oracle.com/TargetAsset:
+  - oci_cloud_migrations_target_asset
+  clusterplacementgroups.oracle.com/ClusterPlacementGroup:
+  - oci_cluster_placement_groups_cluster_placement_group
+  computecloudatcustomer.oracle.com/CccInfrastructure:
+  - oci_compute_cloud_at_customer_ccc_infrastructure
+  computecloudatcustomer.oracle.com/CccUpgradeSchedule:
+  - oci_compute_cloud_at_customer_ccc_upgrade_schedule
+  containerengine.oracle.com/Cluster:
+  - oci_containerengine_cluster
+  containerengine.oracle.com/NodePool:
+  - oci_containerengine_node_pool
+  containerinstances.oracle.com/ContainerInstance:
+  - oci_container_instances_container_instance
+  core.oracle.com/Drg:
+  - oci_core_drg
+  core.oracle.com/Instance:
+  - oci_core_instance
+  core.oracle.com/InternetGateway:
+  - oci_core_internet_gateway
+  core.oracle.com/NatGateway:
+  - oci_core_nat_gateway
+  core.oracle.com/NetworkSecurityGroup:
+  - oci_core_network_security_group
+  core.oracle.com/RouteTable:
+  - oci_core_route_table
+  core.oracle.com/SecurityList:
+  - oci_core_security_list
+  core.oracle.com/ServiceGateway:
+  - oci_core_service_gateway
+  core.oracle.com/Subnet:
+  - oci_core_subnet
+  core.oracle.com/Vcn:
+  - oci_core_vcn
+  database.oracle.com/AutonomousDatabase:
+  - oci_database_autonomous_database
+  databasemigration.oracle.com/Assessment:
+  - oci_database_migration_assessment
+  databasemigration.oracle.com/Connection:
+  - oci_database_migration_connection
+  databasemigration.oracle.com/Migration:
+  - oci_database_migration_migration
+  databasetools.oracle.com/DatabaseToolsConnection:
+  - oci_database_tools_database_tools_connection
+  datacatalog.oracle.com/Catalog:
+  - oci_datacatalog_catalog
+  datacatalog.oracle.com/CatalogPrivateEndpoint:
+  - oci_datacatalog_catalog_private_endpoint
+  datacatalog.oracle.com/Connection:
+  - oci_datacatalog_connection
+  datacatalog.oracle.com/DataAsset:
+  - oci_datacatalog_data_asset
+  datacatalog.oracle.com/Metastore:
+  - oci_datacatalog_metastore
+  dataflow.oracle.com/Application:
+  - oci_dataflow_application
+  dataintegration.oracle.com/Workspace:
+  - oci_dataintegration_workspace
+  datalabelingservice.oracle.com/Dataset:
+  - oci_data_labeling_service_dataset
+  datasafe.oracle.com/AlertPolicy:
+  - oci_data_safe_alert_policy
+  datasafe.oracle.com/AlertPolicyRule:
+  - oci_data_safe_alert_policy_rule
+  datasafe.oracle.com/AttributeSet:
+  - oci_data_safe_attribute_set
+  datasafe.oracle.com/AuditArchiveRetrieval:
+  - oci_data_safe_audit_archive_retrieval
+  datasafe.oracle.com/AuditProfile:
+  - oci_data_safe_audit_profile
+  datasafe.oracle.com/DataSafePrivateEndpoint:
+  - oci_data_safe_data_safe_private_endpoint
+  datasafe.oracle.com/DiscoveryJob:
+  - oci_data_safe_discovery_job
+  datasafe.oracle.com/LibraryMaskingFormat:
+  - oci_data_safe_library_masking_format
+  datasafe.oracle.com/MaskingPolicy:
+  - oci_data_safe_masking_policy
+  datasafe.oracle.com/OnPremConnector:
+  - oci_data_safe_on_prem_connector
+  datasafe.oracle.com/ReportDefinition:
+  - oci_data_safe_report_definition
+  datasafe.oracle.com/SdmMaskingPolicyDifference:
+  - oci_data_safe_sdm_masking_policy_difference
+  datasafe.oracle.com/SecurityAssessment:
+  - oci_data_safe_security_assessment
+  datasafe.oracle.com/SecurityPolicy:
+  - oci_data_safe_security_policy
+  datasafe.oracle.com/SecurityPolicyConfig:
+  - oci_data_safe_security_policy_config
+  datasafe.oracle.com/SecurityPolicyDeployment:
+  - oci_data_safe_security_policy_deployment
+  datasafe.oracle.com/SensitiveDataModel:
+  - oci_data_safe_sensitive_data_model
+  datasafe.oracle.com/SensitiveType:
+  - oci_data_safe_sensitive_type
+  datasafe.oracle.com/SensitiveTypeGroup:
+  - oci_data_safe_sensitive_type_group
+  datasafe.oracle.com/SensitiveTypesExport:
+  - oci_data_safe_sensitive_types_export
+  datasafe.oracle.com/SqlCollection:
+  - oci_data_safe_sql_collection
+  datasafe.oracle.com/TargetAlertPolicyAssociation:
+  - oci_data_safe_target_alert_policy_association
+  datasafe.oracle.com/TargetDatabase:
+  - oci_data_safe_target_database
+  datasafe.oracle.com/TargetDatabaseGroup:
+  - oci_data_safe_target_database_group
+  datasafe.oracle.com/UnifiedAuditPolicy:
+  - oci_data_safe_unified_audit_policy
+  datasafe.oracle.com/UserAssessment:
+  - oci_data_safe_user_assessment
+  datascience.oracle.com/Project:
+  - oci_datascience_project
+  dbmulticloud.oracle.com/MultiCloudResourceDiscovery:
+  - oci_dbmulticloud_multi_cloud_resource_discovery
+  dbmulticloud.oracle.com/OracleDbAwsIdentityConnector:
+  - oci_dbmulticloud_oracle_db_aws_identity_connector
+  dbmulticloud.oracle.com/OracleDbAwsKey:
+  - oci_dbmulticloud_oracle_db_aws_key
+  dbmulticloud.oracle.com/OracleDbAzureBlobContainer:
+  - oci_dbmulticloud_oracle_db_azure_blob_container
+  dbmulticloud.oracle.com/OracleDbAzureBlobMount:
+  - oci_dbmulticloud_oracle_db_azure_blob_mount
+  dbmulticloud.oracle.com/OracleDbAzureConnector:
+  - oci_dbmulticloud_oracle_db_azure_connector
+  dbmulticloud.oracle.com/OracleDbAzureVault:
+  - oci_dbmulticloud_oracle_db_azure_vault
+  dbmulticloud.oracle.com/OracleDbAzureVaultAssociation:
+  - oci_dbmulticloud_oracle_db_azure_vault_association
+  dbmulticloud.oracle.com/OracleDbGcpIdentityConnector:
+  - oci_dbmulticloud_oracle_db_gcp_identity_connector
+  dbmulticloud.oracle.com/OracleDbGcpKeyRing:
+  - oci_dbmulticloud_oracle_db_gcp_key_ring
+  delegateaccesscontrol.oracle.com/DelegationControl:
+  - oci_delegate_access_control_delegation_control
+  demandsignal.oracle.com/OccDemandSignal:
+  - oci_demand_signal_occ_demand_signal
+  desktops.oracle.com/DesktopPool:
+  - oci_desktops_desktop_pool
+  devops.oracle.com/BuildPipeline:
+  - oci_devops_build_pipeline
+  devops.oracle.com/DeployArtifact:
+  - oci_devops_deploy_artifact
+  devops.oracle.com/DeployPipeline:
+  - oci_devops_deploy_pipeline
+  devops.oracle.com/Project:
+  - oci_devops_project
+  devops.oracle.com/Repository:
+  - oci_devops_repository
+  devops.oracle.com/Trigger:
+  - oci_devops_trigger
+  dif.oracle.com/Stack:
+  - oci_dif_stack
+  disasterrecovery.oracle.com/DrPlan:
+  - oci_disaster_recovery_dr_plan
+  disasterrecovery.oracle.com/DrProtectionGroup:
+  - oci_disaster_recovery_dr_protection_group
+  dns.oracle.com/SteeringPolicy:
+  - oci_dns_steering_policy
+  dns.oracle.com/SteeringPolicyAttachment:
+  - oci_dns_steering_policy_attachment
+  dns.oracle.com/TsigKey:
+  - oci_dns_tsig_key
+  dns.oracle.com/View:
+  - oci_dns_view
+  dns.oracle.com/Zone:
+  - oci_dns_zone
+  email.oracle.com/Dkim:
+  - oci_email_dkim
+  email.oracle.com/EmailDomain:
+  - oci_email_email_domain
+  email.oracle.com/Sender:
+  - oci_email_sender
+  email.oracle.com/Suppression:
+  - oci_email_suppression
+  events.oracle.com/Rule:
+  - oci_events_rule
+  filestorage.oracle.com/Export:
+  - oci_file_storage_export
+  filestorage.oracle.com/FileSystem:
+  - oci_file_storage_file_system
+  filestorage.oracle.com/FilesystemSnapshotPolicy:
+  - oci_file_storage_filesystem_snapshot_policy
+  filestorage.oracle.com/MountTarget:
+  - oci_file_storage_mount_target
+  filestorage.oracle.com/OutboundConnector:
+  - oci_file_storage_outbound_connector
+  filestorage.oracle.com/Replication:
+  - oci_file_storage_replication
+  filestorage.oracle.com/Snapshot:
+  - oci_file_storage_snapshot
+  fleetappsmanagement.oracle.com/CatalogItem:
+  - oci_fleet_apps_management_catalog_item
+  fleetappsmanagement.oracle.com/CompliancePolicyRule:
+  - oci_fleet_apps_management_compliance_policy_rule
+  fleetappsmanagement.oracle.com/Fleet:
+  - oci_fleet_apps_management_fleet
+  fleetappsmanagement.oracle.com/FleetCredential:
+  - oci_fleet_apps_management_fleet_credential
+  fleetappsmanagement.oracle.com/FleetProperty:
+  - oci_fleet_apps_management_fleet_property
+  fleetappsmanagement.oracle.com/FleetResource:
+  - oci_fleet_apps_management_fleet_resource
+  fleetappsmanagement.oracle.com/MaintenanceWindow:
+  - oci_fleet_apps_management_maintenance_window
+  fleetappsmanagement.oracle.com/Onboarding:
+  - oci_fleet_apps_management_onboarding
+  fleetappsmanagement.oracle.com/Patch:
+  - oci_fleet_apps_management_patch
+  fleetappsmanagement.oracle.com/PlatformConfiguration:
+  - oci_fleet_apps_management_platform_configuration
+  fleetappsmanagement.oracle.com/Property:
+  - oci_fleet_apps_management_property
+  fleetappsmanagement.oracle.com/Provision:
+  - oci_fleet_apps_management_provision
+  fleetappsmanagement.oracle.com/Runbook:
+  - oci_fleet_apps_management_runbook
+  fleetappsmanagement.oracle.com/RunbookVersion:
+  - oci_fleet_apps_management_runbook_version
+  fleetappsmanagement.oracle.com/SchedulerDefinition:
+  - oci_fleet_apps_management_scheduler_definition
+  fleetappsmanagement.oracle.com/TaskRecord:
+  - oci_fleet_apps_management_task_record
+  fleetsoftwareupdate.oracle.com/FsuCollection:
+  - oci_fleet_software_update_fsu_collection
+  fleetsoftwareupdate.oracle.com/FsuCycle:
+  - oci_fleet_software_update_fsu_cycle
+  fleetsoftwareupdate.oracle.com/FsuReadinessCheck:
+  - oci_fleet_software_update_fsu_readiness_check
+  functions.oracle.com/Application:
+  - oci_functions_application
+  functions.oracle.com/Function:
+  - oci_functions_function
+  fusionapps.oracle.com/FusionEnvironment:
+  - oci_fusion_apps_fusion_environment
+  fusionapps.oracle.com/FusionEnvironmentFamily:
+  - oci_fusion_apps_fusion_environment_family
+  gdp.oracle.com/GdpPipeline:
+  - oci_gdp_gdp_pipeline
+  generativeai.oracle.com/DedicatedAiCluster:
+  - oci_generative_ai_dedicated_ai_cluster
+  generativeai.oracle.com/Endpoint:
+  - oci_generative_ai_endpoint
+  generativeai.oracle.com/Model:
+  - oci_generative_ai_model
+  generativeaiagent.oracle.com/Agent:
+  - oci_generative_ai_agent_agent
+  generativeaiagent.oracle.com/AgentEndpoint:
+  - oci_generative_ai_agent_agent_endpoint
+  generativeaiagent.oracle.com/DataSource:
+  - oci_generative_ai_agent_data_source
+  generativeaiagent.oracle.com/KnowledgeBase:
+  - oci_generative_ai_agent_knowledge_base
+  goldengate.oracle.com/Connection:
+  - oci_golden_gate_connection
+  goldengate.oracle.com/ConnectionAssignment:
+  - oci_golden_gate_connection_assignment
+  goldengate.oracle.com/DatabaseRegistration:
+  - oci_golden_gate_database_registration
+  goldengate.oracle.com/Deployment:
+  - oci_golden_gate_deployment
+  goldengate.oracle.com/DeploymentBackup:
+  - oci_golden_gate_deployment_backup
+  goldengate.oracle.com/Pipeline:
+  - oci_golden_gate_pipeline
+  healthchecks.oracle.com/HttpMonitor:
+  - oci_health_checks_http_monitor
+  healthchecks.oracle.com/PingMonitor:
+  - oci_health_checks_ping_monitor
+  identity.oracle.com/Compartment:
+  - oci_identity_compartment
+  integration.oracle.com/IntegrationInstance:
+  - oci_integration_integration_instance
+  iot.oracle.com/DigitalTwinAdapter:
+  - oci_iot_digital_twin_adapter
+  iot.oracle.com/DigitalTwinInstance:
+  - oci_iot_digital_twin_instance
+  iot.oracle.com/DigitalTwinModel:
+  - oci_iot_digital_twin_model
+  iot.oracle.com/DigitalTwinRelationship:
+  - oci_iot_digital_twin_relationship
+  iot.oracle.com/IotDomain:
+  - oci_iot_iot_domain
+  iot.oracle.com/IotDomainGroup:
+  - oci_iot_iot_domain_group
+  jms.oracle.com/Fleet:
+  - oci_jms_fleet
+  jms.oracle.com/JmsPlugin:
+  - oci_jms_jms_plugin
+  jmsjavadownloads.oracle.com/JavaDownloadToken:
+  - oci_jms_java_downloads_java_download_token
+  jmsutils.oracle.com/AnalyzeApplicationsConfiguration:
+  - oci_jms_utils_analyze_applications_configuration
+  jmsutils.oracle.com/SubscriptionAcknowledgmentConfiguration:
+  - oci_jms_utils_subscription_acknowledgment_configuration
+  licensemanager.oracle.com/LicenseRecord:
+  - oci_license_manager_license_record
+  licensemanager.oracle.com/ProductLicense:
+  - oci_license_manager_product_license
+  limits.oracle.com/Quota:
+  - oci_limits_quota
+  loadbalancer.oracle.com/Backend:
+  - oci_load_balancer_backend
+  loadbalancer.oracle.com/BackendSet:
+  - oci_load_balancer_backend_set
+  loadbalancer.oracle.com/Certificate:
+  - oci_load_balancer_certificate
+  loadbalancer.oracle.com/Hostname:
+  - oci_load_balancer_hostname
+  loadbalancer.oracle.com/Listener:
+  - oci_load_balancer_listener
+  loadbalancer.oracle.com/LoadBalancer:
+  - oci_load_balancer_load_balancer
+  loadbalancer.oracle.com/PathRouteSet:
+  - oci_load_balancer_path_route_set
+  loadbalancer.oracle.com/RuleSet:
+  - oci_load_balancer_rule_set
+  loadbalancer.oracle.com/SSLCipherSuite:
+  - oci_load_balancer_ssl_cipher_suite
+  loganalytics.oracle.com/LogAnalyticsEntity:
+  - oci_log_analytics_log_analytics_entity
+  loganalytics.oracle.com/LogAnalyticsEntityType:
+  - oci_log_analytics_log_analytics_entity_type
+  loganalytics.oracle.com/LogAnalyticsLogGroup:
+  - oci_log_analytics_log_analytics_log_group
+  loganalytics.oracle.com/LogAnalyticsObjectCollectionRule:
+  - oci_log_analytics_log_analytics_object_collection_rule
+  logging.oracle.com/Log:
+  - oci_logging_log
+  logging.oracle.com/LogGroup:
+  - oci_logging_log_group
+  logging.oracle.com/LogSavedSearch:
+  - oci_logging_log_saved_search
+  logging.oracle.com/UnifiedAgentConfiguration:
+  - oci_logging_unified_agent_configuration
+  lustrefilestorage.oracle.com/LustreFileSystem:
+  - oci_lustre_file_storage_lustre_file_system
+  lustrefilestorage.oracle.com/ObjectStorageLink:
+  - oci_lustre_file_storage_object_storage_link
+  managedkafka.oracle.com/KafkaCluster:
+  - oci_managed_kafka_kafka_cluster
+  managedkafka.oracle.com/KafkaClusterConfig:
+  - oci_managed_kafka_kafka_cluster_config
+  managementagent.oracle.com/ManagementAgentInstallKey:
+  - oci_management_agent_management_agent_install_key
+  managementagent.oracle.com/NamedCredential:
+  - oci_management_agent_named_credential
+  managementdashboard.oracle.com/ManagementSavedSearch:
+  - oci_management_dashboard_management_saved_search
+  marketplace.oracle.com/AcceptedAgreement:
+  - oci_marketplace_accepted_agreement
+  marketplace.oracle.com/Publication:
+  - oci_marketplace_publication
+  mediaservices.oracle.com/MediaAsset:
+  - oci_media_services_media_asset
+  mediaservices.oracle.com/MediaWorkflow:
+  - oci_media_services_media_workflow
+  mediaservices.oracle.com/MediaWorkflowConfiguration:
+  - oci_media_services_media_workflow_configuration
+  monitoring.oracle.com/Alarm:
+  - oci_monitoring_alarm
+  monitoring.oracle.com/AlarmSuppression:
+  - oci_monitoring_alarm_suppression
+  networkfirewall.oracle.com/NetworkFirewall:
+  - oci_network_firewall_network_firewall
+  networkfirewall.oracle.com/NetworkFirewallPolicy:
+  - oci_network_firewall_network_firewall_policy
+  networkloadbalancer.oracle.com/Backend:
+  - oci_network_load_balancer_backend
+  networkloadbalancer.oracle.com/BackendSet:
+  - oci_network_load_balancer_backend_set
+  networkloadbalancer.oracle.com/Listener:
+  - oci_network_load_balancer_listener
+  networkloadbalancer.oracle.com/NetworkLoadBalancer:
+  - oci_network_load_balancer_network_load_balancer
+  nosql.oracle.com/Table:
+  - oci_nosql_table
+  objectstorage.oracle.com/Bucket:
+  - oci_objectstorage_bucket
+  oce.oracle.com/OceInstance:
+  - oci_oce_oce_instance
+  ocvp.oracle.com/Cluster:
+  - oci_ocvp_cluster
+  ocvp.oracle.com/EsxiHost:
+  - oci_ocvp_esxi_host
+  ocvp.oracle.com/Sddc:
+  - oci_ocvp_sddc
+  oda.oracle.com/OdaInstance:
+  - oci_oda_oda_instance
+  oda.oracle.com/OdaPrivateEndpoint:
+  - oci_oda_oda_private_endpoint
+  oda.oracle.com/OdaPrivateEndpointAttachment:
+  - oci_oda_oda_private_endpoint_attachment
+  oda.oracle.com/OdaPrivateEndpointScanProxy:
+  - oci_oda_oda_private_endpoint_scan_proxy
+  ons.oracle.com/Subscription:
+  - oci_ons_subscription
+  opa.oracle.com/OpaInstance:
+  - oci_opa_opa_instance
+  opensearch.oracle.com/OpensearchCluster:
+  - oci_opensearch_opensearch_cluster
+  operatoraccesscontrol.oracle.com/OperatorControl:
+  - oci_operator_access_control_operator_control
+  operatoraccesscontrol.oracle.com/OperatorControlAssignment:
+  - oci_operator_access_control_operator_control_assignment
+  opsi.oracle.com/AwrHub:
+  - oci_opsi_awr_hub
+  opsi.oracle.com/AwrHubSource:
+  - oci_opsi_awr_hub_source
+  opsi.oracle.com/ChargebackPlan:
+  - oci_opsi_chargeback_plan
+  opsi.oracle.com/DatabaseInsight:
+  - oci_opsi_database_insight
+  opsi.oracle.com/EnterpriseManagerBridge:
+  - oci_opsi_enterprise_manager_bridge
+  opsi.oracle.com/ExadataInsight:
+  - oci_opsi_exadata_insight
+  opsi.oracle.com/HostInsight:
+  - oci_opsi_host_insight
+  opsi.oracle.com/NewsReport:
+  - oci_opsi_news_report
+  opsi.oracle.com/OperationsInsightsPrivateEndpoint:
+  - oci_opsi_operations_insights_private_endpoint
+  opsi.oracle.com/OperationsInsightsWarehouse:
+  - oci_opsi_operations_insights_warehouse
+  opsi.oracle.com/OperationsInsightsWarehouseUser:
+  - oci_opsi_operations_insights_warehouse_user
+  opsi.oracle.com/OpsiConfiguration:
+  - oci_opsi_opsi_configuration
+  optimizer.oracle.com/Profile:
+  - oci_optimizer_profile
+  osmanagementhub.oracle.com/LifecycleEnvironment:
+  - oci_os_management_hub_lifecycle_environment
+  osmanagementhub.oracle.com/ManagedInstanceGroup:
+  - oci_os_management_hub_managed_instance_group
+  osmanagementhub.oracle.com/ManagementStation:
+  - oci_os_management_hub_management_station
+  osmanagementhub.oracle.com/Profile:
+  - oci_os_management_hub_profile
+  osmanagementhub.oracle.com/ScheduledJob:
+  - oci_os_management_hub_scheduled_job
+  osmanagementhub.oracle.com/SoftwareSource:
+  - oci_os_management_hub_software_source
+  psa.oracle.com/PrivateServiceAccess:
+  - oci_psa_private_service_acces
+  psql.oracle.com/DbSystem:
+  - oci_psql_db_system
+  queue.oracle.com/Queue:
+  - oci_queue_queue
+  recovery.oracle.com/ProtectedDatabase:
+  - oci_recovery_protected_database
+  recovery.oracle.com/ProtectionPolicy:
+  - oci_recovery_protection_policy
+  recovery.oracle.com/RecoveryServiceSubnet:
+  - oci_recovery_recovery_service_subnet
+  redis.oracle.com/RedisCluster:
+  - oci_redis_redis_cluster
+  resourceanalytics.oracle.com/MonitoredRegion:
+  - oci_resource_analytics_monitored_region
+  resourceanalytics.oracle.com/ResourceAnalyticsInstance:
+  - oci_resource_analytics_resource_analytics_instance
+  resourceanalytics.oracle.com/TenancyAttachment:
+  - oci_resource_analytics_tenancy_attachment
+  resourcemanager.oracle.com/PrivateEndpoint:
+  - oci_resourcemanager_private_endpoint
+  resourcescheduler.oracle.com/Schedule:
+  - oci_resource_scheduler_schedule
+  sch.oracle.com/ServiceConnector:
+  - oci_sch_service_connector
+  securityattribute.oracle.com/SecurityAttribute:
+  - oci_security_attribute_security_attribute
+  securityattribute.oracle.com/SecurityAttributeNamespace:
+  - oci_security_attribute_security_attribute_namespace
+  self.oracle.com/Subscription:
+  - oci_self_subscription
+  servicecatalog.oracle.com/PrivateApplication:
+  - oci_service_catalog_private_application
+  servicecatalog.oracle.com/ServiceCatalog:
+  - oci_service_catalog_service_catalog
+  stackmonitoring.oracle.com/BaselineableMetric:
+  - oci_stack_monitoring_baselineable_metric
+  stackmonitoring.oracle.com/Config:
+  - oci_stack_monitoring_config
+  stackmonitoring.oracle.com/DiscoveryJob:
+  - oci_stack_monitoring_discovery_job
+  stackmonitoring.oracle.com/MaintenanceWindow:
+  - oci_stack_monitoring_maintenance_window
+  stackmonitoring.oracle.com/MetricExtension:
+  - oci_stack_monitoring_metric_extension
+  stackmonitoring.oracle.com/MonitoredResource:
+  - oci_stack_monitoring_monitored_resource
+  stackmonitoring.oracle.com/MonitoredResourceType:
+  - oci_stack_monitoring_monitored_resource_type
+  stackmonitoring.oracle.com/MonitoringTemplate:
+  - oci_stack_monitoring_monitoring_template
+  stackmonitoring.oracle.com/ProcessSet:
+  - oci_stack_monitoring_process_set
+  streaming.oracle.com/Stream:
+  - oci_streaming_stream
+  vbsinst.oracle.com/VbsInstance:
+  - oci_vbs_inst_vbs_instance
+  visualbuilder.oracle.com/VbInstance:
+  - oci_visual_builder_vb_instance
+  vnmonitoring.oracle.com/PathAnalyzerTest:
+  - oci_vn_monitoring_path_analyzer_test
+  vulnerabilityscanning.oracle.com/ContainerScanRecipe:
+  - oci_vulnerability_scanning_container_scan_recipe
+  vulnerabilityscanning.oracle.com/ContainerScanTarget:
+  - oci_vulnerability_scanning_container_scan_target
+  vulnerabilityscanning.oracle.com/HostScanRecipe:
+  - oci_vulnerability_scanning_host_scan_recipe
+  vulnerabilityscanning.oracle.com/HostScanTarget:
+  - oci_vulnerability_scanning_host_scan_target
+  waa.oracle.com/WebAppAcceleration:
+  - oci_waa_web_app_acceleration
+  waa.oracle.com/WebAppAccelerationPolicy:
+  - oci_waa_web_app_acceleration_policy
+  waas.oracle.com/AddressList:
+  - oci_waas_address_list
+  waas.oracle.com/Certificate:
+  - oci_waas_certificate
+  waas.oracle.com/CustomProtectionRule:
+  - oci_waas_custom_protection_rule
+  waas.oracle.com/HttpRedirect:
+  - oci_waas_http_redirect
+  waas.oracle.com/WaasPolicy:
+  - oci_waas_waas_policy
+  waf.oracle.com/NetworkAddressList:
+  - oci_waf_network_address_list
+  waf.oracle.com/WebAppFirewall:
+  - oci_waf_web_app_firewall
+  waf.oracle.com/WebAppFirewallPolicy:
+  - oci_waf_web_app_firewall_policy
+  zpr.oracle.com/Configuration:
+  - oci_zpr_configuration
+  zpr.oracle.com/ZprPolicy:
+  - oci_zpr_zpr_policy
 stringke-cloudflare-operator:
   AccessApplication:
   - cloudflare_zero_trust_access_application
@@ -115,3 +833,168 @@ stringke-cloudflare-operator:
   - cloudflare_zero_trust_tunnel_warp_connector
   ZoneRuleset:
   - cloudflare_ruleset
+vault-config-operator:
+  AWSAuthEngineClientConfig:
+  - vault_aws_auth_backend_client
+  AWSAuthEngineIdentityConfig:
+  - vault_aws_auth_backend_config_identity
+  AWSAuthEngineRole:
+  - vault_aws_auth_backend_role
+  AWSSecretEngineConfig:
+  - vault_aws_secret_backend
+  AWSSecretEngineRole:
+  - vault_aws_secret_backend_role
+  AliCloudAuthEngineRole:
+  - vault_alicloud_auth_backend_role
+  AppRoleAuthEngineRole:
+  - vault_approle_auth_backend_role
+  Audit:
+  - vault_audit
+  AuditRequestHeader:
+  - vault_audit_request_header
+  AuthEngineMount:
+  - vault_auth_backend
+  AzureAuthEngineConfig:
+  - vault_azure_auth_backend_config
+  AzureAuthEngineRole:
+  - vault_azure_auth_backend_role
+  AzureSecretEngineConfig:
+  - vault_azure_secret_backend
+  AzureSecretEngineRole:
+  - vault_azure_secret_backend_role
+  CFAuthEngineConfig:
+  - vault_cf_auth_backend_config
+  CFAuthEngineRole:
+  - vault_cf_auth_backend_role
+  CertAuthEngineRole:
+  - vault_cert_auth_backend_role
+  ConsulSecretEngineConfig:
+  - vault_consul_secret_backend
+  ConsulSecretEngineRole:
+  - vault_consul_secret_backend_role
+  DatabaseSecretEngineConfig:
+  - vault_database_secret_backend_connection
+  DatabaseSecretEngineRole:
+  - vault_database_secret_backend_role
+  DatabaseSecretEngineStaticRole:
+  - vault_database_secret_backend_static_role
+  Entity:
+  - vault_identity_entity
+  EntityAlias:
+  - vault_identity_entity_alias
+  GCPAuthEngineConfig:
+  - vault_gcp_auth_backend
+  GCPAuthEngineRole:
+  - vault_gcp_auth_backend_role
+  GCPSecretEngineConfig:
+  - vault_gcp_secret_backend
+  GCPSecretEngineRoleset:
+  - vault_gcp_secret_roleset
+  GCPSecretEngineStaticAccount:
+  - vault_gcp_secret_static_account
+  GitHubAuthEngineConfig:
+  - vault_github_auth_backend
+  GitHubAuthEngineTeamMap:
+  - vault_github_team
+  GitHubAuthEngineUserMap:
+  - vault_github_user
+  Group:
+  - vault_identity_group
+  GroupAlias:
+  - vault_identity_group_alias
+  IdentityOIDCAssignment:
+  - vault_identity_oidc_assignment
+  IdentityOIDCClient:
+  - vault_identity_oidc_client
+  IdentityOIDCProvider:
+  - vault_identity_oidc_provider
+  IdentityOIDCScope:
+  - vault_identity_oidc_scope
+  IdentityTokenConfig:
+  - vault_identity_oidc
+  IdentityTokenKey:
+  - vault_identity_oidc_key
+  IdentityTokenRole:
+  - vault_identity_oidc_role
+  JWTOIDCAuthEngineConfig:
+  - vault_jwt_auth_backend
+  JWTOIDCAuthEngineRole:
+  - vault_jwt_auth_backend_role
+  KerberosAuthEngineConfig:
+  - vault_kerberos_auth_backend_config
+  KerberosAuthEngineGroup:
+  - vault_kerberos_auth_backend_group
+  KerberosAuthEngineLDAPConfig:
+  - vault_kerberos_auth_backend_ldap_config
+  KubernetesAuthEngineConfig:
+  - vault_kubernetes_auth_backend_config
+  KubernetesAuthEngineRole:
+  - vault_kubernetes_auth_backend_role
+  KubernetesSecretEngineConfig:
+  - vault_kubernetes_secret_backend
+  KubernetesSecretEngineRole:
+  - vault_kubernetes_secret_backend_role
+  LDAPAuthEngineConfig:
+  - vault_ldap_auth_backend
+  LDAPAuthEngineGroup:
+  - vault_ldap_auth_backend_group
+  LDAPSecretEngineConfig:
+  - vault_ldap_secret_backend
+  LDAPSecretEngineDynamicRole:
+  - vault_ldap_secret_backend_dynamic_role
+  LDAPSecretEngineStaticRole:
+  - vault_ldap_secret_backend_static_role
+  LeaseCountQuota:
+  - vault_quota_lease_count
+  MongoDBAtlasSecretEngineConfig:
+  - vault_mongodbatlas_secret_backend
+  MongoDBAtlasSecretEngineRole:
+  - vault_mongodbatlas_secret_role
+  Namespace:
+  - vault_namespace
+  NomadSecretEngineConfig:
+  - vault_nomad_secret_backend
+  NomadSecretEngineRole:
+  - vault_nomad_secret_role
+  OCIAuthEngineConfig:
+  - vault_oci_auth_backend
+  OCIAuthEngineRole:
+  - vault_oci_auth_backend_role
+  OktaAuthEngineConfig:
+  - vault_okta_auth_backend
+  OktaAuthEngineGroup:
+  - vault_okta_auth_backend_group
+  PKISecretEngineConfig:
+  - vault_pki_secret_backend_config_urls
+  PKISecretEngineRole:
+  - vault_pki_secret_backend_role
+  PasswordPolicy:
+  - vault_password_policy
+  Policy:
+  - vault_policy
+  QuotaConfig:
+  - vault_quota_config
+  RADIUSAuthEngineConfig:
+  - vault_radius_auth_backend
+  RabbitMQSecretEngineConfig:
+  - vault_rabbitmq_secret_backend
+  RabbitMQSecretEngineRole:
+  - vault_rabbitmq_secret_backend_role
+  RateLimitQuota:
+  - vault_quota_rate_limit
+  RotationPolicy:
+  - vault_rotation_policy
+  SSHSecretEngineConfig:
+  - vault_ssh_secret_backend_ca
+  SSHSecretEngineRole:
+  - vault_ssh_secret_backend_role
+  SecretEngineMount:
+  - vault_mount
+  TerraformCloudSecretEngineConfig:
+  - vault_terraform_cloud_secret_backend
+  TerraformCloudSecretEngineRole:
+  - vault_terraform_cloud_secret_role
+  TransitSecretEngineKey:
+  - vault_transit_secret_backend_key
+  VaultSecret:
+  - vault_kv_secret_v2

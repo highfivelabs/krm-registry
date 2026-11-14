@@ -2,9 +2,15 @@
 
 The Terraform Registry, for KRM: documentation for the Kubernetes Resource
 Model providers (Config Connector, AWS Controllers for Kubernetes, Azure
-Service Operator) and High Five Labs' extensions that fill their gaps, and for
+Service Operator, and vendors' own operators from Grafana to Oracle and
+MongoDB) and High Five Labs' extensions that fill their gaps
+(`*-extensions` for the clouds, `<vendor>-krm-extensions` for the rest), and for
 the catalog's Helm chart packages built from them. Published to GitHub Pages
 by `.github/workflows/pages.yml`.
+
+A surface whose providers cannot be indexed (no operator, CRDs not published
+as source, an API the REST runtime does not drive) carries `notes` in
+`registry.yaml`; its page says why.
 
 ## What gets published
 
@@ -21,9 +27,10 @@ by `.github/workflows/pages.yml`.
 
 ```
 build.sh <root> <site>
-  1. clone ack-extensions, aso-extensions, config-connector-extensions, catalog
+  1. clone the catalog and every provider repo registry.yaml says is ours
   2. resolve.py   which releases exist (APIs)            → registry.lock.json
-  3. fetch.sh     the CRDs at those releases             → <root>/upstream
+  3. fetch.sh, fetch_sources.py
+                  the CRDs at those releases             → <root>/upstream
   4. gen.py       CRDs + kind docs + coverage + charts   → <site>
 ```
 

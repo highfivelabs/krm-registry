@@ -52,7 +52,10 @@ def load_crds(paths):
     for pat in paths:
         for f in sorted(glob.glob(P(pat))):
             with open(f) as fh:
-                for d in yaml.load_all(fh, Loader=L):
+                text = fh.read()
+                if "{{" in text:  # a Helm template: drop the directive lines
+                    text = "\n".join(l for l in text.splitlines() if not l.strip().startswith("{{"))
+                for d in yaml.load_all(text, Loader=L):
                     if isinstance(d, dict) and d.get("kind") == "CustomResourceDefinition":
                         yield f, d
 
@@ -327,7 +330,8 @@ def build():
             k["docRepoBase"] = f"{prov['repo']}/blob/{prov['version']}/"
             ann = crd["metadata"].get("annotations") or {}
             tfs = [t.strip() for t in (ann.get("hfl.dev/terraform") or "").split(",") if t.strip()]
-            tfs += (TFMAP.get(prov["id"]) or {}).get(kind) or []
+            pm = TFMAP.get(prov["id"]) or {}
+            tfs += pm.get(f"{group}/{kind}") or pm.get(kind) or []  # group/Kind where kinds repeat across groups (OSOK)
             if tfs:
                 k["api"] = [{"api": ann.get("hfl.dev/api-path", ""), "tf": sorted(set(tfs))}]
             if ann.get("hfl.dev/readiness"):

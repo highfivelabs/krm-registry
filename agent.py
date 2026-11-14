@@ -192,13 +192,18 @@ def write_agent_tree(out, cat, full_kinds, charts_full):
             tf_index[t].append(k)
         w(kind_path(k), kind_page(k, providers, charts_full))
 
-    # Clouds and services.
+    # Clouds and services (and surfaces with nothing indexed, for their notes).
+    for s in cat["surfaces"]:
+        if cat["surfaces"][s].get("notes") and s not in by_surf_svc:
+            by_surf_svc[s] = {}
     for s, svcs in by_surf_svc.items():
         me = f"{s}/index.md"
         ps = [p for p in cat["providers"] if p["surface"] == s]
-        L = [f"# {SURF[s]}", "", "Providers: " + ", ".join(f"{link(me, f'providers/{p['id']}.md', p['title'])} ({p['tier']})" for p in ps) + ".",
-             "Extension kinds are listed in the same service as the official kinds they sit beside.", "",
-             "| Service | Official kinds | Extension kinds | |", "| --- | --- | --- | --- |"]
+        note = cat["surfaces"][s].get("notes")
+        L = [f"# {SURF[s]}", "", ("Providers: " + ", ".join(f"{link(me, f'providers/{p['id']}.md', p['title'])} ({p['tier']})" for p in ps) + ".") if ps else "No provider indexed.",
+             *([f"Not indexed: {note}"] if note else []),
+             *(["Extension kinds are listed in the same service as the official kinds they sit beside.", "",
+                "| Service | Official kinds | Extension kinds | |", "| --- | --- | --- | --- |"] if svcs else [])]
         for svc in sorted(svcs):
             ks = svcs[svc]
             o = sum(k["tier"] == "official" for k in ks)
@@ -287,7 +292,7 @@ def write_agent_tree(out, cat, full_kinds, charts_full):
          f"Azure Service Operator, and High Five Labs' extensions that fill their gaps), and {nc} Helm chart packages built from them.", "",
          "Every page below is Markdown. A kind page has front matter, an example manifest, and tables of every spec and status field.", "",
          "## Start here", "",
-         *[f"- [{SURF[s]}]({s}/index.md): services, then the kinds in each" for s in cat["surfaces"] if any(k["surface"] == s for k in full_kinds)],
+         *[f"- [{SURF[s]}]({s}/index.md): services, then the kinds in each" for s in cat["surfaces"] if any(k["surface"] == s for k in full_kinds) or cat["surfaces"][s].get("notes")],
          "- [Terraform, by the numbers](terraform/index.md): how much of each Terraform provider the kinds cover",
          "- [Providers](providers/index.md): each provider's kinds by service",
          "- [Packages](packages/index.md): charts, the Terraform module each ports, the kinds each renders", "",

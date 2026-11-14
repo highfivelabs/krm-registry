@@ -108,7 +108,7 @@ def terraform_provider(name, top):
         page += 1
     prefix = name.split("/")[1].lower()
     return {"name": p["name"], "rank": p["rank"], "downloads": p["downloads"], "tier": p["tier"],
-            "version": v["attributes"]["version"], "resources": sorted({f"{prefix}_{s}" for s in res})}
+            "version": v["attributes"]["version"], "resources": sorted({s if s.startswith(prefix + "_") else f"{prefix}_{s}" for s in res})}
 
 
 def terraform_top(n=200):

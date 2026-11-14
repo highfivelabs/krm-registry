@@ -4,8 +4,11 @@ release registry.lock.json names.   fetch_sources.py <lock.json> <root>
 
   source: {asset: URL with {tag}}   download one file
   source: {path: dir}               sparse-checkout dir of the repository at the tag
+  source: {path: a/{newest}/b}      ... where {newest} is the highest-versioned directory
+                                    under a/ at that tag (MongoDB's operator keeps
+                                    releases/<version>/deploy/crds); copied to <dest>/crds
 """
-import json, os, subprocess, sys, urllib.request
+import json, os, re, shutil, subprocess, sys, urllib.request
 
 import yaml
 
@@ -33,7 +36,14 @@ for p in cfg["providers"]:
         with urllib.request.urlopen(req, timeout=120) as r, open(os.path.join(dest, os.path.basename(url)), "wb") as f:
             f.write(r.read())
     else:
+        path = src["path"]
+        head, _, tail = path.partition("/{newest}/")
         run("git", "clone", "-q", "--filter=blob:none", "--no-checkout", "--depth", "1", "--branch", rel["tag"], p["repo"] + ".git", dest)
-        run("git", "-C", dest, "sparse-checkout", "set", src["path"])
+        run("git", "-C", dest, "sparse-checkout", "set", head if tail else path)
         run("git", "-C", dest, "checkout", "-q", rel["tag"])
+        if tail:
+            vkey = lambda d: tuple(int(x) for x in re.findall(r"\d+", d))
+            newest = max(os.listdir(os.path.join(dest, head)), key=vkey)
+            shutil.copytree(os.path.join(dest, head, newest, tail), os.path.join(dest, "crds"))
+            print(f"  {p['id']}: CRDs from {head}/{newest}/{tail}", file=sys.stderr)
     print(f"fetched {p['id']} {rel['tag']}", file=sys.stderr)

@@ -4,8 +4,9 @@
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd) root=$1 site=$2
 mkdir -p "$root/src"
-for r in ack-extensions aso-extensions config-connector-extensions catalog \
-         datadog-extensions github-extensions cloudflare-extensions grafana-extensions gitlab-extensions; do
+# Our own repos: the catalog, and every provider whose repo is ours.
+owned=$(python3 -c "import yaml,sys; d=yaml.safe_load(open(sys.argv[1])); print(' '.join(['catalog']+[p['repo'].rsplit('/',1)[1] for p in d['providers'] if p.get('repo','').startswith('https://github.com/highfivelabs/')]))" "$here/registry.yaml")
+for r in $owned; do
   [ -d "$root/src/$r/.git" ] || git clone -q --depth 1 "https://github.com/highfivelabs/$r.git" "$root/src/$r" \
     || echo "skipping $r: not cloneable yet" >&2
 done

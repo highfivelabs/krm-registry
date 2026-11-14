@@ -17,6 +17,23 @@ surfaces:
   cloudflare: {title: Cloudflare, category: edge and DNS, terraform: cloudflare/cloudflare}
   grafana:    {title: Grafana, category: observability, terraform: grafana/grafana}
   gitlab:     {title: GitLab, category: developer platform, terraform: gitlabhq/gitlab}
+  vault:      {title: Vault, category: secrets, terraform: hashicorp/vault}
+  confluent:  {title: Confluent Cloud, category: data streaming, terraform: confluentinc/confluent,
+               notes: "Confluent for Kubernetes (CFK) manages topics, schemas, connectors, role bindings, cluster links and schema exporters, some of them on Confluent Cloud; it is not indexed here because its CRDs ship only in Confluent's Helm chart, not in a public repository."}
+  databricks: {title: Databricks, category: data platform, terraform: databricks/databricks,
+               notes: "Databricks publishes no OpenAPI spec, so there is no generated extension yet; the community databricks-kube-operator covers jobs, repos, secrets and git credentials."}
+  pagerduty:  {title: PagerDuty, category: incident response, terraform: PagerDuty/pagerduty}
+  newrelic:   {title: New Relic, category: observability, terraform: newrelic/newrelic,
+               notes: "New Relic's configuration API is NerdGraph (GraphQL), which the REST runtime does not drive; its old Kubernetes operator (alert policies and conditions, v0.0.8) is unmaintained. Not covered yet."}
+  oci:        {title: Oracle Cloud, category: cloud, terraform: oracle/oci,
+               notes: "Oracle's OCI Service Operator is indexed at its latest tag. Its main branch carries 475 CRDs (about 320 Terraform resources' worth) not yet in a release."}
+  mongodbatlas: {title: MongoDB Atlas, category: database, terraform: mongodb/mongodbatlas}
+  okta:       {title: Okta, category: identity, terraform: okta/okta}
+  snowflake:  {title: Snowflake, category: data platform, terraform: snowflakedb/snowflake}
+  artifactory: {title: JFrog Artifactory, category: developer platform, terraform: jfrog/artifactory,
+               notes: "JFrog publishes Crossplane providers (provider-artifactory: 214 kinds; also xray, project and platform) as images in its authenticated registry, with no public source; they are not indexed here. Nothing to extend: they cover nearly all of the Terraform provider."}
+  alicloud:   {title: Alibaba Cloud, category: cloud, terraform: aliyun/alicloud,
+               notes: "No Kubernetes operator manages Alibaba Cloud resources (ACK's own CRDs run in-cluster software), and the API is RPC-style with request signing, which the REST runtime does not drive. Not covered yet."}
 
 # Terraform types each operator kind stands in for (generated extension
 # kinds carry theirs in the CRD's hfl.dev/terraform annotation).
@@ -196,63 +213,190 @@ providers:
     source: {path: config/crd/bases}
     crds: [upstream/gitlab-runner-operator/config/crd/bases/*.yaml]
 
+  - id: oci-service-operator
+    title: OCI Service Operator
+    surface: oci
+    publisher: Oracle
+    tier: official
+    manages: external-api
+    repo: https://github.com/oracle/oci-service-operator
+    docs: https://github.com/oracle/oci-service-operator/tree/main/docs
+    release: {tags: '^v[0-9]+[.][0-9]+[.][0-9]+(-alpha)?$'}
+    source: {path: config/crd/bases}
+    crds: [upstream/oci-service-operator/config/crd/bases/*.yaml]
+
+  - id: atlas-kubernetes-operator
+    title: Atlas Kubernetes Operator
+    surface: mongodbatlas
+    publisher: MongoDB
+    tier: official
+    manages: external-api
+    repo: https://github.com/mongodb/mongodb-atlas-kubernetes
+    docs: https://www.mongodb.com/docs/atlas/operator/current/
+    release: {tags: '^v[0-9]+[.][0-9]+[.][0-9]+$'}
+    source: {path: 'releases/{newest}/deploy/crds'}
+    crds: [upstream/atlas-kubernetes-operator/crds/*.yaml]
+
+  - id: vault-config-operator
+    title: vault-config-operator
+    surface: vault
+    publisher: Red Hat Community of Practice (community)
+    tier: community
+    manages: external-api
+    repo: https://github.com/redhat-cop/vault-config-operator
+    release: {tags: '^v[0-9]+[.][0-9]+[.][0-9]+$'}
+    source: {path: config/crd/bases}
+    crds: [upstream/vault-config-operator/config/crd/bases/*.yaml]
+
+  - id: vault-secrets-operator
+    title: Vault Secrets Operator
+    surface: vault
+    publisher: HashiCorp
+    tier: official
+    manages: in-cluster
+    repo: https://github.com/hashicorp/vault-secrets-operator
+    docs: https://developer.hashicorp.com/vault/docs/platform/k8s/vso
+    release: {tags: '^v[0-9]+[.][0-9]+[.][0-9]+$'}
+    source: {path: config/crd/bases}
+    crds: [upstream/vault-secrets-operator/config/crd/bases/*.yaml]
+
+  - id: databricks-kube-operator
+    title: databricks-kube-operator
+    surface: databricks
+    publisher: mach-kernel (community)
+    tier: community
+    manages: external-api
+    repo: https://github.com/mach-kernel/databricks-kube-operator
+    release: {tags: '^databricks-kube-operator-[0-9]+[.][0-9]+[.][0-9]+$'}
+    source: {path: charts/databricks-kube-operator/templates}
+    crds: [upstream/databricks-kube-operator/charts/databricks-kube-operator/templates/crds.yaml]
+
   # High Five Labs' REST extensions (krm-rest-runtime), at main.
-  - id: datadog-extensions
-    title: datadog-extensions
+  - id: datadog-krm-extensions
+    title: datadog-krm-extensions
     surface: datadog
     publisher: High Five Labs
     tier: extension
     manages: external-api
     extends: datadog-operator
-    repo: https://github.com/highfivelabs/datadog-extensions
+    repo: https://github.com/highfivelabs/datadog-krm-extensions
     version: main
-    crds: [src/datadog-extensions/config/crds/*.yaml]
+    crds: [src/datadog-krm-extensions/config/crds/*.yaml]
     group_suffix: .datadog.hfl.dev
 
-  - id: github-extensions
-    title: github-extensions
+  - id: github-krm-extensions
+    title: github-krm-extensions
     surface: github
     publisher: High Five Labs
     tier: extension
     manages: external-api
-    repo: https://github.com/highfivelabs/github-extensions
+    repo: https://github.com/highfivelabs/github-krm-extensions
     version: main
-    crds: [src/github-extensions/config/crds/*.yaml]
+    crds: [src/github-krm-extensions/config/crds/*.yaml]
     group_suffix: .github.hfl.dev
 
-  - id: cloudflare-extensions
-    title: cloudflare-extensions
+  - id: cloudflare-krm-extensions
+    title: cloudflare-krm-extensions
     surface: cloudflare
     publisher: High Five Labs
     tier: extension
     manages: external-api
-    repo: https://github.com/highfivelabs/cloudflare-extensions
+    repo: https://github.com/highfivelabs/cloudflare-krm-extensions
     version: main
-    crds: [src/cloudflare-extensions/config/crds/*.yaml]
+    crds: [src/cloudflare-krm-extensions/config/crds/*.yaml]
     group_suffix: .cloudflare.hfl.dev
 
-  - id: grafana-extensions
-    title: grafana-extensions
+  - id: grafana-krm-extensions
+    title: grafana-krm-extensions
     surface: grafana
     publisher: High Five Labs
     tier: extension
     manages: external-api
     extends: grafana-operator
-    repo: https://github.com/highfivelabs/grafana-extensions
+    repo: https://github.com/highfivelabs/grafana-krm-extensions
     version: main
-    crds: [src/grafana-extensions/config/crds/*.yaml]
+    crds: [src/grafana-krm-extensions/config/crds/*.yaml]
     group_suffix: .grafana.hfl.dev
 
-  - id: gitlab-extensions
-    title: gitlab-extensions
+  - id: gitlab-krm-extensions
+    title: gitlab-krm-extensions
     surface: gitlab
     publisher: High Five Labs
     tier: extension
     manages: external-api
-    repo: https://github.com/highfivelabs/gitlab-extensions
+    repo: https://github.com/highfivelabs/gitlab-krm-extensions
     version: main
-    crds: [src/gitlab-extensions/config/crds/*.yaml]
+    crds: [src/gitlab-krm-extensions/config/crds/*.yaml]
     group_suffix: .gitlab.hfl.dev
+
+  - id: pagerduty-krm-extensions
+    title: pagerduty-krm-extensions
+    surface: pagerduty
+    publisher: High Five Labs
+    tier: extension
+    manages: external-api
+    repo: https://github.com/highfivelabs/pagerduty-krm-extensions
+    version: main
+    crds: [src/pagerduty-krm-extensions/config/crds/*.yaml]
+    group_suffix: .pagerduty.hfl.dev
+
+  - id: okta-krm-extensions
+    title: okta-krm-extensions
+    surface: okta
+    publisher: High Five Labs
+    tier: extension
+    manages: external-api
+    repo: https://github.com/highfivelabs/okta-krm-extensions
+    version: main
+    crds: [src/okta-krm-extensions/config/crds/*.yaml]
+    group_suffix: .okta.hfl.dev
+
+  - id: mongodbatlas-krm-extensions
+    title: mongodbatlas-krm-extensions
+    surface: mongodbatlas
+    publisher: High Five Labs
+    tier: extension
+    manages: external-api
+    extends: atlas-kubernetes-operator
+    repo: https://github.com/highfivelabs/mongodbatlas-krm-extensions
+    version: main
+    crds: [src/mongodbatlas-krm-extensions/config/crds/*.yaml]
+    group_suffix: .mongodbatlas.hfl.dev
+
+  - id: confluent-krm-extensions
+    title: confluent-krm-extensions
+    surface: confluent
+    publisher: High Five Labs
+    tier: extension
+    manages: external-api
+    repo: https://github.com/highfivelabs/confluent-krm-extensions
+    version: main
+    crds: [src/confluent-krm-extensions/config/crds/*.yaml]
+    group_suffix: .confluent.hfl.dev
+
+  - id: vault-krm-extensions
+    title: vault-krm-extensions
+    surface: vault
+    publisher: High Five Labs
+    tier: extension
+    manages: external-api
+    extends: vault-config-operator
+    repo: https://github.com/highfivelabs/vault-krm-extensions
+    version: main
+    crds: [src/vault-krm-extensions/config/crds/*.yaml]
+    group_suffix: .vault.hfl.dev
+
+  - id: snowflake-krm-extensions
+    title: snowflake-krm-extensions
+    surface: snowflake
+    publisher: High Five Labs
+    tier: extension
+    manages: external-api
+    repo: https://github.com/highfivelabs/snowflake-krm-extensions
+    version: main
+    crds: [src/snowflake-krm-extensions/config/crds/*.yaml]
+    group_suffix: .snowflake.hfl.dev
+
 
 packages:
   - id: catalog

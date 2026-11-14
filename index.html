@@ -120,7 +120,7 @@ async function shard(k){const u=shardUrl(k); if(!SHARDS[u]) SHARDS[u]=fetch(u).t
 let CHARTS=null; async function chartData(c){ if(C.packs){CHARTS??=fetch('data/charts.json').then(r=>r.json()); return (await CHARTS)[c.cloud+'-'+c.name]} return fetch(`data/charts/${c.cloud}-${c.name}.json`).then(r=>r.json())}
 
 fetch('data/catalog.json').then(r=>r.json()).then(c=>{
-  C=c; SURF=Object.fromEntries(Object.entries(c.surfaces).map(([k,v])=>[k,v.title])); SURFS=Object.keys(c.surfaces).filter(s=>c.kinds.some(k=>k.surface===s)); CLOUDS=SURFS.filter(s=>c.surfaces[s].category==='cloud'); VENDORS=SURFS.filter(s=>c.surfaces[s].category!=='cloud');
+  C=c; SURF=Object.fromEntries(Object.entries(c.surfaces).map(([k,v])=>[k,v.title])); SURFS=Object.keys(c.surfaces).filter(s=>c.kinds.some(k=>k.surface===s)||c.surfaces[s].notes); CLOUDS=SURFS.filter(s=>c.surfaces[s].category==='cloud'); VENDORS=SURFS.filter(s=>c.surfaces[s].category!=='cloud');
   c.kinds.forEach(k=>{KBY[kslug(k)]=k; k._id=k.id}); c.charts.forEach(ch=>CBY[cslug(ch)]=ch); c.providers.forEach(p=>PBY[p.id]=p);
   C.byId={}; c.kinds.forEach(k=>C.byId[k.id]=k);
   C.overlaidBy={}; c.kinds.forEach(k=>{if(k.overlays)(C.overlaidBy[k.overlays.id]??=[]).push(k)});
@@ -226,8 +226,9 @@ function surface(s){
   const m=servicesOf(s), names=Object.keys(m).sort(), t=surfStats(s);
   const ps=C.providers.filter(p=>p.surface===s);
 
+  const note=C.surfaces[s].notes?`<div class="card" style="margin-top:12px;border-left:3px solid var(--line2)"><b>Not indexed</b><div class="muted" style="margin-top:4px">${esc(C.surfaces[s].notes)}</div></div>`:'';
   return `<div class="crumbs"><a href="#surfaces">Clouds &amp; vendors</a> /</div><h1>${SURF[s]}</h1>
-  <div class="sub">${ps.map(p=>`<a href="#pr-${p.id}">${esc(p.title)}</a> ${tierBadge(p.tier)}`).join(' &nbsp;+&nbsp; ')} — ${fmt(t.n)} kinds in ${names.length} services. Extension kinds sit beside the official and community kinds of the same service.</div>${C.terraform?.surfaces?.[s]?`<div class="card" style="margin-top:12px">${tfLine(s).replace('border-top:1px solid var(--line2);padding-top:8px','')} <a href="#numbers">All surfaces</a></div>`:''}
+  <div class="sub">${ps.length?ps.map(p=>`<a href="#pr-${p.id}">${esc(p.title)}</a> ${tierBadge(p.tier)}`).join(' &nbsp;+&nbsp; ')+' — ':''}${fmt(t.n)} kinds in ${names.length} services.${ps.length?' Extension kinds sit beside the official and community kinds of the same service.':''}</div>${note}${C.terraform?.surfaces?.[s]?`<div class="card" style="margin-top:12px">${tfLine(s).replace('border-top:1px solid var(--line2);padding-top:8px','')} <a href="#numbers">All surfaces</a></div>`:''}
   ${fbar('s-'+s,'Filter services and kinds',[['','All'],['filled','Both'],['new','Extension only'],['official','Official/community only']])}
   <div class="grid g4">${names.map(n=>{const x=m[n],tot=x.o+x.e;return `<a class="card" href="#${svcslug(s,n)}" style="padding:12px 14px" data-f="${lc(n,x.ks.map(k=>[k.kind,k.group]))}" data-tags="${x.o&&x.e?'filled':x.e?'new':'official'}"><b>${esc(n)}</b><div class="bar" style="height:6px"><i class="o" style="width:${100*x.o/tot}%"></i><i class="e" style="width:${100*x.e/tot}%"></i></div><div class="muted" style="font-size:12px">${x.o} official/community · ${x.e} extension</div></a>`}).join('')}</div>`}
 function service(sl){
