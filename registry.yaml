@@ -23,6 +23,8 @@ surfaces:
   databricks: {title: Databricks, category: data platform, terraform: databricks/databricks,
                notes: "Databricks publishes no OpenAPI spec, so there is no generated extension yet; the community databricks-kube-operator covers jobs, repos, secrets and git credentials."}
   pagerduty:  {title: PagerDuty, category: incident response, terraform: PagerDuty/pagerduty}
+  sentry:     {title: Sentry, category: observability, terraform: jianyuan/sentry,
+               notes: "Sentry publishes no Kubernetes operator. Two community projects exist (jace-ys/sentry-operator, last updated 2021; sr/kube-sentry-controller, 2023) and cover only teams, projects and client keys; neither is indexed here."}
   newrelic:   {title: New Relic, category: observability, terraform: newrelic/newrelic,
                notes: "New Relic's configuration API is NerdGraph (GraphQL), which the REST runtime does not drive; its old Kubernetes operator (alert policies and conditions, v0.0.8) is unmaintained. Not covered yet."}
   oci:        {title: Oracle Cloud, category: cloud, terraform: oracle/oci,
@@ -339,6 +341,17 @@ providers:
     version: main
     crds: [src/pagerduty-krm-extensions/config/crds/*.yaml]
     group_suffix: .pagerduty.hfl.dev
+
+  - id: sentry-krm-extensions
+    title: sentry-krm-extensions
+    surface: sentry
+    publisher: High Five Labs
+    tier: extension
+    manages: external-api
+    repo: https://github.com/highfivelabs/sentry-krm-extensions
+    version: main
+    crds: [src/sentry-krm-extensions/config/crds/*.yaml]
+    group_suffix: .sentry.hfl.dev
 
   - id: okta-krm-extensions
     title: okta-krm-extensions
