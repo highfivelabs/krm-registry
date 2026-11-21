@@ -123,6 +123,9 @@ def kind_page(k, providers, charts):
         fm["terraform_equivalents"] = tfs(k)
     if k.get("overlays"):
         fm["overlays"] = k["overlays"]["id"]
+    fm["example_tested"] = (k.get("example") or {}).get("tested", "none")
+    if (k.get("example") or {}).get("tested") in ("live", "live-failing") and k["example"].get("date"):
+        fm["example_live_date"] = k["example"]["date"]
     if k.get("usedBy"):
         fm["used_by_packages"] = k["usedBy"]
     if k.get("docsUrl"):
@@ -159,7 +162,15 @@ def kind_page(k, providers, charts):
     if k.get("doc"):
         body = re.sub(r"^# .*\n", "", k["doc"]["md"]).strip()
         L += ["## Notes", "", re.sub(r"^(#+) ", r"#\1 ", body, flags=re.M), ""]
-    L += ["## Example", "", "```yaml", example(k).rstrip(), "```", ""]
+    ex = k.get("example")
+    if ex:
+        L += ["## Example", "", ex["line"], "", "```yaml", ex["yaml"].rstrip(), "```", ""]
+        if ex.get("prereqs"):
+            L += ["The live test makes these first; `<...>` values come from them: " + "; ".join(f"`{c}`" for c in ex["prereqs"]) + ".", ""]
+        L += [n for n in ex.get("notes") or [] if n] + ([""] if ex.get("notes") else [])
+        L += [f"The object reaches the API through the Connection named `default` in its namespace (see {link(me, f'providers/{p['id']}.md', p['title'])}).", ""]
+    else:
+        L += ["## Example", "", "Every required field, with placeholders; untested.", "", "```yaml", example(k).rstrip(), "```", ""]
     for sec in ("spec", "status"):
         L += [f"## {sec.capitalize()}", ""]
         if not k[sec]:

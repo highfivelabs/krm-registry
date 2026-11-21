@@ -19,6 +19,8 @@ as source, an API the REST runtime does not drive) carries `notes` in
 | `index.html` + `data/` | people | the browsable site: clouds, providers, kinds, packages, search, filters |
 | `llms.txt` | agents | the entry point: what this is, where to start, how to look up |
 | `<cloud>/index.md` → `<cloud>/<service>/index.md` → `kinds/<provider>/<group>/<Kind>.md` | agents | drill-down, a few KB per step; a kind page has front matter, links, an example manifest, every spec and status field |
+
+A REST extension kind's example is the spec its live tests ran against the real API (`hack/live/live.yaml`, with the date from `records.json`), else the sample its fake-API test runs; the page and the front matter (`example_tested: live|live-failing|fake|none`) say which (`examples.py`).
 | `terraform/<type>.md` | agents | a Terraform resource type → the kinds that stand in for it |
 | `providers/`, `packages/` | agents | each provider's kinds; each chart's source module, kinds, values, outputs |
 | `registry.lock.json` | both | exactly which releases this build documents |
