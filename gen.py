@@ -17,6 +17,8 @@ from collections import defaultdict
 
 import yaml
 
+import examples
+
 L = yaml.CSafeLoader
 ROOT, OUT, LOCKF = sys.argv[1], sys.argv[2], sys.argv[3]
 LOCK = json.load(open(LOCKF))
@@ -377,6 +379,7 @@ def build():
         if prov["tier"] != "extension":
             continue
         docs, gaps = kind_docs(prov), readme_gaps(prov)
+        tested = examples.load(P("src/" + prov["repo"].rstrip("/").rsplit("/", 1)[1])) if prov.get("repo") else {}
         tf = tf_index(prov)
         cov = coverage_index(prov, tf)
         base = prov.get("extends")
@@ -396,6 +399,13 @@ def build():
                     continue
                 if (group, k["kind"]) in docs:
                     k["doc"] = docs[(group, k["kind"])]
+                if (group, k["kind"]) in tested:
+                    ex = dict(tested[(group, k["kind"])])
+                    for path in examples.typed(ex["spec"], k["spec"]):
+                        ex["notes"].append(f"`{path}` is a number the live test takes from a value it saves first; replace the 0.")
+                    ex["yaml"] = examples.manifest(k, ex)
+                    ex["line"] = examples.tested_line(ex)
+                    k["example"] = ex
                 if (group, k["kind"]) in gaps:
                     k["gap"] = gaps[(group, k["kind"])]
                 elif k.get("readiness") == "fake" and k.get("api"):
@@ -412,6 +422,13 @@ def build():
                     ospec = {f["p"] for f in next(x for x in shards[(o["provider"], o["group"])] if x["kind"] == o["kind"])["spec"]}
                     mine = {f["p"] for f in k["spec"]}
                     k["overlays"] = {"id": o["id"], "added": sorted(mine - ospec), "removed": sorted(ospec - mine)}
+
+    ex_count = defaultdict(int)
+    for (pid, group), ks in shards.items():
+        if providers[pid]["tier"] == "extension":
+            for k in ks:
+                ex_count[(k.get("example") or {}).get("tested", "none")] += 1
+    print("examples: " + ", ".join(f"{n} {t}" for t, n in sorted(ex_count.items(), key=lambda x: -x[1])), file=sys.stderr)
 
     # Terraform resource types the catalog maps to kinds by hand (modules it tracks).
     rt = P("src/catalog/docs/coverage/resource-types.csv")
