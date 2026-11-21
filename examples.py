@@ -10,6 +10,7 @@ tested of these, and says how it was tested:
   live-failing  run live, but its latest run failed
   fake          the sample, run on the fake API built from the descriptors
 """
+import glob
 import json
 import os
 import re
@@ -152,3 +153,23 @@ def tested_line(ex):
         last = f" It last passed on {ex['date']}." if ex.get("date") else ""
         return f"Run live against {ex.get('target') or 'the real API'}, but its latest run failed.{last}"
     return "Tested on the fake API built from the descriptors only; not yet run live."
+
+
+def related(repo_dir, repo_url):
+    """{(group, Kind): [example]}: the repository's examples/<Kind>/*.yaml
+    (krm-rest-runtime's gen/examples.py), each a kind with the kinds it
+    needs joined by spec.fieldRefs, under every kind it shows."""
+    out = {}
+    for path in sorted(glob.glob(os.path.join(repo_dir, "examples", "*", "*.yaml"))):
+        text = open(path).read()
+        docs = [d for d in yaml.safe_load_all(text) if d]
+        rel = os.path.relpath(path, repo_dir)
+        main = docs[-1]["kind"] if docs else ""
+        ex = {"file": rel, "url": f"{repo_url}/blob/main/{rel}", "main": main,
+              "kinds": [d["kind"] for d in docs],
+              "yaml": "\n".join(l for l in text.splitlines() if not l.startswith("# Code generated")).strip() + "\n"}
+        for d in docs:
+            key = (d["apiVersion"].split("/")[0], d["kind"])
+            if ex not in out.setdefault(key, []):
+                out[key].append(ex)
+    return out

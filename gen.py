@@ -379,7 +379,9 @@ def build():
         if prov["tier"] != "extension":
             continue
         docs, gaps = kind_docs(prov), readme_gaps(prov)
-        tested = examples.load(P("src/" + prov["repo"].rstrip("/").rsplit("/", 1)[1])) if prov.get("repo") else {}
+        repo_dir = P("src/" + prov["repo"].rstrip("/").rsplit("/", 1)[1]) if prov.get("repo") else None
+        tested = examples.load(repo_dir) if repo_dir else {}
+        with_related = examples.related(repo_dir, prov["repo"].rstrip("/")) if repo_dir else {}
         tf = tf_index(prov)
         cov = coverage_index(prov, tf)
         base = prov.get("extends")
@@ -406,6 +408,10 @@ def build():
                     ex["yaml"] = examples.manifest(k, ex)
                     ex["line"] = examples.tested_line(ex)
                     k["example"] = ex
+                if (group, k["kind"]) in with_related:
+                    # Its own first, then those that need it.
+                    rel = with_related[(group, k["kind"])]
+                    k["related"] = [r for r in rel if r["main"] == k["kind"]] + [r for r in rel if r["main"] != k["kind"]][:6]
                 if (group, k["kind"]) in gaps:
                     k["gap"] = gaps[(group, k["kind"])]
                 elif k.get("readiness") == "fake" and k.get("api"):
@@ -429,6 +435,7 @@ def build():
             for k in ks:
                 ex_count[(k.get("example") or {}).get("tested", "none")] += 1
     print("examples: " + ", ".join(f"{n} {t}" for t, n in sorted(ex_count.items(), key=lambda x: -x[1])), file=sys.stderr)
+    print(f"examples with related kinds: {sum(1 for ks in shards.values() for k in ks if any(r['main'] == k['kind'] for r in k.get('related') or []))} kinds", file=sys.stderr)
 
     # Terraform resource types the catalog maps to kinds by hand (modules it tracks).
     rt = P("src/catalog/docs/coverage/resource-types.csv")

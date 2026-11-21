@@ -124,6 +124,8 @@ def kind_page(k, providers, charts):
     if k.get("overlays"):
         fm["overlays"] = k["overlays"]["id"]
     fm["example_tested"] = (k.get("example") or {}).get("tested", "none")
+    if any(r["main"] == k["kind"] for r in k.get("related") or []):
+        fm["example_with_related"] = [r["file"] for r in k["related"] if r["main"] == k["kind"]]
     if (k.get("example") or {}).get("tested") in ("live", "live-failing") and k["example"].get("date"):
         fm["example_live_date"] = k["example"]["date"]
     if k.get("usedBy"):
@@ -171,6 +173,18 @@ def kind_page(k, providers, charts):
         L += [f"The object reaches the API through the Connection named `default` in its namespace (see {link(me, f'providers/{p['id']}.md', p['title'])}).", ""]
     else:
         L += ["## Example", "", "Every required field, with placeholders; untested.", "", "```yaml", example(k).rstrip(), "```", ""]
+    rel = k.get("related") or []
+    own = [r for r in rel if r["main"] == k["kind"]]
+    used = [r for r in rel if r["main"] != k["kind"]]
+    if own:
+        L += ["## With the kinds it needs", "",
+              "Each object takes the ID of the one before it through `spec.fieldRefs`; nothing is sent until that one is Ready. "
+              "Tested on the fake API: every object is made, in this order, and deleted.", ""]
+        for r in own:
+            L += [f"From [`{r['file']}`]({r['url']}):", "", "```yaml", r["yaml"].rstrip(), "```", ""]
+    if used:
+        L += ["## Used by", "", "Examples in which other kinds take this one's ID through `spec.fieldRefs`: "
+              + ", ".join(f"[{r['main']}]({r['url']})" for r in used) + ".", ""]
     for sec in ("spec", "status"):
         L += [f"## {sec.capitalize()}", ""]
         if not k[sec]:
