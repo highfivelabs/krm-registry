@@ -1,0 +1,1351 @@
+[
+ {
+  "id": "gitlab-krm-extensions/project.gitlab.hfl.dev/Project",
+  "provider": "gitlab-krm-extensions",
+  "surface": "gitlab",
+  "tier": "extension",
+  "group": "project.gitlab.hfl.dev",
+  "kind": "Project",
+  "plural": "projects",
+  "service": "project",
+  "scope": "Namespaced",
+  "version": "v1alpha1",
+  "versions": [
+   "v1alpha1"
+  ],
+  "stability": "alpha",
+  "desc": "Project: crud resource at /projects/{id}. Terraform equivalent: gitlab_project. Fields keep the API's own names.",
+  "nspec": 108,
+  "nstatus": 5,
+  "short": [],
+  "cloudcontrol": false,
+  "source": "src/gitlab-krm-extensions/config/crds/project.gitlab.hfl.dev_projects.yaml",
+  "srcUrl": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/config/crds/project.gitlab.hfl.dev_projects.yaml",
+  "docsUrl": null,
+  "repoUrl": "https://github.com/highfivelabs/gitlab-krm-extensions/tree/main",
+  "docRepoBase": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/",
+  "api": [
+   {
+    "api": "/projects/{id}",
+    "tf": [
+     "gitlab_project"
+    ]
+   }
+  ],
+  "readiness": "live",
+  "manages": "external-api",
+  "spec": [
+   {
+    "p": "spec.name",
+    "t": "string",
+    "d": "The name of the project. If not provided, defaults to `path`. At least one of `name`, `path` must be provided."
+   },
+   {
+    "p": "spec.path",
+    "t": "string",
+    "d": "The path of the repository. If not provided, generated from `name` as lowercase with dashes. Must not start or end with a special character, and must not contain consecutive special characters. At least one of `name`, `path` must be provided."
+   },
+   {
+    "p": "spec.default_branch",
+    "t": "string",
+    "d": "The default branch of the project. Accepts a branch name or a fully qualified reference such as `refs/heads/main`, from which the `refs/heads/` prefix is removed."
+   },
+   {
+    "p": "spec.description",
+    "t": "string",
+    "d": "The description of the project"
+   },
+   {
+    "p": "spec.build_git_strategy",
+    "t": "string",
+    "d": "The Git strategy. Defaults to `fetch`",
+    "e": [
+     "fetch",
+     "clone"
+    ]
+   },
+   {
+    "p": "spec.build_timeout",
+    "t": "integer",
+    "d": "The maximum amount of time, in seconds, that a job can run."
+   },
+   {
+    "p": "spec.auto_cancel_pending_pipelines",
+    "t": "string",
+    "d": "Auto-cancel pending pipelines",
+    "e": [
+     "disabled",
+     "enabled"
+    ]
+   },
+   {
+    "p": "spec.ci_config_path",
+    "t": "string",
+    "d": "The path to CI config file. Defaults to `.gitlab-ci.yml`"
+   },
+   {
+    "p": "spec.service_desk_enabled",
+    "t": "boolean",
+    "d": "Disable or enable the service desk"
+   },
+   {
+    "p": "spec.issues_enabled",
+    "t": "boolean",
+    "d": "Flag indication if the issue tracker is enabled. Deprecated: Use `issues_access_level` instead."
+   },
+   {
+    "p": "spec.merge_requests_enabled",
+    "t": "boolean",
+    "d": "Flag indication if merge requests are enabled. Deprecated: Use `merge_requests_access_level` instead."
+   },
+   {
+    "p": "spec.wiki_enabled",
+    "t": "boolean",
+    "d": "Flag indication if the wiki is enabled. Deprecated: Use `wiki_access_level` instead."
+   },
+   {
+    "p": "spec.jobs_enabled",
+    "t": "boolean",
+    "d": "Flag indication if jobs are enabled. Deprecated: Use `builds_access_level` instead."
+   },
+   {
+    "p": "spec.snippets_enabled",
+    "t": "boolean",
+    "d": "Flag indication if snippets are enabled. Deprecated: Use `snippets_access_level` instead."
+   },
+   {
+    "p": "spec.issues_access_level",
+    "t": "string",
+    "d": "Issues access level. One of `disabled`, `private` or `enabled`",
+    "e": [
+     "disabled",
+     "private",
+     "enabled"
+    ]
+   },
+   {
+    "p": "spec.repository_access_level",
+    "t": "string",
+    "d": "Repository access level. One of `disabled`, `private` or `enabled`",
+    "e": [
+     "disabled",
+     "private",
+     "enabled"
+    ]
+   },
+   {
+    "p": "spec.merge_requests_access_level",
+    "t": "string",
+    "d": "Merge requests access level. One of `disabled`, `private` or `enabled`",
+    "e": [
+     "disabled",
+     "private",
+     "enabled"
+    ]
+   },
+   {
+    "p": "spec.forking_access_level",
+    "t": "string",
+    "d": "Forks access level. One of `disabled`, `private` or `enabled`",
+    "e": [
+     "disabled",
+     "private",
+     "enabled"
+    ]
+   },
+   {
+    "p": "spec.wiki_access_level",
+    "t": "string",
+    "d": "Wiki access level. One of `disabled`, `private` or `enabled`",
+    "e": [
+     "disabled",
+     "private",
+     "enabled"
+    ]
+   },
+   {
+    "p": "spec.builds_access_level",
+    "t": "string",
+    "d": "Builds access level. One of `disabled`, `private` or `enabled`",
+    "e": [
+     "disabled",
+     "private",
+     "enabled"
+    ]
+   },
+   {
+    "p": "spec.snippets_access_level",
+    "t": "string",
+    "d": "Snippets access level. One of `disabled`, `private` or `enabled`",
+    "e": [
+     "disabled",
+     "private",
+     "enabled"
+    ]
+   },
+   {
+    "p": "spec.package_registry_access_level",
+    "t": "string",
+    "d": "Controls visibility of the package registry. One of `disabled`, `private`, `enabled` or `public`. `private` will make the package registry accessible only to project members (reporter role and above). `enabled` will make the package registry accessible to everyone who has access to the project. `public` will make the package registry accessible to everyone. `disabled` will disable the package regi",
+    "e": [
+     "disabled",
+     "private",
+     "enabled",
+     "public"
+    ]
+   },
+   {
+    "p": "spec.pages_access_level",
+    "t": "string",
+    "d": "Pages access level. One of `disabled`, `private`, `enabled` or `public`",
+    "e": [
+     "disabled",
+     "private",
+     "enabled",
+     "public"
+    ]
+   },
+   {
+    "p": "spec.analytics_access_level",
+    "t": "string",
+    "d": "Analytics access level. One of `disabled`, `private` or `enabled`",
+    "e": [
+     "disabled",
+     "private",
+     "enabled"
+    ]
+   },
+   {
+    "p": "spec.container_registry_access_level",
+    "t": "string",
+    "d": "Controls visibility of the container registry. One of `disabled`, `private` or `enabled`. `private` will make the container registry accessible only to project members (reporter role and above). `enabled` will make the container registry accessible to everyone who has access to the project. `disabled` will disable the container registry. With `enabled`, the container registry has the same visibili",
+    "e": [
+     "disabled",
+     "private",
+     "enabled"
+    ]
+   },
+   {
+    "p": "spec.security_and_compliance_access_level",
+    "t": "string",
+    "d": "Security and compliance access level. One of `disabled`, `private` or `enabled`",
+    "e": [
+     "disabled",
+     "private",
+     "enabled"
+    ]
+   },
+   {
+    "p": "spec.releases_access_level",
+    "t": "string",
+    "d": "Releases access level. One of `disabled`, `private` or `enabled`",
+    "e": [
+     "disabled",
+     "private",
+     "enabled"
+    ]
+   },
+   {
+    "p": "spec.environments_access_level",
+    "t": "string",
+    "d": "Environments access level. One of `disabled`, `private` or `enabled`",
+    "e": [
+     "disabled",
+     "private",
+     "enabled"
+    ]
+   },
+   {
+    "p": "spec.feature_flags_access_level",
+    "t": "string",
+    "d": "Feature flags access level. One of `disabled`, `private` or `enabled`",
+    "e": [
+     "disabled",
+     "private",
+     "enabled"
+    ]
+   },
+   {
+    "p": "spec.infrastructure_access_level",
+    "t": "string",
+    "d": "Infrastructure access level. One of `disabled`, `private` or `enabled`",
+    "e": [
+     "disabled",
+     "private",
+     "enabled"
+    ]
+   },
+   {
+    "p": "spec.monitor_access_level",
+    "t": "string",
+    "d": "Monitor access level. One of `disabled`, `private` or `enabled`",
+    "e": [
+     "disabled",
+     "private",
+     "enabled"
+    ]
+   },
+   {
+    "p": "spec.model_experiments_access_level",
+    "t": "string",
+    "d": "Model experiments access level. One of `disabled`, `private` or `enabled`",
+    "e": [
+     "disabled",
+     "private",
+     "enabled"
+    ]
+   },
+   {
+    "p": "spec.model_registry_access_level",
+    "t": "string",
+    "d": "Model registry access level. One of `disabled`, `private` or `enabled`",
+    "e": [
+     "disabled",
+     "private",
+     "enabled"
+    ]
+   },
+   {
+    "p": "spec.emails_disabled",
+    "t": "boolean",
+    "d": "Disable email notifications. Deprecated: Use emails_enabled instead."
+   },
+   {
+    "p": "spec.emails_enabled",
+    "t": "boolean",
+    "d": "Enable email notifications"
+   },
+   {
+    "p": "spec.show_default_award_emojis",
+    "t": "boolean",
+    "d": "Show default award emojis"
+   },
+   {
+    "p": "spec.show_diff_preview_in_email",
+    "t": "boolean",
+    "d": "Include the code diff preview in merge request notification emails"
+   },
+   {
+    "p": "spec.warn_about_potentially_unwanted_characters",
+    "t": "boolean",
+    "d": "Warn about potentially unwanted characters"
+   },
+   {
+    "p": "spec.enforce_auth_checks_on_uploads",
+    "t": "boolean",
+    "d": "Enforce auth check on uploads"
+   },
+   {
+    "p": "spec.shared_runners_enabled",
+    "t": "boolean",
+    "d": "Flag indication if shared runners are enabled for that project"
+   },
+   {
+    "p": "spec.group_runners_enabled",
+    "t": "boolean",
+    "d": "Flag indication if group runners are enabled for that project"
+   },
+   {
+    "p": "spec.resource_group_default_process_mode",
+    "t": "string",
+    "d": "The process mode of the resource group",
+    "e": [
+     "unordered",
+     "oldest_first",
+     "newest_first",
+     "newest_ready_first"
+    ]
+   },
+   {
+    "p": "spec.resolve_outdated_diff_discussions",
+    "t": "boolean",
+    "d": "Automatically resolve merge request diff threads on lines changed with a push"
+   },
+   {
+    "p": "spec.remove_source_branch_after_merge",
+    "t": "boolean",
+    "d": "Remove the source branch by default after merge"
+   },
+   {
+    "p": "spec.packages_enabled",
+    "t": "boolean",
+    "d": "Deprecated in GitLab 17.10: Use :package_registry_access_level instead. Enable project packages feature"
+   },
+   {
+    "p": "spec.container_registry_enabled",
+    "t": "boolean",
+    "d": "Deprecated: Use :container_registry_access_level instead. Flag indication if the container registry is enabled for that project"
+   },
+   {
+    "p": "spec.container_expiration_policy_attributes",
+    "t": "object",
+    "d": "Object that contains information on the container expiration policy"
+   },
+   {
+    "p": "spec.container_expiration_policy_attributes.cadence",
+    "t": "string",
+    "d": "Container expiration policy cadence for recurring job"
+   },
+   {
+    "p": "spec.container_expiration_policy_attributes.keep_n",
+    "t": "integer",
+    "d": "Container expiration policy number of images to keep"
+   },
+   {
+    "p": "spec.container_expiration_policy_attributes.older_than",
+    "t": "string",
+    "d": "Container expiration policy remove images older than value"
+   },
+   {
+    "p": "spec.container_expiration_policy_attributes.name_regex",
+    "t": "string",
+    "d": "Container expiration policy regex for image removal"
+   },
+   {
+    "p": "spec.container_expiration_policy_attributes.name_regex_keep",
+    "t": "string",
+    "d": "Container expiration policy regex for image retention"
+   },
+   {
+    "p": "spec.container_expiration_policy_attributes.enabled",
+    "t": "boolean",
+    "d": "Flag indication if container expiration policy is enabled"
+   },
+   {
+    "p": "spec.lfs_enabled",
+    "t": "boolean",
+    "d": "Flag indication if Git LFS is enabled for that project"
+   },
+   {
+    "p": "spec.visibility",
+    "t": "string",
+    "d": "The visibility of the project.",
+    "e": [
+     "private",
+     "internal",
+     "public"
+    ]
+   },
+   {
+    "p": "spec.public_builds",
+    "t": "boolean",
+    "d": "If `true`, jobs can be viewed by non-project members. Deprecated: Use public_jobs instead."
+   },
+   {
+    "p": "spec.public_jobs",
+    "t": "boolean",
+    "d": "If `true`, jobs can be viewed by non-project members."
+   },
+   {
+    "p": "spec.request_access_enabled",
+    "t": "boolean",
+    "d": "Allow users to request member access"
+   },
+   {
+    "p": "spec.only_allow_merge_if_pipeline_succeeds",
+    "t": "boolean",
+    "d": "Only allow to merge if builds succeed"
+   },
+   {
+    "p": "spec.allow_merge_on_skipped_pipeline",
+    "t": "boolean",
+    "d": "Allow to merge if pipeline is skipped"
+   },
+   {
+    "p": "spec.only_allow_merge_if_all_discussions_are_resolved",
+    "t": "boolean",
+    "d": "Only allow to merge if all threads are resolved"
+   },
+   {
+    "p": "spec.tag_list",
+    "t": "[]string",
+    "d": "The list of tags for the project. Deprecated in GitLab 14.0: Use :topics instead"
+   },
+   {
+    "p": "spec.topics",
+    "t": "[]string",
+    "d": "The list of topics for a project. When updating a project, replaces any existing topics."
+   },
+   {
+    "p": "spec.printing_merge_request_link_enabled",
+    "t": "boolean",
+    "d": "Show link to create/view merge request when pushing from the command line"
+   },
+   {
+    "p": "spec.merge_method",
+    "t": "string",
+    "d": "The merge method used when merging merge requests",
+    "e": [
+     "ff",
+     "rebase_merge",
+     "merge"
+    ]
+   },
+   {
+    "p": "spec.suggestion_commit_message",
+    "t": "string",
+    "d": "The commit message used to apply merge request suggestions"
+   },
+   {
+    "p": "spec.merge_commit_template",
+    "t": "string",
+    "d": "Template used to create merge commit message"
+   },
+   {
+    "p": "spec.squash_commit_template",
+    "t": "string",
+    "d": "Template used to create squash commit message"
+   },
+   {
+    "p": "spec.issue_branch_template",
+    "t": "string",
+    "d": "Template used to create a branch from an issue"
+   },
+   {
+    "p": "spec.auto_devops_enabled",
+    "t": "boolean",
+    "d": "Flag indication if Auto DevOps is enabled"
+   },
+   {
+    "p": "spec.auto_devops_deploy_strategy",
+    "t": "string",
+    "d": "Auto Deploy strategy",
+    "e": [
+     "continuous",
+     "manual",
+     "timed_incremental"
+    ]
+   },
+   {
+    "p": "spec.autoclose_referenced_issues",
+    "t": "boolean",
+    "d": "Flag indication if referenced issues auto-closing on the default branch is enabled"
+   },
+   {
+    "p": "spec.repository_storage",
+    "t": "string",
+    "d": "Which storage shard the repository is on. Available only to admins"
+   },
+   {
+    "p": "spec.squash_option",
+    "t": "string",
+    "d": "Squash default for project. One of `never`, `always`, `default_on`, or `default_off`.",
+    "e": [
+     "never",
+     "always",
+     "default_on",
+     "default_off"
+    ]
+   },
+   {
+    "p": "spec.mr_default_target_self",
+    "t": "boolean",
+    "d": "Merge requests of this forked project targets itself by default. If `false`, the target is the upstream project."
+   },
+   {
+    "p": "spec.mr_default_title_template",
+    "t": "string",
+    "d": "Template used to generate the default merge request title. Maximum 100 characters. [Introduced](https://gitlab.com/gitlab-org/gitlab/-/merge_requests/228442) in GitLab 18.11."
+   },
+   {
+    "p": "spec.cicd_catalog_enabled",
+    "t": "boolean",
+    "d": "Set whether the project is a CI/CD catalog project. Requires the Owner role. [Introduced](https://gitlab.com/gitlab-org/gitlab/-/issues/463043) in GitLab 19.3."
+   },
+   {
+    "p": "spec.only_allow_merge_if_all_status_checks_passed",
+    "t": "boolean",
+    "d": "Blocks merge requests from merging unless all status checks have passed. Default is `false`. Ultimate only."
+   },
+   {
+    "p": "spec.approvals_before_merge",
+    "t": "integer",
+    "d": "How many approvers should approve merge request by default. Deprecated in GitLab 16.0: Use the merge request approvals API instead. Premium and Ultimate only."
+   },
+   {
+    "p": "spec.mirror",
+    "t": "boolean",
+    "d": "[Deprecated] Enables pull mirroring in a project. Premium and Ultimate only."
+   },
+   {
+    "p": "spec.mirror_trigger_builds",
+    "t": "boolean",
+    "d": "[Deprecated] Pull mirroring triggers builds. Premium and Ultimate only."
+   },
+   {
+    "p": "spec.external_authorization_classification_label",
+    "t": "string",
+    "d": "The classification label for the project. Premium and Ultimate only."
+   },
+   {
+    "p": "spec.requirements_access_level",
+    "t": "string",
+    "d": "Requirements feature access level. One of `disabled`, `private` or `enabled`",
+    "e": [
+     "disabled",
+     "private",
+     "enabled"
+    ]
+   },
+   {
+    "p": "spec.prevent_merge_without_jira_issue",
+    "t": "boolean",
+    "d": "Require an associated issue from Jira. Ultimate only."
+   },
+   {
+    "p": "spec.auto_duo_code_review_enabled",
+    "t": "boolean",
+    "d": "Enable automatic reviews by GitLab Duo on merge requests"
+   },
+   {
+    "p": "spec.duo_code_review_decisions_enabled",
+    "t": "boolean",
+    "d": "Enable approval and change requests by GitLab Duo on merge requests. Behind a feature flag named `duo_code_review_decisions`, enabled by default."
+   },
+   {
+    "p": "spec.duo_code_review_depth_allowed",
+    "t": "boolean",
+    "d": "[Beta] Allow deep reviews by GitLab Duo Code Review Flow"
+   },
+   {
+    "p": "spec.duo_code_review_default_depth",
+    "t": "string",
+    "d": "[Beta] Default review depth for GitLab Duo Code Review Flow. One of `standard` or `deep`",
+    "e": [
+     "standard",
+     "deep"
+    ]
+   },
+   {
+    "p": "spec.duo_remote_flows_enabled",
+    "t": "boolean",
+    "d": "Enable GitLab Duo remote flows for this project"
+   },
+   {
+    "p": "spec.duo_sast_fp_detection_enabled",
+    "t": "boolean",
+    "d": "Enable GitLab Duo SAST false positive detection for this project"
+   },
+   {
+    "p": "spec.duo_secret_detection_fp_enabled",
+    "t": "boolean",
+    "d": "Enable GitLab Duo Secret Detection false positive detection for this project"
+   },
+   {
+    "p": "spec.duo_dependency_bump_breaking_changes_enabled",
+    "t": "boolean",
+    "d": "Turn on Agentic Breaking Change Resolution for this project"
+   },
+   {
+    "p": "spec.duo_sast_vr_workflow_enabled",
+    "t": "boolean",
+    "d": "Enable GitLab Duo SAST vulnerability resolution workflow for this project. Requires the Security Manager, Maintainer, or Owner role."
+   },
+   {
+    "p": "spec.spp_repository_pipeline_access",
+    "t": "boolean",
+    "d": "Grant users and tokens read-only access to security policy configurations for enforcement in linked CI/CD projects. Ultimate only."
+   },
+   {
+    "p": "spec.merge_request_title_regex",
+    "t": "string",
+    "d": "The regex the Merge Request must adhere to"
+   },
+   {
+    "p": "spec.merge_request_title_regex_description",
+    "t": "string",
+    "d": "The description for the regex the Merge Request must adhere to"
+   },
+   {
+    "p": "spec.repository_object_format",
+    "t": "string",
+    "d": "The object format of the project repository. Default is `sha1`.",
+    "e": [
+     "sha1",
+     "sha256"
+    ]
+   },
+   {
+    "p": "spec.initialize_with_readme",
+    "t": "boolean",
+    "d": "Initialize a project with a README.md. Default is `false`. Do not set to `true` with `import_url` or other params that set the repository contents, or the import can fail with `not a git repository`."
+   },
+   {
+    "p": "spec.use_custom_template",
+    "t": "boolean",
+    "d": "Use a custom instance-level project template, or a group-level one with `group_with_project_templates_id`. Premium and Ultimate only."
+   },
+   {
+    "p": "spec.group_with_project_templates_id",
+    "t": "integer",
+    "d": "For group-level custom templates, ID of the group that serves as the template source. Leave empty for instance-level templates. Requires `use_custom_template` to be `true`. Premium and Ultimate only."
+   },
+   {
+    "p": "spec.namespace_id",
+    "t": "integer",
+    "d": "Namespace ID for the new project. Accepts a group or subgroup ID. Default to the user namespace."
+   },
+   {
+    "p": "spec.import_url",
+    "t": "string",
+    "d": "URL from which the project is imported. When set, do not set `initialize_with_readme` to `true`, or the import can fail with `not a git repository`. Mutually exclusive with `template_name`, `template_project_id`."
+   },
+   {
+    "p": "spec.template_name",
+    "t": "string",
+    "d": "Name of template from which to create project. Without `use_custom_template`, the name of a built-in project template. With `use_custom_template`, the name of a custom project template. Mutually exclusive with `import_url`, `template_project_id`."
+   },
+   {
+    "p": "spec.template_project_id",
+    "t": "integer",
+    "d": "Project ID of template from which to create project. Use with `use_custom_template` for a custom project template. Preferred over `template_name`, which can be ambiguous. Premium and Ultimate only. Mutually exclusive with `import_url`, `template_name`."
+   },
+   {
+    "p": "spec.connectionRef",
+    "t": "object",
+    "d": "The Connection to use; default \"default\" in the same namespace."
+   },
+   {
+    "p": "spec.connectionRef.name",
+    "t": "string"
+   },
+   {
+    "p": "spec.secretRefs",
+    "t": "map[string]object",
+    "d": "Fill body fields from Secrets: {<field>: {name, key}}. Use for tokens, passwords and secret values."
+   },
+   {
+    "p": "spec.fieldRefs",
+    "t": "map[string]object",
+    "d": "Fill spec fields from other objects in this namespace: {<field>: {kind, name, fieldPath}}. fieldPath defaults to status.id, taken once that object is Ready; apiVersion is needed only where the kind's name is in more than one group. Nothing is sent until every reference resolves."
+   }
+  ],
+  "status": [
+   {
+    "p": "status.id",
+    "t": "string"
+   },
+   {
+    "p": "status.appliedHash",
+    "t": "string"
+   },
+   {
+    "p": "status.observedGeneration",
+    "t": "integer"
+   },
+   {
+    "p": "status.atProvider",
+    "t": "object"
+   },
+   {
+    "p": "status.conditions",
+    "t": "[]object"
+   }
+  ],
+  "refs": [],
+  "example": {
+   "notes": [
+    "`spec.namespace_id` is a number the live test takes from a value it saves first; replace the 0."
+   ],
+   "tested": "live",
+   "date": "2026-11-17",
+   "target": "GitLab 19.5.5",
+   "prereqs": [
+    "POST /groups"
+   ],
+   "spec": {
+    "name": "example-project",
+    "path": "example-project",
+    "namespace_id": 0,
+    "visibility": "private"
+   },
+   "yaml": "apiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  namespace_id: 0\n  visibility: private\n",
+   "line": "Tested live: create, update, drift repair and delete passed against GitLab 19.5.5 on 2026-11-17."
+  },
+  "related": [
+   {
+    "file": "examples/Project/with-Group.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/Project/with-Group.yaml",
+    "main": "Project",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n"
+   },
+   {
+    "file": "examples/Branch/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/Branch/with-Group-and-Project.yaml",
+    "main": "Branch",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "Branch"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: branch.gitlab.hfl.dev/v1alpha1\nkind: Branch\nmetadata:\n  name: example-branch\n  namespace: default\nspec:\n  branch: example-branch\n  ref: main\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/BranchProtection/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/BranchProtection/with-Group-and-Project.yaml",
+    "main": "BranchProtection",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "BranchProtection"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: branch.gitlab.hfl.dev/v1alpha1\nkind: BranchProtection\nmetadata:\n  name: example-branchprotection\n  namespace: default\nspec:\n  name: example-branchprotection\n  push_access_level: 40\n  merge_access_level: 40\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ClusterAgent/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ClusterAgent/with-Group-and-Project.yaml",
+    "main": "ClusterAgent",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ClusterAgent"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: cluster.gitlab.hfl.dev/v1alpha1\nkind: ClusterAgent\nmetadata:\n  name: example-clusteragent\n  namespace: default\nspec:\n  name: example-clusteragent\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ClusterAgentToken/with-Group-and-Project-and-ClusterAgent.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ClusterAgentToken/with-Group-and-Project-and-ClusterAgent.yaml",
+    "main": "ClusterAgentToken",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ClusterAgent",
+     "ClusterAgentToken"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: cluster.gitlab.hfl.dev/v1alpha1\nkind: ClusterAgent\nmetadata:\n  name: example-clusteragent\n  namespace: default\nspec:\n  name: example-clusteragent\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n---\napiVersion: cluster.gitlab.hfl.dev/v1alpha1\nkind: ClusterAgentToken\nmetadata:\n  name: example-clusteragenttoken\n  namespace: default\nspec:\n  name: example-clusteragenttoken\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n    agentID:\n      kind: ClusterAgent\n      name: example-clusteragent\n"
+   },
+   {
+    "file": "examples/DeployKey/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/DeployKey/with-Group-and-Project.yaml",
+    "main": "DeployKey",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "DeployKey"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: deploy.gitlab.hfl.dev/v1alpha1\nkind: DeployKey\nmetadata:\n  name: example-deploykey\n  namespace: default\nspec:\n  title: example-deploykey\n  key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIESnx8zLtMqslb+EKt8MbNMMvHlXBQfdwshxSWiQ3dqa hfl-live\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/PagesDomain/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/PagesDomain/with-Group-and-Project.yaml",
+    "main": "PagesDomain",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "PagesDomain"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: pages.gitlab.hfl.dev/v1alpha1\nkind: PagesDomain\nmetadata:\n  name: example-pagesdomain\n  namespace: default\nspec:\n  domain: example-pagesdomain.hfl-live.example\n  auto_ssl_enabled: false\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/PipelineSchedule/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/PipelineSchedule/with-Group-and-Project.yaml",
+    "main": "PipelineSchedule",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "PipelineSchedule"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: pipeline.gitlab.hfl.dev/v1alpha1\nkind: PipelineSchedule\nmetadata:\n  name: example-pipelineschedule\n  namespace: default\nspec:\n  description: example-pipelineschedule\n  ref: refs/heads/main\n  cron: 0 1 * * *\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/PipelineScheduleVariable/with-Group-and-Project-and-PipelineSchedule.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/PipelineScheduleVariable/with-Group-and-Project-and-PipelineSchedule.yaml",
+    "main": "PipelineScheduleVariable",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "PipelineSchedule",
+     "PipelineScheduleVariable"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: pipeline.gitlab.hfl.dev/v1alpha1\nkind: PipelineSchedule\nmetadata:\n  name: example-pipelineschedule\n  namespace: default\nspec:\n  description: example-pipelineschedule\n  ref: refs/heads/main\n  cron: 0 1 * * *\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n---\napiVersion: pipeline.gitlab.hfl.dev/v1alpha1\nkind: PipelineScheduleVariable\nmetadata:\n  name: example-pipelineschedulevariable\n  namespace: default\nspec:\n  key: example_pipelineschedulevariable\n  value: a\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n    pipelineScheduleID:\n      kind: PipelineSchedule\n      name: example-pipelineschedule\n"
+   },
+   {
+    "file": "examples/PipelineTrigger/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/PipelineTrigger/with-Group-and-Project.yaml",
+    "main": "PipelineTrigger",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "PipelineTrigger"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: pipeline.gitlab.hfl.dev/v1alpha1\nkind: PipelineTrigger\nmetadata:\n  name: example-pipelinetrigger\n  namespace: default\nspec:\n  description: example-pipelinetrigger\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ProjectAccessToken/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectAccessToken/with-Group-and-Project.yaml",
+    "main": "ProjectAccessToken",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectAccessToken"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectAccessToken\nmetadata:\n  name: example-projectaccesstoken\n  namespace: default\nspec:\n  name: example-projectaccesstoken\n  scopes:\n  - read_api\n  access_level: 30\n  expires_at: '2030-01-01'\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ProjectBadge/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectBadge/with-Group-and-Project.yaml",
+    "main": "ProjectBadge",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectBadge"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectBadge\nmetadata:\n  name: example-projectbadge\n  namespace: default\nspec:\n  link_url: https://hfl-live.example/example-projectbadge\n  image_url: https://hfl-live.example/badge.svg\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ProjectCustomAttribute/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectCustomAttribute/with-Group-and-Project.yaml",
+    "main": "ProjectCustomAttribute",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectCustomAttribute"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectCustomAttribute\nmetadata:\n  name: example-projectcustomattribute\n  namespace: default\nspec:\n  key: example_projectcustomattribute\n  value: a\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ProjectDeployToken/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectDeployToken/with-Group-and-Project.yaml",
+    "main": "ProjectDeployToken",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectDeployToken"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectDeployToken\nmetadata:\n  name: example-projectdeploytoken\n  namespace: default\nspec:\n  name: example-projectdeploytoken\n  scopes:\n  - read_repository\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ProjectEnvironment/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectEnvironment/with-Group-and-Project.yaml",
+    "main": "ProjectEnvironment",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectEnvironment"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectEnvironment\nmetadata:\n  name: example-projectenvironment\n  namespace: default\nspec:\n  name: example-projectenvironment\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ProjectErrorTrackingSettings/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectErrorTrackingSettings/with-Group-and-Project.yaml",
+    "main": "ProjectErrorTrackingSettings",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectErrorTrackingSettings"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectErrorTrackingSettings\nmetadata:\n  name: example-projecterrortrackingsettings\n  namespace: default\nspec:\n  active: true\n  integrated: true\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ProjectFeatureFlag/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectFeatureFlag/with-Group-and-Project.yaml",
+    "main": "ProjectFeatureFlag",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectFeatureFlag"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectFeatureFlag\nmetadata:\n  name: example-projectfeatureflag\n  namespace: default\nspec:\n  name: example_projectfeatureflag\n  description: a\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ProjectFeatureFlagUserList/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectFeatureFlagUserList/with-Group-and-Project.yaml",
+    "main": "ProjectFeatureFlagUserList",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectFeatureFlagUserList"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectFeatureFlagUserList\nmetadata:\n  name: example-projectfeatureflaguserlist\n  namespace: default\nspec:\n  name: example-projectfeatureflaguserlist\n  user_xids: u1,u2\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ProjectFreezePeriod/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectFreezePeriod/with-Group-and-Project.yaml",
+    "main": "ProjectFreezePeriod",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectFreezePeriod"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectFreezePeriod\nmetadata:\n  name: example-projectfreezeperiod\n  namespace: default\nspec:\n  freeze_start: 0 23 * * 5\n  freeze_end: 0 7 * * 1\n  cron_timezone: UTC\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ProjectHook/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectHook/with-Group-and-Project.yaml",
+    "main": "ProjectHook",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectHook"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectHook\nmetadata:\n  name: example-projecthook\n  namespace: default\nspec:\n  url: https://hfl-live.example/hook/example-projecthook\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ProjectIssue/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectIssue/with-Group-and-Project.yaml",
+    "main": "ProjectIssue",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectIssue"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectIssue\nmetadata:\n  name: example-projectissue\n  namespace: default\nspec:\n  title: example-projectissue\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ProjectIssueLink/with-Group-and-Project-and-ProjectIssue.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectIssueLink/with-Group-and-Project-and-ProjectIssue.yaml",
+    "main": "ProjectIssueLink",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectIssue",
+     "ProjectIssueLink"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectIssue\nmetadata:\n  name: example-projectissue\n  namespace: default\nspec:\n  title: example-projectissue\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectIssueLink\nmetadata:\n  name: example-projectissuelink\n  namespace: default\nspec:\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n    issueIid:\n      kind: ProjectIssue\n      name: example-projectissue\n    target_project_id:\n      kind: Project\n      name: example-project\n      fieldPath: status.atProvider.id\n    target_issue_iid:\n      kind: ProjectIssue\n      name: example-projectissue\n      fieldPath: status.atProvider.iid\n"
+   },
+   {
+    "file": "examples/ProjectJobTokenScope/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectJobTokenScope/with-Group-and-Project.yaml",
+    "main": "ProjectJobTokenScope",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectJobTokenScope"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectJobTokenScope\nmetadata:\n  name: example-projectjobtokenscope\n  namespace: default\nspec:\n  enabled: false\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ProjectLabel/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectLabel/with-Group-and-Project.yaml",
+    "main": "ProjectLabel",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectLabel"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectLabel\nmetadata:\n  name: example-projectlabel\n  namespace: default\nspec:\n  name: example-projectlabel\n  color: '#FF0000'\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ProjectMembership/with-Group-and-Project-and-User.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectMembership/with-Group-and-Project-and-User.yaml",
+    "main": "ProjectMembership",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "User",
+     "ProjectMembership"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: user.gitlab.hfl.dev/v1alpha1\nkind: User\nmetadata:\n  name: example-user\n  namespace: default\nspec:\n  name: example-user\n  username: example-user\n  email: example-user@hfl-live.example\n  force_random_password: true\n  skip_confirmation: true\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectMembership\nmetadata:\n  name: example-projectmembership\n  namespace: default\nspec:\n  access_level: 30\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n    user_id:\n      kind: User\n      name: example-user\n      fieldPath: status.atProvider.id\n"
+   },
+   {
+    "file": "examples/ProjectMergeRequestNote/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectMergeRequestNote/with-Group-and-Project.yaml",
+    "main": "ProjectMergeRequestNote",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectMergeRequestNote"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectMergeRequestNote\nmetadata:\n  name: example-projectmergerequestnote\n  namespace: default\nspec:\n  noteableID: <mr>\n  body: hello\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ProjectMilestone/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectMilestone/with-Group-and-Project.yaml",
+    "main": "ProjectMilestone",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectMilestone"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectMilestone\nmetadata:\n  name: example-projectmilestone\n  namespace: default\nspec:\n  title: example-projectmilestone\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ProjectSecureFile/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectSecureFile/with-Group-and-Project.yaml",
+    "main": "ProjectSecureFile",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectSecureFile"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectSecureFile\nmetadata:\n  name: example-projectsecurefile\n  namespace: default\nspec:\n  name: example-projectsecurefile.txt\n  file:\n    name: example-projectsecurefile.txt\n    content: hello-secure-file\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ProjectServiceAccount/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectServiceAccount/with-Group-and-Project.yaml",
+    "main": "ProjectServiceAccount",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectServiceAccount"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectServiceAccount\nmetadata:\n  name: example-projectserviceaccount\n  namespace: default\nspec:\n  name: example-projectserviceaccount\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ProjectTag/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectTag/with-Group-and-Project.yaml",
+    "main": "ProjectTag",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectTag"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectTag\nmetadata:\n  name: example-projecttag\n  namespace: default\nspec:\n  tag_name: example-projecttag\n  ref: main\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ProjectVariable/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectVariable/with-Group-and-Project.yaml",
+    "main": "ProjectVariable",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectVariable"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectVariable\nmetadata:\n  name: example-projectvariable\n  namespace: default\nspec:\n  key: example_projectvariable\n  value: a\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ProjectWikiPage/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectWikiPage/with-Group-and-Project.yaml",
+    "main": "ProjectWikiPage",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectWikiPage"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectWikiPage\nmetadata:\n  name: example-projectwikipage\n  namespace: default\nspec:\n  title: example_projectwikipage\n  content: hello\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/Release/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/Release/with-Group-and-Project.yaml",
+    "main": "Release",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "Release"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: release.gitlab.hfl.dev/v1alpha1\nkind: Release\nmetadata:\n  name: example-release\n  namespace: default\nspec:\n  tag_name: example-release\n  ref: main\n  name: example-release\n  description: first\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/ReleaseLink/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ReleaseLink/with-Group-and-Project.yaml",
+    "main": "ReleaseLink",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ReleaseLink"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: release.gitlab.hfl.dev/v1alpha1\nkind: ReleaseLink\nmetadata:\n  name: example-releaselink\n  namespace: default\nspec:\n  tagName: example-releaselink-r\n  name: example-releaselink\n  url: https://hfl-live.example/example-releaselink\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/RepositoryFile/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/RepositoryFile/with-Group-and-Project.yaml",
+    "main": "RepositoryFile",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "RepositoryFile"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: repository.gitlab.hfl.dev/v1alpha1\nkind: RepositoryFile\nmetadata:\n  name: example-repositoryfile\n  namespace: default\nspec:\n  filePath: example-repositoryfile.txt\n  branch: main\n  commit_message: live test example-repositoryfile\n  encoding: base64\n  content: aGVsbG8tcmVwb3NpdG9yeS1maWxl\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   },
+   {
+    "file": "examples/TagProtection/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/TagProtection/with-Group-and-Project.yaml",
+    "main": "TagProtection",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "TagProtection"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: tag.gitlab.hfl.dev/v1alpha1\nkind: TagProtection\nmetadata:\n  name: example-tagprotection\n  namespace: default\nspec:\n  name: example-tagprotection-*\n  create_access_level: 40\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   }
+  ],
+  "usedBy": []
+ },
+ {
+  "id": "gitlab-krm-extensions/project.gitlab.hfl.dev/ProjectWikiPage",
+  "provider": "gitlab-krm-extensions",
+  "surface": "gitlab",
+  "tier": "extension",
+  "group": "project.gitlab.hfl.dev",
+  "kind": "ProjectWikiPage",
+  "plural": "projectwikipages",
+  "service": "project",
+  "scope": "Namespaced",
+  "version": "v1alpha1",
+  "versions": [
+   "v1alpha1"
+  ],
+  "stability": "alpha",
+  "desc": "ProjectWikiPage: crud resource at /projects/{id}/wikis/{slug}. Terraform equivalent: gitlab_project_wiki_page. Fields keep the API's own names.",
+  "nspec": 10,
+  "nstatus": 5,
+  "short": [],
+  "cloudcontrol": false,
+  "source": "src/gitlab-krm-extensions/config/crds/project.gitlab.hfl.dev_projectwikipages.yaml",
+  "srcUrl": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/config/crds/project.gitlab.hfl.dev_projectwikipages.yaml",
+  "docsUrl": null,
+  "repoUrl": "https://github.com/highfivelabs/gitlab-krm-extensions/tree/main",
+  "docRepoBase": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/",
+  "api": [
+   {
+    "api": "/projects/{id}/wikis/{slug}",
+    "tf": [
+     "gitlab_project_wiki_page"
+    ]
+   }
+  ],
+  "readiness": "live",
+  "manages": "external-api",
+  "spec": [
+   {
+    "p": "spec.projectID",
+    "t": "string",
+    "d": "Fills {id} in /projects/{id}/wikis/{slug}."
+   },
+   {
+    "p": "spec.title",
+    "t": "string",
+    "d": "Title of the wiki page."
+   },
+   {
+    "p": "spec.front_matter",
+    "t": "object",
+    "d": "YAML front matter of the wiki page."
+   },
+   {
+    "p": "spec.front_matter.title",
+    "t": "string",
+    "d": "Title in the front matter of the wiki page."
+   },
+   {
+    "p": "spec.content",
+    "t": "string",
+    "d": "Content of the wiki page."
+   },
+   {
+    "p": "spec.format",
+    "t": "string",
+    "d": "Format of the wiki page.",
+    "e": [
+     "markdown",
+     "rdoc",
+     "asciidoc",
+     "org"
+    ]
+   },
+   {
+    "p": "spec.connectionRef",
+    "t": "object",
+    "d": "The Connection to use; default \"default\" in the same namespace."
+   },
+   {
+    "p": "spec.connectionRef.name",
+    "t": "string"
+   },
+   {
+    "p": "spec.secretRefs",
+    "t": "map[string]object",
+    "d": "Fill body fields from Secrets: {<field>: {name, key}}. Use for tokens, passwords and secret values."
+   },
+   {
+    "p": "spec.fieldRefs",
+    "t": "map[string]object",
+    "d": "Fill spec fields from other objects in this namespace: {<field>: {kind, name, fieldPath}}. fieldPath defaults to status.id, taken once that object is Ready; apiVersion is needed only where the kind's name is in more than one group. Nothing is sent until every reference resolves."
+   }
+  ],
+  "status": [
+   {
+    "p": "status.id",
+    "t": "string"
+   },
+   {
+    "p": "status.appliedHash",
+    "t": "string"
+   },
+   {
+    "p": "status.observedGeneration",
+    "t": "integer"
+   },
+   {
+    "p": "status.atProvider",
+    "t": "object"
+   },
+   {
+    "p": "status.conditions",
+    "t": "[]object"
+   }
+  ],
+  "refs": [],
+  "example": {
+   "notes": [],
+   "tested": "live",
+   "date": "2026-11-17",
+   "target": "GitLab 19.5.5",
+   "prereqs": [
+    "POST /projects"
+   ],
+   "spec": {
+    "projectID": "<project>",
+    "title": "example_projectwikipage",
+    "content": "hello"
+   },
+   "yaml": "apiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectWikiPage\nmetadata:\n  name: example-projectwikipage\n  namespace: default\nspec:\n  projectID: <project>\n  title: example_projectwikipage\n  content: hello\n",
+   "line": "Tested live: create, update, drift repair and delete passed against GitLab 19.5.5 on 2026-11-17."
+  },
+  "related": [
+   {
+    "file": "examples/ProjectWikiPage/with-Group-and-Project.yaml",
+    "url": "https://github.com/highfivelabs/gitlab-krm-extensions/blob/main/examples/ProjectWikiPage/with-Group-and-Project.yaml",
+    "main": "ProjectWikiPage",
+    "kinds": [
+     "Group",
+     "Group",
+     "Project",
+     "ProjectWikiPage"
+    ],
+    "yaml": "apiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group-parent\n  namespace: default\nspec:\n  name: example-group-parent\n  path: example-group-parent\n  visibility: private\n---\napiVersion: group.gitlab.hfl.dev/v1alpha1\nkind: Group\nmetadata:\n  name: example-group\n  namespace: default\nspec:\n  name: example-group\n  path: example-group\n  visibility: private\n  fieldRefs:\n    parent_id:\n      kind: Group\n      name: example-group-parent\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: Project\nmetadata:\n  name: example-project\n  namespace: default\nspec:\n  name: example-project\n  path: example-project\n  visibility: private\n  fieldRefs:\n    namespace_id:\n      kind: Group\n      name: example-group\n      fieldPath: status.atProvider.id\n---\napiVersion: project.gitlab.hfl.dev/v1alpha1\nkind: ProjectWikiPage\nmetadata:\n  name: example-projectwikipage\n  namespace: default\nspec:\n  title: example_projectwikipage\n  content: hello\n  fieldRefs:\n    projectID:\n      kind: Project\n      name: example-project\n"
+   }
+  ],
+  "usedBy": []
+ }
+]

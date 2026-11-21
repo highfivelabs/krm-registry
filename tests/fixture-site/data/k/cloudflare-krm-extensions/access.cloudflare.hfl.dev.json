@@ -1,0 +1,143 @@
+[
+ {
+  "id": "cloudflare-krm-extensions/access.cloudflare.hfl.dev/AccessRule",
+  "provider": "cloudflare-krm-extensions",
+  "surface": "cloudflare",
+  "tier": "extension",
+  "group": "access.cloudflare.hfl.dev",
+  "kind": "AccessRule",
+  "plural": "accessrules",
+  "service": "access",
+  "scope": "Namespaced",
+  "version": "v1alpha1",
+  "versions": [
+   "v1alpha1"
+  ],
+  "stability": "alpha",
+  "desc": "AccessRule: crud resource at /accounts/{account_id}/firewall/access_rules/rules/{rule_id}. Terraform equivalent: cloudflare_access_rule. Fields keep the API's own names.",
+  "nspec": 10,
+  "nstatus": 5,
+  "short": [],
+  "cloudcontrol": false,
+  "source": "src/cloudflare-krm-extensions/config/crds/access.cloudflare.hfl.dev_accessrules.yaml",
+  "srcUrl": "https://github.com/highfivelabs/cloudflare-krm-extensions/blob/main/config/crds/access.cloudflare.hfl.dev_accessrules.yaml",
+  "docsUrl": null,
+  "repoUrl": "https://github.com/highfivelabs/cloudflare-krm-extensions/tree/main",
+  "docRepoBase": "https://github.com/highfivelabs/cloudflare-krm-extensions/blob/main/",
+  "api": [
+   {
+    "api": "/accounts/{account_id}/firewall/access_rules/rules/{rule_id}",
+    "tf": [
+     "cloudflare_access_rule"
+    ]
+   }
+  ],
+  "readiness": "live",
+  "manages": "external-api",
+  "spec": [
+   {
+    "p": "spec.accountID",
+    "t": "string",
+    "d": "Fills {account_id} in /accounts/{account_id}/firewall/access_rules/rules/{rule_id}."
+   },
+   {
+    "p": "spec.configuration",
+    "t": "object",
+    "d": "The rule configuration."
+   },
+   {
+    "p": "spec.configuration.target",
+    "t": "string",
+    "d": "The configuration target. You must set the target to `ip` when specifying an IP address in the rule.",
+    "e": [
+     "ip",
+     "ip6",
+     "ip_range",
+     "asn",
+     "country"
+    ]
+   },
+   {
+    "p": "spec.configuration.value",
+    "t": "string",
+    "d": "The IP address to match. This address will be compared to the IP address of incoming requests."
+   },
+   {
+    "p": "spec.mode",
+    "t": "string",
+    "d": "The action to apply to a matched request.",
+    "e": [
+     "block",
+     "challenge",
+     "whitelist",
+     "js_challenge",
+     "managed_challenge"
+    ]
+   },
+   {
+    "p": "spec.notes",
+    "t": ""
+   },
+   {
+    "p": "spec.connectionRef",
+    "t": "object",
+    "d": "The Connection to use; default \"default\" in the same namespace."
+   },
+   {
+    "p": "spec.connectionRef.name",
+    "t": "string"
+   },
+   {
+    "p": "spec.secretRefs",
+    "t": "map[string]object",
+    "d": "Fill body fields from Secrets: {<field>: {name, key}}. Use for tokens, passwords and secret values."
+   },
+   {
+    "p": "spec.fieldRefs",
+    "t": "map[string]object",
+    "d": "Fill spec fields from other objects in this namespace: {<field>: {kind, name, fieldPath}}. fieldPath defaults to status.id, taken once that object is Ready; apiVersion is needed only where the kind's name is in more than one group. Nothing is sent until every reference resolves."
+   }
+  ],
+  "status": [
+   {
+    "p": "status.id",
+    "t": "string"
+   },
+   {
+    "p": "status.appliedHash",
+    "t": "string"
+   },
+   {
+    "p": "status.observedGeneration",
+    "t": "integer"
+   },
+   {
+    "p": "status.atProvider",
+    "t": "object"
+   },
+   {
+    "p": "status.conditions",
+    "t": "[]object"
+   }
+  ],
+  "refs": [],
+  "example": {
+   "notes": [],
+   "tested": "live",
+   "date": "2026-11-20",
+   "target": "Cloudflare free account (Free Website zone)",
+   "spec": {
+    "accountID": "<accountId>",
+    "mode": "challenge",
+    "configuration": {
+     "target": "ip",
+     "value": "192.0.2.77"
+    },
+    "notes": "example-accessrule"
+   },
+   "yaml": "apiVersion: access.cloudflare.hfl.dev/v1alpha1\nkind: AccessRule\nmetadata:\n  name: example-accessrule\n  namespace: default\nspec:\n  accountID: <accountId>\n  mode: challenge\n  configuration:\n    target: ip\n    value: 192.0.2.77\n  notes: example-accessrule\n",
+   "line": "Tested live: create, update, drift repair and delete passed against Cloudflare free account (Free Website zone) on 2026-11-20."
+  },
+  "usedBy": []
+ }
+]

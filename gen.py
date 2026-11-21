@@ -411,7 +411,7 @@ def build():
                 if (group, k["kind"]) in with_related:
                     # Its own first, then those that need it.
                     rel = with_related[(group, k["kind"])]
-                    k["related"] = [r for r in rel if r["main"] == k["kind"]] + [r for r in rel if r["main"] != k["kind"]][:6]
+                    k["related"] = [r for r in rel if r["main"] == k["kind"]] + [r for r in rel if r["main"] != k["kind"]]
                 if (group, k["kind"]) in gaps:
                     k["gap"] = gaps[(group, k["kind"])]
                 elif k.get("readiness") == "fake" and k.get("api"):

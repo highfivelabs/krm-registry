@@ -183,8 +183,10 @@ def kind_page(k, providers, charts):
         for r in own:
             L += [f"From [`{r['file']}`]({r['url']}):", "", "```yaml", r["yaml"].rstrip(), "```", ""]
     if used:
+        names = [f"[{r['main']}]({r['url']})" for r in used]
+        more = f", and {len(names) - 12} more (`get_kind` in the registry's MCP server lists them all)" if len(names) > 12 else ""
         L += ["## Used by", "", "Examples in which other kinds take this one's ID through `spec.fieldRefs`: "
-              + ", ".join(f"[{r['main']}]({r['url']})" for r in used) + ".", ""]
+              + ", ".join(names[:12]) + more + ".", ""]
     for sec in ("spec", "status"):
         L += [f"## {sec.capitalize()}", ""]
         if not k[sec]:

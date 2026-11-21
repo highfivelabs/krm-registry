@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "krm-registry": {
+      "command": "python3",
+      "args": ["mcp_server.py", "--site", "site"]
+    }
+  }
+}
