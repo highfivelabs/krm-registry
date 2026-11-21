@@ -1,0 +1,457 @@
+[
+ {
+  "id": "config-connector/storage.cnrm.cloud.google.com/StorageBucket",
+  "provider": "config-connector",
+  "surface": "gcp",
+  "tier": "official",
+  "group": "storage.cnrm.cloud.google.com",
+  "kind": "StorageBucket",
+  "plural": "storagebuckets",
+  "service": "storage",
+  "scope": "Namespaced",
+  "version": "v1beta1",
+  "versions": [
+   "v1beta1"
+  ],
+  "stability": "ga",
+  "desc": "StorageBucket is the Schema for the StorageBucket API",
+  "nspec": 64,
+  "nstatus": 14,
+  "short": [
+   "gcpstoragebucket",
+   "gcpstoragebuckets"
+  ],
+  "cloudcontrol": false,
+  "source": "upstream/kcc/config/crds/resources/apiextensions.k8s.io_v1_customresourcedefinition_storagebuckets.storage.cnrm.cloud.google.com.yaml",
+  "srcUrl": "https://github.com/GoogleCloudPlatform/k8s-config-connector/blob/5d80f8e69f1ae84940c8257c1af5026fbad90517/config/crds/resources/apiextensions.k8s.io_v1_customresourcedefinition_storagebuckets.storage.cnrm.cloud.google.com.yaml",
+  "docsUrl": "https://docs.cloud.google.com/config-connector/docs/reference/resource-docs/storage/storagebucket",
+  "repoUrl": "https://github.com/GoogleCloudPlatform/k8s-config-connector/tree/v1.162.0",
+  "docRepoBase": "https://github.com/GoogleCloudPlatform/k8s-config-connector/blob/v1.162.0/",
+  "spec": [
+   {
+    "p": "spec.autoclass",
+    "t": "object",
+    "d": "The bucket's autoclass configuration."
+   },
+   {
+    "p": "spec.autoclass.enabled",
+    "t": "boolean",
+    "r": 1,
+    "d": "While set to true, autoclass automatically transitions objects in your bucket to appropriate storage classes based on each object's access pattern."
+   },
+   {
+    "p": "spec.autoclass.terminalStorageClass",
+    "t": "string",
+    "d": "The storage class that objects in the bucket eventually transition to if they are not read for a certain length of time. Supported values include: NEARLINE, ARCHIVE."
+   },
+   {
+    "p": "spec.bucketPolicyOnly",
+    "t": "boolean",
+    "d": "DEPRECATED. Please use the `uniformBucketLevelAccess` field as this field has been renamed by Google. The `uniformBucketLevelAccess` field will supersede this field. Enables Bucket PolicyOnly access to a bucket."
+   },
+   {
+    "p": "spec.cors",
+    "t": "[]object",
+    "d": "The bucket's Cross-Origin Resource Sharing (CORS) configuration."
+   },
+   {
+    "p": "spec.cors[].maxAgeSeconds",
+    "t": "integer",
+    "d": "The value, in seconds, to return in the Access-Control-Max-Age header used in preflight responses."
+   },
+   {
+    "p": "spec.cors[].method",
+    "t": "[]string",
+    "d": "The list of HTTP methods on which to include CORS response headers, (GET, OPTIONS, POST, etc) Note: \"*\" is permitted in the list of methods, and means \"any method\"."
+   },
+   {
+    "p": "spec.cors[].origin",
+    "t": "[]string",
+    "d": "The list of Origins eligible to receive CORS response headers. Note: \"*\" is permitted in the list of origins, and means \"any Origin\"."
+   },
+   {
+    "p": "spec.cors[].responseHeader",
+    "t": "[]string",
+    "d": "The list of HTTP headers other than the simple response headers to give permission for the user-agent to share across domains."
+   },
+   {
+    "p": "spec.customPlacementConfig",
+    "t": "object",
+    "d": "The bucket's custom location configuration, which specifies the individual regions that comprise a dual-region bucket. If the bucket is designated a single or multi-region, the parameters are empty."
+   },
+   {
+    "p": "spec.customPlacementConfig.dataLocations",
+    "t": "[]string",
+    "r": 1,
+    "d": "The list of individual regions that comprise a dual-region bucket. See the docs for a list of acceptable regions."
+   },
+   {
+    "p": "spec.defaultEventBasedHold",
+    "t": "boolean",
+    "d": "Whether or not to automatically apply an eventBasedHold to new objects added to the bucket."
+   },
+   {
+    "p": "spec.encryption",
+    "t": "object",
+    "d": "The bucket's encryption configuration."
+   },
+   {
+    "p": "spec.encryption.kmsKeyRef",
+    "t": "object",
+    "r": 1,
+    "d": "A reference to the KMS Crypto Key that will be used to encrypt objects inserted into this bucket."
+   },
+   {
+    "p": "spec.encryption.kmsKeyRef.external",
+    "t": "string",
+    "d": "A reference to an externally managed KMSCryptoKey resource. Should be in the format \"projects/{{projectID}}/locations/{{location}}/keyRings/{{keyring}}/cryptoKeys/{{cryptokey}}\"."
+   },
+   {
+    "p": "spec.encryption.kmsKeyRef.name",
+    "t": "string",
+    "d": "The name of a KMSCryptoKey resource."
+   },
+   {
+    "p": "spec.encryption.kmsKeyRef.namespace",
+    "t": "string",
+    "d": "The namespace of a KMSCryptoKey resource."
+   },
+   {
+    "p": "spec.ipFilter",
+    "t": "object",
+    "d": "The bucket IP filtering configuration."
+   },
+   {
+    "p": "spec.ipFilter.allowAllServiceAgentAccess",
+    "t": "boolean",
+    "d": "Whether to allow all service agents to access the bucket regardless of the IP filter configuration."
+   },
+   {
+    "p": "spec.ipFilter.allowCrossOrgVpcs",
+    "t": "boolean",
+    "d": "Whether to allow cross-org VPCs in the bucket's IP filter configuration."
+   },
+   {
+    "p": "spec.ipFilter.mode",
+    "t": "string",
+    "r": 1,
+    "d": "The mode of the IP filter. Valid values are 'Enabled' and 'Disabled'."
+   },
+   {
+    "p": "spec.ipFilter.publicNetworkSource",
+    "t": "object",
+    "d": "The public network IP address ranges that can access the bucket and its data."
+   },
+   {
+    "p": "spec.ipFilter.publicNetworkSource.allowedIpCidrRanges",
+    "t": "[]string",
+    "r": 1,
+    "d": "The list of public IPv4, IPv6 cidr ranges that are allowed to access the bucket."
+   },
+   {
+    "p": "spec.ipFilter.vpcNetworkSources",
+    "t": "[]object",
+    "d": "The list of VPC networks that can access the bucket."
+   },
+   {
+    "p": "spec.ipFilter.vpcNetworkSources[].allowedIpCidrRanges",
+    "t": "[]string",
+    "r": 1,
+    "d": "The list of public or private IPv4 and IPv6 CIDR ranges that can access the bucket."
+   },
+   {
+    "p": "spec.ipFilter.vpcNetworkSources[].networkRef",
+    "t": "object",
+    "r": 1,
+    "d": "The VPC network that can access the bucket."
+   },
+   {
+    "p": "spec.ipFilter.vpcNetworkSources[].networkRef.external",
+    "t": "string",
+    "d": "A reference to an externally managed ComputeNetwork resource. Should be in the format \"projects/{{projectID}}/global/networks/{{networkID}}\"."
+   },
+   {
+    "p": "spec.ipFilter.vpcNetworkSources[].networkRef.name",
+    "t": "string",
+    "d": "The name of a ComputeNetwork resource."
+   },
+   {
+    "p": "spec.ipFilter.vpcNetworkSources[].networkRef.namespace",
+    "t": "string",
+    "d": "The namespace of a ComputeNetwork resource."
+   },
+   {
+    "p": "spec.lifecycleRule",
+    "t": "[]object",
+    "d": "The bucket's Lifecycle Rules configuration."
+   },
+   {
+    "p": "spec.lifecycleRule[].action",
+    "t": "object",
+    "r": 1,
+    "d": "The Lifecycle Rule's action configuration. A single block of this type is supported."
+   },
+   {
+    "p": "spec.lifecycleRule[].action.storageClass",
+    "t": "string",
+    "d": "The target Storage Class of objects affected by this Lifecycle Rule. Supported values include: MULTI_REGIONAL, REGIONAL, NEARLINE, COLDLINE, ARCHIVE."
+   },
+   {
+    "p": "spec.lifecycleRule[].action.type",
+    "t": "string",
+    "r": 1,
+    "d": "The type of the action of this Lifecycle Rule. Supported values include: Delete, SetStorageClass and AbortIncompleteMultipartUpload."
+   },
+   {
+    "p": "spec.lifecycleRule[].condition",
+    "t": "object",
+    "r": 1,
+    "d": "The Lifecycle Rule's condition configuration."
+   },
+   {
+    "p": "spec.lifecycleRule[].condition.age",
+    "t": "integer",
+    "d": "Minimum age of an object in days to satisfy this condition."
+   },
+   {
+    "p": "spec.lifecycleRule[].condition.createdBefore",
+    "t": "string",
+    "d": "Creation date of an object in RFC 3339 (e.g. 2017-06-13) to satisfy this condition."
+   },
+   {
+    "p": "spec.lifecycleRule[].condition.customTimeBefore",
+    "t": "string",
+    "d": "Creation date of an object in RFC 3339 (e.g. 2017-06-13) to satisfy this condition."
+   },
+   {
+    "p": "spec.lifecycleRule[].condition.daysSinceCustomTime",
+    "t": "integer",
+    "d": "Number of days elapsed since the user-specified timestamp set on an object."
+   },
+   {
+    "p": "spec.lifecycleRule[].condition.daysSinceNoncurrentTime",
+    "t": "integer",
+    "d": "Number of days elapsed since the noncurrent timestamp of an object. This condition is relevant only for versioned objects."
+   },
+   {
+    "p": "spec.lifecycleRule[].condition.matchesPrefix",
+    "t": "[]string",
+    "d": "One or more matching name prefixes to satisfy this condition."
+   },
+   {
+    "p": "spec.lifecycleRule[].condition.matchesStorageClass",
+    "t": "[]string",
+    "d": "Storage Class of objects to satisfy this condition. Supported values include: MULTI_REGIONAL, REGIONAL, NEARLINE, COLDLINE, ARCHIVE, STANDARD, DURABLE_REDUCED_AVAILABILITY."
+   },
+   {
+    "p": "spec.lifecycleRule[].condition.matchesSuffix",
+    "t": "[]string",
+    "d": "One or more matching name suffixes to satisfy this condition."
+   },
+   {
+    "p": "spec.lifecycleRule[].condition.noncurrentTimeBefore",
+    "t": "string",
+    "d": "Creation date of an object in RFC 3339 (e.g. 2017-06-13) to satisfy this condition."
+   },
+   {
+    "p": "spec.lifecycleRule[].condition.numNewerVersions",
+    "t": "integer",
+    "d": "Relevant only for versioned objects. The number of newer versions of an object to satisfy this condition."
+   },
+   {
+    "p": "spec.lifecycleRule[].condition.withState",
+    "t": "string",
+    "d": "Match to live and/or archived objects. Unversioned buckets have only live objects. Supported values include: \"LIVE\", \"ARCHIVED\", \"ANY\"."
+   },
+   {
+    "p": "spec.location",
+    "t": "string",
+    "d": "The Google Cloud Storage location.",
+    "df": "US"
+   },
+   {
+    "p": "spec.logging",
+    "t": "object",
+    "d": "The bucket's Access & Storage Logs configuration."
+   },
+   {
+    "p": "spec.logging.logBucket",
+    "t": "string",
+    "r": 1,
+    "d": "The bucket that will receive log objects."
+   },
+   {
+    "p": "spec.logging.logObjectPrefix",
+    "t": "string",
+    "d": "The object prefix for log objects. If it's not provided, by default Google Cloud Storage sets this to this bucket's name."
+   },
+   {
+    "p": "spec.publicAccessPrevention",
+    "t": "string",
+    "d": "Prevents public access to a bucket."
+   },
+   {
+    "p": "spec.requesterPays",
+    "t": "boolean",
+    "d": "Enables Requester Pays on a storage bucket."
+   },
+   {
+    "p": "spec.resourceID",
+    "t": "string",
+    "d": "Immutable. Optional. The name of the resource. Used for creation and acquisition. When unset, the value of `metadata.name` is used as the default.",
+    "im": 1
+   },
+   {
+    "p": "spec.retentionPolicy",
+    "t": "object",
+    "d": "Configuration of the bucket's data retention policy for how long objects in the bucket should be retained."
+   },
+   {
+    "p": "spec.retentionPolicy.isLocked",
+    "t": "boolean",
+    "d": "If set to true, the bucket will be locked and permanently restrict edits to the bucket's retention policy.  Caution: Locking a bucket is an irreversible action."
+   },
+   {
+    "p": "spec.retentionPolicy.retentionPeriod",
+    "t": "integer",
+    "r": 1,
+    "d": "The period of time, in seconds, that objects in the bucket must be retained and cannot be deleted, overwritten, or archived. The value must be less than 3,155,760,000 seconds."
+   },
+   {
+    "p": "spec.softDeletePolicy",
+    "t": "object",
+    "d": "The bucket's soft delete policy, which defines the period of time that soft-deleted objects will be retained, and cannot be permanently deleted. If it is not provided, by default Google Cloud Storage sets this to default soft delete policy."
+   },
+   {
+    "p": "spec.softDeletePolicy.retentionDurationSeconds",
+    "t": "integer",
+    "d": "The duration in seconds that soft-deleted objects in the bucket will be retained and cannot be permanently deleted. Default value is 604800."
+   },
+   {
+    "p": "spec.storageClass",
+    "t": "string",
+    "d": "The Storage Class of the new bucket. Supported values include: STANDARD, MULTI_REGIONAL, REGIONAL, NEARLINE, COLDLINE, ARCHIVE."
+   },
+   {
+    "p": "spec.uniformBucketLevelAccess",
+    "t": "boolean",
+    "d": "Enables uniform bucket-level access on a bucket."
+   },
+   {
+    "p": "spec.versioning",
+    "t": "object",
+    "d": "The bucket's Versioning configuration."
+   },
+   {
+    "p": "spec.versioning.enabled",
+    "t": "boolean",
+    "r": 1,
+    "d": "While set to true, versioning is fully enabled for this bucket."
+   },
+   {
+    "p": "spec.website",
+    "t": "object",
+    "d": "Configuration if the bucket acts as a website."
+   },
+   {
+    "p": "spec.website.mainPageSuffix",
+    "t": "string",
+    "d": "Behaves as the bucket's directory index where missing objects are treated as potential directories."
+   },
+   {
+    "p": "spec.website.notFoundPage",
+    "t": "string",
+    "d": "The custom object to return when a requested resource is not found."
+   }
+  ],
+  "status": [
+   {
+    "p": "status.conditions",
+    "t": "[]object",
+    "d": "Conditions represent the latest available observations of the object's current state."
+   },
+   {
+    "p": "status.conditions[].lastTransitionTime",
+    "t": "string",
+    "d": "Last time the condition transitioned from one status to another."
+   },
+   {
+    "p": "status.conditions[].message",
+    "t": "string",
+    "d": "Human-readable message indicating details about last transition."
+   },
+   {
+    "p": "status.conditions[].reason",
+    "t": "string",
+    "d": "Unique, one-word, CamelCase reason for the condition's last transition."
+   },
+   {
+    "p": "status.conditions[].status",
+    "t": "string",
+    "d": "Status is the status of the condition. Can be True, False, Unknown."
+   },
+   {
+    "p": "status.conditions[].type",
+    "t": "string",
+    "d": "Type is the type of the condition."
+   },
+   {
+    "p": "status.observedGeneration",
+    "t": "integer",
+    "d": "ObservedGeneration is the generation of the resource that was most recently observed by the Config Connector controller. If this is equal to metadata.generation, then that means that the current reported status reflects the most recent desired state of the resource.",
+    "f": "int64"
+   },
+   {
+    "p": "status.observedState",
+    "t": "object",
+    "d": "ObservedState is the state of the resource as most recently observed in GCP."
+   },
+   {
+    "p": "status.observedState.softDeletePolicy",
+    "t": "object",
+    "d": "The bucket's soft delete policy, which defines the period of time that soft-deleted objects will be retained, and cannot be permanently deleted. If it is not provided, by default Google Cloud Storage sets this to default soft delete policy."
+   },
+   {
+    "p": "status.observedState.softDeletePolicy.effectiveTime",
+    "t": "string",
+    "d": "Server-determined value that indicates the time from which the policy, or one with a greater retention, was effective. This value is in RFC 3339 format."
+   },
+   {
+    "p": "status.observedState.softDeletePolicy.retentionDurationSeconds",
+    "t": "integer",
+    "d": "The duration in seconds that soft-deleted objects in the bucket will be retained and cannot be permanently deleted. Default value is 604800.",
+    "f": "int64"
+   },
+   {
+    "p": "status.observedState.storageClass",
+    "t": "string",
+    "d": "The Storage Class of the bucket as observed in GCP."
+   },
+   {
+    "p": "status.selfLink",
+    "t": "string",
+    "d": "The URI of the created resource."
+   },
+   {
+    "p": "status.url",
+    "t": "string",
+    "d": "The base URL of the bucket, in the format gs://<bucket-name>."
+   }
+  ],
+  "refs": [],
+  "api": [
+   {
+    "api": "storage.googleapis.com/Bucket",
+    "tf": [
+     "google_storage_bucket"
+    ]
+   }
+  ],
+  "usedBy": [
+   "gcp/cloud-function-v1",
+   "gcp/cloud-function-v2",
+   "gcp/gcs",
+   "gcp/geap-agent-runtime"
+  ]
+ }
+]

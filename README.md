@@ -25,6 +25,30 @@ A REST extension kind's example is the spec its live tests ran against the real 
 | `providers/`, `packages/` | agents | each provider's kinds; each chart's source module, kinds, values, outputs |
 | `registry.lock.json` | both | exactly which releases this build documents |
 
+## For agents (MCP)
+
+`mcp_server.py` serves the registry over the Model Context Protocol
+(stdio), from a built site's `data/`: a local build (`--site site`, which
+`.mcp.json` registers for sessions opened here), or the published registry
+(`--url <its base URL>`, read over HTTPS on demand), so nothing new is
+hosted. Python's standard library only.
+
+| Tool | Answers |
+| --- | --- |
+| `search_kinds` | kinds across every provider by text (kind, group, service, Terraform type, description), cloud, service, provider or tier |
+| `get_kind` | one kind: every spec and status field, Terraform equivalents, API paths, the gap it fills, its tested example, and the examples that show it with the kinds it needs (or that use it) |
+| `kinds_for_terraform` | Terraform resource types to the kinds that stand in for each |
+| `list_providers` | every provider: cloud, tier, publisher, version, number of kinds |
+| `get_package` | a catalog chart: its upstream module, kinds, values and outputs |
+
+```sh
+./build.sh /tmp/krm-root site && python3 mcp_server.py --site site
+python3 -m unittest discover -s tests   # the tools against tests/fixture-site
+```
+
+Each vendor repository also serves its own kinds in more depth (validate a
+manifest, dry-run it on the fake API): `go run ./cmd/mcp` there.
+
 ## How a build works
 
 ```

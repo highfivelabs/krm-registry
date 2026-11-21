@@ -1,0 +1,277 @@
+{
+ "id": "aws/acm",
+ "cloud": "aws",
+ "name": "acm",
+ "package": "aws-acm",
+ "version": "0.1.0",
+ "desc": "An ACM certificate, or its Route 53 DNS validation records, as AWS Controllers for Kubernetes (ACK) objects. A port of terraform-aws-modules' acm module.",
+ "module": {
+  "module": "aws/acm",
+  "repo": "https://github.com/terraform-aws-modules/terraform-aws-acm",
+  "path": ".",
+  "version": "v6.3.1",
+  "commit": "aae84c011dd68ace1beb5d10e1feddfe9a334953",
+  "license": "Apache-2.0",
+  "module_url": "https://github.com/terraform-aws-modules/terraform-aws-acm/tree/v6.3.1",
+  "registry_url": "https://registry.terraform.io/modules/terraform-aws-modules/acm/aws",
+  "synced": "2026-11-12",
+  "family": "terraform-aws-modules",
+  "repoName": "terraform-aws-modules/terraform-aws-acm"
+ },
+ "upstream": {
+  "pinned": "v6.3.1",
+  "latest": "v6.3.1",
+  "published": "2026-08-26",
+  "via": "terraform-registry-api",
+  "behind": false
+ },
+ "keywords": [
+  "aws",
+  "ack",
+  "acm",
+  "route53",
+  "terraform-aws-modules"
+ ],
+ "uses": [
+  "ack/acm.services.k8s.aws/Certificate",
+  "ack/route53.services.k8s.aws/RecordSet"
+ ],
+ "unknownKinds": [],
+ "refused": [
+  {
+   "variable": "create_route53_records",
+   "kind": "gap",
+   "reason": "accepted, except true (the default) for a certificate this component requests with DNS validation: the validation records' names and values exist only in the Certificate's status, so one render cannot write them; a second component with create_route53_records_only: true writes them from this one's outputs, as the module's \"separate AWS providers\" example does",
+   "partial": true
+  },
+  {
+   "variable": "validate_certificate",
+   "kind": "gap",
+   "reason": "accepted; true with DNS validation and create_route53_records: true is refused, as for create_route53_records",
+   "partial": true
+  },
+  {
+   "variable": "validation_allow_overwrite_records",
+   "kind": "gap",
+   "reason": "accepted, but ACK's RecordSet is created with Route 53's CREATE action, which fails on a record already there (as false does): true's overwrite is not carried",
+   "partial": true
+  },
+  {
+   "variable": "validation_method",
+   "kind": "gap",
+   "reason": "accepted DNS or unset; EMAIL is refused: ACK's Certificate always requests DNS validation",
+   "partial": true
+  },
+  {
+   "variable": "validation_record_fqdns",
+   "kind": "gap",
+   "reason": "accepted, but the validation wait (aws_acm_certificate_validation) has no kind: the component is Ready once ACK has requested the certificate, not when it is ISSUED (ACK's Certificate is synced in PENDING_VALIDATION); the acm_certificate_status output reports ISSUED",
+   "partial": true
+  },
+  {
+   "variable": "validation_timeout",
+   "kind": "by-design",
+   "reason": "Terraform's wait for validation, which has no kind here (aws_acm_certificate_validation): Bundt waits for the component to be Ready"
+  },
+  {
+   "variable": "wait_for_validation",
+   "kind": "gap",
+   "reason": "accepted, but the validation wait (aws_acm_certificate_validation) has no kind: the component is Ready once ACK has requested the certificate, not when it is ISSUED (ACK's Certificate is synced in PENDING_VALIDATION); the acm_certificate_status output reports ISSUED",
+   "partial": true
+  }
+ ],
+ "nrefused": 7,
+ "outputs": [
+  "acm_certificate_arn",
+  "acm_certificate_domain_validation_options",
+  "acm_certificate_status",
+  "acm_certificate_validation_emails",
+  "validation_route53_record_fqdns",
+  "distinct_domain_names",
+  "validation_domains"
+ ],
+ "providers": [
+  "ack"
+ ],
+ "readme": "# acm\n\nAn ACM certificate, or its Route 53 DNS validation records, as AWS\nControllers for Kubernetes (ACK) objects. A port of terraform-aws-modules'\n[`terraform-aws-acm`](https://github.com/terraform-aws-modules/terraform-aws-acm/tree/aae84c011dd68ace1beb5d10e1feddfe9a334953)\nat v6.3.1 (`aae84c01`), Apache-2.0; modified (a translation of the module's\nvariables and logic into a Helm chart). Bundt Package `aws-acm`\n(`package.yaml`). Checked against ACK's acm-controller v1.11.0 and\nroute53-controller v1.8.0 (`UPSTREAM.md`, \"ACK controllers\").\n\n## Example\n\nDNS validation with Route 53 is two components, as in the module's README\nexample \"Usage with Route53 DNS validation and separate AWS providers\". The\ncertificate:\n\n```yaml\ndomain_name: my-domain.com\nsubject_alternative_names: [\"*.my-domain.com\", \"app.sub.my-domain.com\"]\nvalidation_method: DNS\ncreate_route53_records: false\n```\n\nrenders one `acm.services.k8s.aws/v1alpha1` `Certificate` (`hfl.dev/id`\n`certificate`, `tests/golden/separate-acm.yaml`). Its records, a second\ncomponent whose `acm_certificate_domain_validation_options` and\n`distinct_domain_names` take the first's outputs of the same names\n(`valueFrom`):\n\n```yaml\ncreate_certificate: false\ncreate_route53_records_only: true\nvalidation_method: DNS\nzone_id: Z266PL4W4W6MSG\ndistinct_domain_names: <the certificate's distinct_domain_names>\nacm_certificate_domain_validation_options: <the certificate's acm_certificate_domain_validation_options>\n```\n\nrenders a `route53.services.k8s.aws/v1alpha1` `RecordSet` per distinct\ndomain (`validation-record-<i>`, `tests/golden/separate-records.yaml`).\n\n## What it renders\n\n| Module resource | When | Object (`hfl.dev/id`) |\n| --- | --- | --- |\n| `aws_acm_certificate` | `create_certificate` | `acm/Certificate` `certificate`: `domainName`, `subjectAlternativeNames`, `domainValidationOptions` (`validation_option`), `keyAlgorithm`, `certificateAuthorityARN` (`private_authority_arn`), `options` (`certificateTransparencyLoggingPreference`, `export`), `tags` |\n| `aws_route53_record.validation` | `create_route53_records_only`, DNS validation | `route53/RecordSet` `validation-record-<i>` for each of `distinct_domain_names` (or the domain and SANs without `*.`): the zone from `zones` (by domain) or `zone_id`, the record's name, type and value from `acm_certificate_domain_validation_options`, `ttl` (`dns_ttl`) |\n| `aws_acm_certificate_validation` | | no kind: nothing waits for `ISSUED` (below) |\n\n**Why two components.** ACK requests every certificate with DNS\nvalidation, and the records to create are in the `Certificate`'s status\n(`domainValidations[].resourceRecord`), known only once ACK has requested\nit. One render cannot write them, so a certificate with DNS validation and\n`create_route53_records: true` (the default) is refused with a message that\nsays what to do. The module's own records-only mode takes the records from\nvalues, which a second component gets from the first's outputs\n(`docs/aws.md`, section 6).\n\n## Values\n\nEvery module variable is a value of the same name, type and default. The\nchart adds `names` (no keys: no name can collide), `namePrefix` (changes\nnothing), `labels` (Kubernetes only) and `deletion_policy`; `tags` is the\nmodule's own, and `region` becomes the annotation `services.k8s.aws/region`\non the certificate.\n\nRefused or accepted in part (`upstream.yaml`):\n\n- `validation_method`, in part: `DNS` or unset; `EMAIL` is refused (ACK\n  always requests DNS validation).\n- `create_route53_records` and `validate_certificate`, in part: both `true`\n  with DNS validation on a certificate this component requests is refused\n  (above).\n- `wait_for_validation` and `validation_record_fqdns`, in part: accepted,\n  but nothing waits for the certificate to be `ISSUED`. ACK's `Certificate`\n  is synced, so the component is Ready, once requested\n  (`PENDING_VALIDATION`); the `acm_certificate_status` output reports\n  `ISSUED`.\n- `validation_allow_overwrite_records`, in part: ACK creates a record with\n  Route 53's `CREATE` action, which fails on a record already there.\n- `validation_timeout`: Terraform's wait (by design).\n\n## Outputs\n\nAll seven. `acm_certificate_domain_validation_options` and\n`validation_domains` have Terraform's shape (`domain_name`,\n`resource_record_name`, `resource_record_type`, `resource_record_value`);\n`acm_certificate_validation_emails` is always empty (DNS validation only);\n`validation_route53_record_fqdns` are the records' names, lower case,\nwithout the trailing dot.\n\n## Differences from Terraform\n\n- DNS validation with Route 53 records is two components (above).\n- The component is Ready before the certificate is `ISSUED`.\n\n## Tests\n\n`task test CHART=aws/acm`: golden renders (the module's README examples,\nboth halves of the two-component example, every certificate option)\nvalidated against acm-controller v1.11.0's and route53-controller v1.8.0's\nCRDs, and the refusal cases. `tests/mock.values.yaml` is the case the\nfake-AWS run applies (`docs/aws.md`, \"Charts\").\n",
+ "values": [
+  {
+   "p": "names",
+   "t": "object"
+  },
+  {
+   "p": "namePrefix",
+   "t": "string",
+   "pt": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?)?$",
+   "mx": 63
+  },
+  {
+   "p": "labels",
+   "t": "map[string]['string', 'number', 'boolean', 'null']"
+  },
+  {
+   "p": "deletion_policy",
+   "t": "string",
+   "e": [
+    "DELETE",
+    "ABANDON",
+    "PREVENT"
+   ]
+  },
+  {
+   "p": "acm_certificate_domain_validation_options",
+   "t": [
+    "array",
+    "object"
+   ],
+   "d": "A list of domain_validation_options created by the ACM certificate to create required Route53 records from it (used when create_route53_records_only is set to true)"
+  },
+  {
+   "p": "certificate_transparency_logging_preference",
+   "t": "boolean",
+   "d": "Specifies whether certificate details should be added to a certificate transparency log"
+  },
+  {
+   "p": "create_certificate",
+   "t": "boolean",
+   "d": "Whether to create ACM certificate"
+  },
+  {
+   "p": "create_route53_records",
+   "t": "boolean",
+   "d": "When validation is set to DNS, define whether to create the DNS records internally via Route53 or externally using any DNS provider"
+  },
+  {
+   "p": "create_route53_records_only",
+   "t": "boolean",
+   "d": "Whether to create only Route53 records (e.g. using separate AWS provider)"
+  },
+  {
+   "p": "distinct_domain_names",
+   "t": "[]string",
+   "d": "List of distinct domains and SANs (used when create_route53_records_only is set to true)"
+  },
+  {
+   "p": "dns_ttl",
+   "t": "integer",
+   "d": "The TTL of DNS recursive resolvers to cache information about this record."
+  },
+  {
+   "p": "domain_name",
+   "t": "string",
+   "d": "A domain name for which the certificate should be issued"
+  },
+  {
+   "p": "export",
+   "t": [
+    "string",
+    "null"
+   ],
+   "d": "Whether the certificate can be exported. Valid values are ENABLED or DISABLED (default). Note Issuing an exportable certificate is subject to additional charges",
+   "e": [
+    "ENABLED",
+    "DISABLED",
+    null
+   ]
+  },
+  {
+   "p": "key_algorithm",
+   "t": [
+    "string",
+    "null"
+   ],
+   "d": "Specifies the algorithm of the public and private key pair that your Amazon issued certificate uses to encrypt data"
+  },
+  {
+   "p": "private_authority_arn",
+   "t": [
+    "string",
+    "null"
+   ],
+   "d": "Private Certificate Authority ARN for issuing private certificates"
+  },
+  {
+   "p": "putin_khuylo",
+   "t": "boolean",
+   "d": "Do you agree that Putin doesn't respect Ukrainian sovereignty and territorial integrity? More info: https://en.wikipedia.org/wiki/Putin_khuylo!"
+  },
+  {
+   "p": "region",
+   "t": [
+    "string",
+    "null"
+   ],
+   "d": "Region to create the resources into"
+  },
+  {
+   "p": "subject_alternative_names",
+   "t": "[]string",
+   "d": "A list of domains that should be SANs in the issued certificate"
+  },
+  {
+   "p": "tags",
+   "t": "map[string]['string', 'number', 'boolean']",
+   "d": "A mapping of tags to assign to the resource"
+  },
+  {
+   "p": "validate_certificate",
+   "t": "boolean",
+   "d": "Whether to validate certificate by creating Route53 record"
+  },
+  {
+   "p": "validation_allow_overwrite_records",
+   "t": "boolean",
+   "d": "Whether to allow overwrite of Route53 records"
+  },
+  {
+   "p": "validation_method",
+   "t": [
+    "string",
+    "null"
+   ],
+   "d": "Which method to use for validation. DNS or EMAIL are valid. This parameter must not be set for certificates that were imported into ACM and then into Terraform."
+  },
+  {
+   "p": "validation_option",
+   "t": "map[string]object",
+   "d": "The domain name that you want ACM to use to send you validation emails. This domain name is the suffix of the email addresses that you want ACM to use."
+  },
+  {
+   "p": "validation_record_fqdns",
+   "t": "[]string",
+   "d": "When validation is set to DNS and the DNS validation records are set externally, provide the fqdns for the validation"
+  },
+  {
+   "p": "validation_timeout",
+   "t": [
+    "string",
+    "null"
+   ],
+   "d": "Not supported: Terraform's wait for validation, which has no kind here (aws_acm_certificate_validation): Bundt waits for the component to be Ready"
+  },
+  {
+   "p": "wait_for_validation",
+   "t": "boolean",
+   "d": "Whether to wait for the validation to complete"
+  },
+  {
+   "p": "zone_id",
+   "t": "string",
+   "d": "The ID of the hosted zone to contain this record. Required when validating via Route53"
+  },
+  {
+   "p": "zones",
+   "t": "map[string]string",
+   "d": "Map containing the Route53 Zone IDs for additional domains."
+  }
+ ],
+ "outputExprs": {
+  "acm_certificate_arn": "'certificate' in resources ? resources.certificate.status.ackResourceMetadata.arn : ''",
+  "acm_certificate_domain_validation_options": "'certificate' in resources && has(resources.certificate.status.domainValidations) ? resources.certificate.status.domainValidations.filter(d, has(d.resourceRecord)).map(d, {\n    'domain_name': d.domainName,\n    'resource_record_name': d.resourceRecord.name,\n    'resource_record_type': d.resourceRecord.type_,\n    'resource_record_value': d.resourceRecord.value})\n: []",
+  "acm_certificate_status": "'certificate' in resources && has(resources.certificate.status.status) ? resources.certificate.status.status : ''",
+  "acm_certificate_validation_emails": "[]",
+  "validation_route53_record_fqdns": "lists.range(size(resources.filter(k, k.matches('^validation-record-[0-9]+$'))))\n  .map(i, resources['validation-record-' + string(i)].spec.name.lowerAscii())\n  .map(n, n.endsWith('.') ? n.substring(0, size(n) - 1) : n)",
+  "distinct_domain_names": "size(inputs.distinct_domain_names) > 0 ? inputs.distinct_domain_names : ([inputs.domain_name] + inputs.subject_alternative_names).map(s, s.replace('*.', '')).distinct()",
+  "validation_domains": "('certificate' in resources && has(resources.certificate.status.domainValidations)\n  ? resources.certificate.status.domainValidations.filter(d, has(d.resourceRecord)).map(d, {\n      'domain_name': d.domainName.replace('*.', ''),\n      'resource_record_name': d.resourceRecord.name,\n      'resource_record_type': d.resourceRecord.type_,\n      'resource_record_value': d.resourceRecord.value})\n  : (type(inputs.acm_certificate_domain_validation_options) == list ? inputs.acm_certificate_domain_validation_options : [])\n    .map(d, {\n      'domain_name': d.domain_name.replace('*.', ''),\n      'resource_record_name': d.resource_record_name,\n      'resource_record_type': d.resource_record_type,\n      'resource_record_value': d.resource_record_value})).distinct()"
+ }
+}
