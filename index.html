@@ -5,33 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>KRM Registry</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<meta name="theme-color" content="#b93d0b">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
 <style>
 :root{
-  --bg:#fbfbfa;--panel:#fff;--ink:#1b1d21;--ink2:#555b66;--ink3:#8a909b;--line:#e6e6e3;--line2:#f0f0ed;
-  --acc:#4b3fd1;--acc-bg:#efedff;
-  --gcp:#1a73e8;--aws:#d4790f;--azure:#0a7bc2;
-  --off:#2f6f4f;--off-bg:#e7f3ec;--ext:#8a3ffc;--ext-bg:#f3ecff;
-  --alpha:#a2560a;--alpha-bg:#fdf1e3;--beta:#7a5d00;--beta-bg:#fbf6dc;
-  --mono:'JetBrains Mono',ui-monospace,monospace;
+  /* High Five Labs tokens (website repo, brand/tokens.css), mapped onto this page's names. */
+  --bg:#f3f5f7;--panel:#fff;--ink:#222a33;--ink2:#4a5866;--ink3:#5f6a79;--line:#d3dae1;--line2:#eef1f6;
+  --clay:#b93d0b;--acc:#2f47c4;--acc-bg:#e8ebfa;
+  --gcp:#1a73e8;--aws:#c06a00;--azure:#0a6fb0;
+  --off:#1b7a3d;--off-bg:#e3f2e8;--ext:#2f47c4;--ext-bg:#e8ebfa;
+  --alpha:#8a5a00;--alpha-bg:#fbf0dc;--beta:#8a5a00;--beta-bg:#fbf6dc;
+  --display:"Familjen Grotesk","Helvetica Neue",Arial,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
 }
 @media (prefers-color-scheme:dark){:root{
-  --bg:#141518;--panel:#1b1d21;--ink:#e9eaec;--ink2:#a9aeb8;--ink3:#737985;--line:#2c2f35;--line2:#23252a;
-  --acc:#a59cff;--acc-bg:#26234a;--off:#7fd1a5;--off-bg:#1b2e24;--ext:#c8a6ff;--ext-bg:#2a2140;
-  --alpha:#f0b06b;--alpha-bg:#35260f;--beta:#e6cf6a;--beta-bg:#302a10;
+  --bg:#0d1217;--panel:#131a22;--ink:#d3d9df;--ink2:#9eabb7;--ink3:#8794a4;--line:#27313b;--line2:#0f151c;
+  --clay:#ff8f57;--acc:#9aabff;--acc-bg:#1a2140;--off:#63d08e;--off-bg:#13261b;--ext:#9aabff;--ext-bg:#1a2140;
+  --alpha:#e6b450;--alpha-bg:#2b2110;--beta:#e6b450;--beta-bg:#2b2610;
+  --gcp:#8ab4f8;--aws:#f0a040;--azure:#5cb3f0;
 }}
 *{box-sizing:border-box}[hidden]{display:none!important}
-body{margin:0;font:14px/1.55 Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+body{margin:0;font:15px/1.55 var(--body);background:var(--bg);color:var(--ink)}
 a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
 code,.mono{font-family:var(--mono);font-size:12.5px}
 header{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:22px;padding:10px 28px}
-.logo{font-weight:700;font-size:16px;color:var(--ink);display:flex;gap:8px;align-items:center}
-.logo b{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:7px;background:var(--ink);color:var(--panel);font-size:12px}
+.logo{font-weight:700;font-size:18px;color:var(--ink);display:flex;gap:9px;align-items:center;white-space:nowrap}.logo:hover{text-decoration:none}
+.logo svg{width:30px;height:30px;flex:none}.logo .m{fill:var(--ink)}.logo .c{fill:var(--clay)}.logo .cl{stroke:var(--clay)}
+.logo small{font-family:var(--body);font-weight:500;font-size:12px;color:var(--ink3);margin-left:2px}
 nav a{color:var(--ink2);margin-right:16px;font-weight:500}
 #q{flex:1;max-width:520px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
 main{max-width:1180px;margin:0 auto;padding:28px}
-h1{font-size:26px;margin:0 0 4px;letter-spacing:-.01em}h2{font-size:17px;margin:30px 0 10px}h3{font-size:14px;margin:18px 0 6px}
+h1,h2,h3,.stat,.logo{font-family:var(--display)}h1{font-size:28px;margin:0 0 4px;letter-spacing:-.01em;line-height:1.1}h2{font-size:19px;margin:34px 0 12px}h3{font-size:14px;margin:18px 0 6px}
 .sub{color:var(--ink2)}
 .muted{color:var(--ink3)}
 .grid{display:grid;gap:14px}.g3{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}.g4{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
@@ -58,7 +65,7 @@ tr:last-child td{border-bottom:0}
 .crumbs{font-size:13px;color:var(--ink3);margin-bottom:8px}
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:22px 0 0}
 .tabs button{font:inherit;font-weight:500;background:none;border:0;padding:8px 12px;color:var(--ink2);cursor:pointer;border-bottom:2px solid transparent}
-.tabs button.on{color:var(--ink);border-color:var(--acc)}
+.tabs button.on{color:var(--ink);border-color:var(--clay)}
 .fields{background:var(--panel);border:1px solid var(--line);border-top:0;border-radius:0 0 10px 10px}
 .ff{display:flex;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line2)}
 .ff input{flex:1;padding:6px 10px;border:1px solid var(--line);border-radius:6px;font:inherit;background:var(--bg);color:var(--ink)}
@@ -76,6 +83,35 @@ tr:last-child td{border-bottom:0}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{font:inherit;font-size:12.5px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:var(--panel);color:var(--ink2);cursor:pointer}
 .chip.on{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.card{border-radius:12px}a.card:hover{border-color:var(--clay)}
+:focus-visible{outline:2px solid var(--clay);outline-offset:2px;border-radius:2px}
+/* Landing */
+.land{padding:56px 0 8px;max-width:820px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--clay);margin-bottom:14px}
+.land h1{font-size:clamp(2.1rem,1.5rem + 2.8vw,3.4rem);font-weight:700;line-height:1.05;letter-spacing:-.02em;margin:0}
+.land h1 em{font-style:normal;color:var(--clay)}
+.land .lede{font-size:clamp(1.05rem,1rem + .3vw,1.25rem);color:var(--ink2);margin:16px 0 0;max-width:620px}
+.land .big{margin:28px 0 8px;padding:16px 18px;font-size:17px;border-radius:12px;border-width:2px}
+.land .big:focus{border-color:var(--clay);outline:none}
+.try{font-size:13px;color:var(--ink3);display:flex;flex-wrap:wrap;gap:4px 0;align-items:baseline}.try>span{margin-right:8px}
+body.home #q{visibility:hidden}
+.mini .soon{color:var(--ink3)}.mini .soon b{color:var(--ink2)}.try a{font-family:var(--mono);font-size:12.5px;margin-right:10px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:40px 0 8px}
+.stats div{background:var(--panel);padding:18px 20px}.stats b{display:block;font-family:var(--display);font-size:30px;line-height:1.1}.stats span{font-size:13px;color:var(--ink2)}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.three .card h3{margin:0 0 6px;font-size:17px}.three .card p{margin:0;color:var(--ink2);font-size:14px}
+.three .k{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin-bottom:8px}
+.mini{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.mini a{display:flex;flex-direction:column;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;color:inherit}
+.mini a:hover{border-color:var(--clay);text-decoration:none}.mini b{font-family:var(--display);font-size:16px}.mini span{font-size:12.5px;color:var(--ink3)}
+.mini .bar{margin:6px 0 0;height:4px}
+.agents{display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--ink);color:var(--panel);border-radius:12px;padding:22px 24px;margin-top:40px}
+.agents h3{margin:0 0 4px;font-size:19px;color:inherit}.agents p{margin:0;opacity:.8;font-size:14px}.agents code{color:inherit}
+.agents a{color:var(--ink);background:var(--panel);border-radius:999px;padding:8px 16px;font-weight:600;font-size:14px;white-space:nowrap}
+.more{display:flex;justify-content:space-between;align-items:baseline;gap:10px}.more a{font-size:14px}
+footer{max-width:1180px;margin:40px auto 0;padding:24px 28px 40px;border-top:1px solid var(--line);color:var(--ink3);font-size:13px;display:flex;gap:18px;flex-wrap:wrap}
+footer a{color:var(--ink2)}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.three{grid-template-columns:1fr}.land{padding-top:28px}main{padding:20px 16px}header{padding:10px 16px;gap:10px}header nav{order:3;width:100%;overflow-x:auto;white-space:nowrap;scrollbar-width:none}body.home #q{display:none}}
 .res{padding:10px 14px;border-bottom:1px solid var(--line2);display:block;color:inherit}.res:hover{background:var(--bg);text-decoration:none}
 .res .k{font-weight:600}.res .g{font-family:var(--mono);font-size:12px;color:var(--ink3);margin-left:6px}
 .res .why{font-size:12.5px;color:var(--ink2)}
@@ -87,18 +123,19 @@ tr:last-child td{border-bottom:0}
 .fbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:16px 0 8px;position:sticky;top:57px;background:var(--bg);padding:8px 0;z-index:3}
 .fin{flex:1;min-width:220px;max-width:400px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:inherit}
 .tfeq{display:inline-block;font-family:var(--mono);font-size:11.5px;color:var(--ink2);border:1px dashed var(--ink3);border-radius:5px;padding:0 6px;margin:1px 0;cursor:help;white-space:nowrap}
-.tfeq::before{content:'≈ ';color:var(--ink3);font-family:Inter,sans-serif}
+.tfeq::before{content:'≈ ';color:var(--ink3);font-family:var(--body)}
 .tfmap{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:3px 0}.tfmap .arr{color:var(--ink3)}
 .fcount{font-size:12.5px;margin-left:auto}
 </style>
 </head>
 <body>
 <header>
-  <a class="logo" href="#home"><b>K</b>KRM Registry</a>
+  <a class="logo" href="#home" aria-label="KRM Registry home"><svg viewBox="0 0 64 64" aria-hidden="true"><g transform="translate(0 2)"><rect class="c" x="8" y="18" width="14" height="42" rx="7" transform="rotate(8 15 60)"/><circle class="c" cx="32" cy="38" r="4.5"/><rect class="m" x="42" y="18" width="14" height="42" rx="7" transform="rotate(-8 49 60)"/><g class="cl" stroke-width="4" stroke-linecap="round" fill="none"><line x1="32" y1="3" x2="32" y2="10"/><line x1="20" y1="7" x2="24.5" y2="12.5"/><line x1="44" y1="7" x2="39.5" y2="12.5"/></g></g></svg>KRM Registry<small>by High Five Labs</small></a>
   <nav><a href="#surfaces">Clouds &amp; vendors</a><a href="#numbers">Terraform coverage</a><a href="#providers">Providers</a><a href="#packages">Packages</a><a href="#about">About</a></nav>
   <input id="q" placeholder="Search kinds and charts, or paste a Terraform type to find its equivalent…">
 </header>
 <main id="app"><div class="loading">Loading the index…</div></main>
+<footer><span>KRM Registry · built from each provider's published CRDs</span><a href="#about">How it works</a><a href="#numbers">Terraform coverage</a><a href="llms.txt">llms.txt</a><a href="https://highfivelabs.dev">High Five Labs</a></footer>
 <script>
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let C, KBY={}, CBY={}, PBY={}, SHARDS={}, Q='';
@@ -146,7 +183,7 @@ const upB=c=>{const u=c.upstream||{};return !u.latest?'':u.behind?`<span class="
 const famB=m=>`<span class="badge b-plain">${esc(m.family)}</span>`;
 const lc=(...a)=>esc(a.flat().filter(Boolean).join(' ').toLowerCase());
 const tfOf=k=>(k.api||[]).flatMap(a=>[a.api,...a.tf]);
-function route(){route0();const b=$('#app .fbar');if(b)applyF(b.dataset.view)}
+function route(){document.body.classList.toggle('home',(location.hash.slice(1)||'home')==='home');route0();const b=$('#app .fbar');if(b)applyF(b.dataset.view)}
 function route0(){
   if(!C) return; const h=location.hash.slice(1)||'home', A=$('#app');
   document.title='KRM Registry';
@@ -175,16 +212,24 @@ function surfCard(s){const t=surfStats(s);return `<a class="card" href="#s-${s}"
   <div class="muted" style="font-size:12.5px"><span class="dot" style="background:var(--off)"></span>${fmt(t.o)} official/community &nbsp; <span class="dot" style="background:var(--ext)"></span>${fmt(t.e)} extension${t.ch?` &nbsp;· ${t.ch} packages`:''}</div>${tfLine(s)}</a>`}
 function tfLine(s){const t=C.terraform?.surfaces?.[s]; if(!t) return ''; const pct=Math.round(100*t.covered/t.total);
   return `<div style="font-size:12.5px;margin-top:8px;border-top:1px solid var(--line2);padding-top:8px" title="${TFTIP}">Terraform ${tfeq(t.name)} #${t.rank} by downloads<br><b>${t.covered}</b> of ${t.total} resources have a kind (${pct}%)</div>`}
+function bySize(l){return [...l].sort((a,b)=>(surfStats(a).n?0:1)-(surfStats(b).n?0:1))}
+function miniCard(s){const t=surfStats(s);if(!t.n) return `<a class="soon" href="#s-${s}"><b>${SURF[s]}</b><span>coming soon</span></a>`;return `<a href="#s-${s}"><b>${SURF[s]}</b><span>${fmt(t.n)} kinds · ${t.svcs} services</span><div class="bar"><i class="o" style="width:${100*t.o/t.n}%"></i><i class="e" style="width:${100*t.e/t.n}%"></i></div></a>`}
 function home(){
   const nK=C.kinds.length, nTF=new Set(C.kinds.flatMap(k=>(k.api||[]).flatMap(a=>a.tf))).size;
-  return `<div class="hero"><h1>Every Kubernetes kind for every cloud, in one place.</h1>
-  <div class="sub">Providers are the controllers that turn KRM objects into cloud resources. Packages are Helm charts of those objects, ported from Terraform modules. ${fmt(nK)} kinds from ${C.providers.length} providers and ${C.charts.length} packages. No Terraform runs here: ${fmt(nTF)} Terraform resource types are mapped to the kinds that stand in for them, marked ${tfeq('like_this')}.</div>
-  <input class="big" placeholder="Try google_storage_bucket, aws_ec2_tag, ManagedCluster, Microsoft.App/managedEnvironments…" oninput="Q=this.value;$('#q').value=Q;location.hash='search'"></div>
-  <h2>Clouds</h2><div class="grid g3">${CLOUDS.map(surfCard).join('')}</div>
-  <h2>Vendors</h2><div class="sub" style="margin-bottom:10px">The long tail, by Terraform downloads: each vendor's own operators, community operators, and High Five Labs extensions for the rest. <a href="#numbers">Coverage by the numbers</a></div><div class="grid g3">${VENDORS.map(surfCard).join('')}</div>
-  <h2>Providers</h2>${provTable(C.providers)}
-  <h2>Packages</h2><div class="grid g3">${CLOUDS.filter(s=>C.charts.some(c=>c.cloud===s)).map(s=>{const cs=C.charts.filter(c=>c.cloud===s);return `<a class="card" href="#packages">${surfB(s)} <span class="stat" style="font-size:20px;margin-left:6px">${cs.length}</span><small class="muted"> charts</small><div class="muted" style="margin-top:6px;font-size:12.5px">${cs.slice(0,6).map(c=>esc(c.name)).join(', ')}…</div></a>`}).join('')}</div>
-  <h2>For agents</h2><div class="card">Start at <a href="llms.txt">llms.txt</a>. Each step is a small Markdown page with links to the next: cloud → service → kind, where a kind page has front matter, an example manifest and every spec and status field. Shortcuts: <code>kinds/&lt;provider&gt;/&lt;group&gt;/&lt;Kind&gt;.md</code>, and <code>terraform/&lt;type&gt;.md</code> to go from a Terraform type to the kinds that stand in for it.</div>`}
+  const ex=['google_storage_bucket','aws_s3_bucket','datadog_monitor','github_repository'];
+  return `<section class="land"><div class="eyebrow">KRM Registry</div>
+  <h1>Every cloud resource, <em>as a Kubernetes kind.</em></h1>
+  <p class="lede">Find the controller, the kind and a working example for anything you'd write in Terraform today, across the clouds and the long tail of vendors.</p>
+  <input class="big" aria-label="Search the registry" placeholder="Search a kind, a service, or a Terraform type…" oninput="Q=this.value;$('#q').value=Q;location.hash='search'">
+  <div class="try"><span>Try</span>${ex.map(e=>`<a href="#search" onclick="Q='${e}';$('#q').value=Q">${e}</a>`).join('')}</div></section>
+  <div class="stats"><div><b>${fmt(nK)}</b><span>kinds</span></div><div><b>${C.providers.length}</b><span>providers</span></div><div><b>${fmt(nTF)}</b><span>Terraform types mapped</span></div><div><b>${C.charts.length}</b><span>packages</span></div></div>
+  <h2>What's in it</h2><div class="three">
+  <div class="card"><div class="k">Providers</div><h3>The clouds' own controllers</h3><p>Config Connector, ACK, ASO and vendors' operators, documented from the CRDs they ship.</p></div>
+  <div class="card"><div class="k">Extensions</div><h3>The gaps, filled</h3><p>High Five Labs kinds for what Terraform covers and the operators don't, listed beside the official ones.</p></div>
+  <div class="card"><div class="k">Packages</div><h3>Modules, as charts</h3><p>Helm charts of those kinds, ported from popular Terraform modules.</p></div></div>
+  <div class="more"><h2>Clouds</h2><a href="#surfaces">All clouds &amp; vendors →</a></div><div class="mini">${bySize(CLOUDS).map(miniCard).join('')}</div>
+  <div class="more"><h2>Vendors</h2><a href="#numbers">Coverage by the numbers →</a></div><div class="mini">${bySize(VENDORS).map(miniCard).join('')}</div>
+  <div class="agents"><div><h3>Built for agents, too</h3><p>Small Markdown pages from cloud to kind, a Terraform-type lookup, and an MCP server.</p></div><a href="llms.txt">Start at llms.txt</a></div>`}
 function provTable(ps){return `<table><tr><th>Provider</th><th>Cloud</th><th>Publisher</th><th>Version</th><th style="text-align:right">Kinds</th></tr>${ps.map(p=>`<tr><td><a href="#pr-${p.id}"><b>${esc(p.title)}</b></a> ${tierBadge(p.tier)}${p.manages==='in-cluster'?' '+badge('runs in-cluster software','plain'):''}${p.extends?` <span class="muted">extends ${esc(PBY[p.extends].title)}</span>`:''}</td><td>${surfB(p.surface)}</td><td>${esc(p.publisher)}</td><td class="mono">${esc(p.version)}${p.controllers?` <span class="muted">(${p.controllers} controllers)</span>`:''}</td><td style="text-align:right">${fmt(p.nkinds)}</td></tr>`).join('')}</table>`}
 function providers(){return `<h1>Providers</h1><div class="sub">Official providers are the cloud vendors' own controllers. Extension providers add kinds the official ones lack, in their own API groups, and are documented beside them.</div><h2></h2>${provTable(C.providers)}`}
 function surfaces(){return `<h1>Clouds &amp; vendors</h1><div class="sub">Each surface's providers, merged by service: official and community operators beside High Five Labs' extensions.</div><h2>Clouds</h2><div class="grid g3">${CLOUDS.map(surfCard).join('')}</div><h2>Vendors</h2><div class="grid g3">${VENDORS.map(surfCard).join('')}</div>`}
