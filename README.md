@@ -5,8 +5,8 @@ Model providers (Config Connector, AWS Controllers for Kubernetes, Azure
 Service Operator, and vendors' own operators from Grafana to Oracle and
 MongoDB) and High Five Labs' extensions that fill their gaps
 (`*-extensions` for the clouds, `<vendor>-krm-extensions` for the rest), and for
-the catalog's Helm chart packages built from them. Published to GitHub Pages
-by `.github/workflows/pages.yml`.
+the catalog's Helm chart packages built from them. Published to registry.highfivelabs.dev
+by `publish.sh` ("Publishing").
 
 A surface whose providers cannot be indexed (no operator, CRDs not published
 as source, an API the REST runtime does not drive) carries `notes` in
@@ -83,24 +83,29 @@ build.sh <root> <site>
 
 The repos we own are read at `main`. `registry.yaml` lists every source.
 
-## Setup
+## Publishing
 
-1. Create `highfivelabs/krm-registry` (public) and push this repository.
-2. Settings → Pages → Source: **GitHub Actions**.
-3. The first push to `main` builds and deploys; after that it runs nightly.
+The site is served from the private bucket `gs://highfivelabs-prd-registry`
+through tf-infra's `prod/gcp` unit `sites/registry`: an HTTPS load balancer
+with Cloud CDN for `registry.highfivelabs.dev`, and `reg.hfl.dev` as a 301 to
+it. Responses are cached for 300 seconds, so a publish shows up within five
+minutes and needs no invalidation.
 
-## Rebuilding on change
-
-The nightly run picks up anything new. To rebuild as soon as an extension repo
-or the catalog merges, add this to their push-to-main workflow, with a token
-that can write to krm-registry's contents (a fine-grained token or a GitHub
-App installation token) in the `REGISTRY_DISPATCH_TOKEN` secret:
-
-```yaml
-- run: gh api repos/highfivelabs/krm-registry/dispatches -f event_type=source-changed
-  env:
-    GH_TOKEN: ${{ secrets.REGISTRY_DISPATCH_TOKEN }}
+```sh
+./publish.sh                 # build (GITHUB_TOKEN or `gh auth token`), then publish
+./publish.sh site            # publish a site already built
+DRY_RUN=1 ./publish.sh site  # list what would change
 ```
+
+It syncs the site to the bucket as `registry-publisher@highfivelabs-prd`, by
+impersonation: the caller needs `roles/iam.serviceAccountTokenCreator` on that
+account (granted in tf-infra), and no key exists. Objects no longer in the
+site are deleted. `404.html` is a copy of `index.html`, so an unknown path
+still loads the app.
+
+Run it after merging to `main`, and after a provider release you want
+listed. GitHub Actions and Pages are off for the org, so nothing runs it on a
+schedule yet; the old Pages workflow is gone.
 
 ## Joining the registry
 
