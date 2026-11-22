@@ -257,6 +257,14 @@ def write_agent_tree(out, cat, full_kinds, charts_full):
         mine = [k for k in full_kinds if k["provider"] == p["id"]]
         L = [f"# {p['title']}", "", f"Publisher {p['publisher']} · {p['tier']}{' · extends ' + link(me, f'providers/{p['extends']}.md', p['extends']) if p.get('extends') else ''}"
              f" · version {p['version']}{' (' + p['commit'][:12] + ')' if p.get('commit') else ''} · source {p['repo']} · {len(mine)} kinds", ""]
+        by_ = [x for x in cat["providers"] if x.get("installs") == p["id"]]
+        if p.get("installs"):
+            L += [f"Installs {link(me, f'providers/{p['installs']}.md', p['installs'])}.", ""]
+        if by_:
+            L += ["Installed by " + ", ".join(link(me, f"providers/{x['id']}.md", x["title"]) for x in by_) + ".", ""]
+        for v in p.get("install") or []:
+            L += [f"## Install: {v['name']}", ""] + ([f"For {v['when']}."] if v.get("when") else []) + \
+                 ["", "```sh", v["steps"], "```", ""] + ([v["note"], ""] if v.get("note") else [])
         bysvc = defaultdict(list)
         for k in mine:
             bysvc[k["service"]].append(k)

@@ -65,6 +65,14 @@ build.sh <root> <site>
 - **Operators** (any provider with `release:` in registry.yaml): newest tag
   matching the pattern, from GitHub's Releases API or git tags (GitLab);
   `fetch_sources.py` takes their CRDs from a release asset or a repo path.
+  A provider shipped through a public Cloud Storage bucket instead
+  (`release: {gcs: bucket}`) gets its newest version-named folder, and
+  `source: {gcs: bucket/{tag}/file.tar.gz}` unpacks the tarball there. The
+  Config Connector operator is fetched this way.
+- **Install variants.** A provider's `install:` list (name, when, steps with
+  `{tag}`) becomes an Install card on its page and a section of its agent page,
+  e.g. the operator's GKE Standard and GKE Autopilot manifests. A provider that
+  `installs:` another is linked from it ("installed by").
 - **Terraform, by the numbers.** For each surface's Terraform provider: rank,
   downloads, latest version and full resource list (Terraform Registry API),
   plus the top 200 providers for the long-tail table. Operator kinds map to
