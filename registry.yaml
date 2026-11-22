@@ -53,6 +53,37 @@ providers:
     crds: [upstream/kcc/config/crds/resources/*.yaml]
     group_suffix: .cnrm.cloud.google.com
 
+  # Installs and configures Config Connector itself. Google ships it as a tarball in a
+  # public Cloud Storage bucket, one folder per version, not as a GitHub release.
+  - id: config-connector-operator
+    title: Config Connector operator
+    surface: gcp
+    publisher: Google
+    tier: official
+    manages: in-cluster
+    installs: config-connector
+    repo: https://github.com/GoogleCloudPlatform/k8s-config-connector
+    docs: https://docs.cloud.google.com/config-connector/docs/how-to/install-manually
+    release: {gcs: configconnector-operator}            # the newest version folder
+    source: {gcs: 'configconnector-operator/{tag}/release-bundle.tar.gz'}
+    # Standard and Autopilot manifests carry the same CRDs; read one.
+    crds: [upstream/config-connector-operator/operator-system/configconnector-operator.yaml]
+    group_suffix: .cnrm.cloud.google.com
+    install:
+      - name: GKE Standard
+        when: Standard clusters, and clusters outside GKE
+        steps: |
+          gcloud storage cp gs://configconnector-operator/{tag}/release-bundle.tar.gz release-bundle.tar.gz
+          tar zxvf release-bundle.tar.gz
+          kubectl apply -f operator-system/configconnector-operator.yaml
+      - name: GKE Autopilot
+        when: Autopilot clusters
+        note: Same kinds; the operator installs Config Connector from its Autopilot channel.
+        steps: |
+          gcloud storage cp gs://configconnector-operator/{tag}/release-bundle.tar.gz release-bundle.tar.gz
+          tar zxvf release-bundle.tar.gz
+          kubectl apply -f operator-system/autopilot-configconnector-operator.yaml
+
   - id: ack
     title: AWS Controllers for Kubernetes
     surface: aws

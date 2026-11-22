@@ -27,7 +27,7 @@ CFG = yaml.load(open(os.path.join(HERE, "registry.yaml")), Loader=L)
 for _p in CFG["providers"]:  # providers document the release the lock resolved
     _l = LOCK["providers"].get(_p["id"])
     if _l and _p["id"] != "ack":
-        _p["version"], _p["commit"] = _l["tag"], _l["commit"]
+        _p["version"], _p["commit"] = _l["tag"], _l.get("commit")
 TFMAP = yaml.load(open(os.path.join(HERE, CFG.get("terraform_map", "terraform-map.yaml"))), Loader=L) or {}
 TFLOCK = (LOCK.get("terraform") or {}).get("surfaces") or {}
 
@@ -182,6 +182,16 @@ def docs_url(prov, k):
     return None
 
 
+def install_of(prov):
+    """Install variants, with {tag} filled in: [{name, when, steps}] (Config Connector's
+    operator: one manifest for GKE Standard, another for Autopilot)."""
+    out = []
+    for v in prov.get("install") or []:
+        out.append({"name": v["name"], "when": v.get("when"), "note": v.get("note"),
+                    "steps": v["steps"].format(tag=prov.get("version") or "latest").strip()})
+    return out or None
+
+
 def src_url(prov, rel, ctrl, release):
     if prov["id"] == "config-connector":
         return f"{prov['repo']}/blob/{prov['commit']}/" + rel.split("upstream/kcc/", 1)[1]
@@ -192,6 +202,8 @@ def src_url(prov, rel, ctrl, release):
     src = prov.get("source") or {}
     if "asset" in src:
         return src["asset"].format(tag=prov["version"])
+    if "gcs" in src:
+        return "https://storage.googleapis.com/" + src["gcs"].format(tag=prov["version"])
     inner = rel.split("/", 2)[2]
     blob = "/-/blob/" if "gitlab.com" in prov["repo"] else "/blob/"
     return f"{prov['repo']}{blob}{prov['version']}/" + inner
@@ -539,7 +551,8 @@ def build():
     provs = []
     for p in CFG["providers"]:
         mine = [k for k in kinds if k["provider"] == p["id"]]
-        provs.append({x: p.get(x) for x in ("id", "title", "surface", "publisher", "tier", "extends", "repo", "docs", "version", "commit", "manages")} |
+        provs.append({x: p.get(x) for x in ("id", "title", "surface", "publisher", "tier", "extends", "repo", "docs", "version", "commit", "manages", "installs")} |
+                     {"install": install_of(p)} |
                      {"nkinds": len(mine), "ngroups": len({k["group"] for k in mine}), "nservices": len({k["service"] for k in mine}),
                       "controllers": len({k["controller"]["repo"] for k in mine if k.get("controller")}) or None})
     # Terraform, by the numbers: how much of each surface's provider the kinds cover.

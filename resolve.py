@@ -91,6 +91,30 @@ def latest_tag(repo, pattern):
     return {"tag": t, "commit": tags[t], "via": "git-tags"}
 
 
+def latest_gcs(bucket, pattern=r"^[0-9]+\.[0-9]+\.[0-9]+$"):
+    """Newest version in a public Cloud Storage bucket whose top-level folders are
+    versions (Config Connector's operator: gs://configconnector-operator/1.162.0/)."""
+    base = f"https://storage.googleapis.com/storage/v1/b/{bucket}/o"
+    prefixes, token = [], None
+    while True:
+        q = {"delimiter": "/", "fields": "prefixes,nextPageToken"} | ({"pageToken": token} if token else {})
+        req = urllib.request.Request(base + "?" + urllib.parse.urlencode(q), headers={"User-Agent": "krm-registry"})
+        d = json.load(urllib.request.urlopen(req, timeout=60))
+        prefixes += [x.rstrip("/") for x in d.get("prefixes", [])]
+        token = d.get("nextPageToken")
+        if not token:
+            break
+    versions = [v for v in prefixes if re.match(pattern, v)]
+    if not versions:
+        return None
+    v = max(versions, key=version_key)
+    req = urllib.request.Request(base + "?" + urllib.parse.urlencode({"prefix": v + "/", "fields": "items(name,updated)"}),
+                                 headers={"User-Agent": "krm-registry"})
+    items = json.load(urllib.request.urlopen(req, timeout=60)).get("items", [])
+    published = max((i["updated"][:10] for i in items), default=None)
+    return {"tag": v, "commit": None, "published": published, "via": f"gcs:{bucket}"}
+
+
 def terraform_provider(name, top):
     """Rank, downloads, latest version and resource list of a Terraform provider (Registry API)."""
     p = next((x for x in top if x["name"].lower() == name.lower()), None)
@@ -207,11 +231,19 @@ def main():
     cfg = yaml.safe_load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "registry.yaml")))
     for p in cfg["providers"]:
         if p.get("release"):
-            rel = latest_tag(p["repo"], p["release"]["tags"])
+            r = p["release"]
+            if "gcs" in r:
+                try:
+                    rel = latest_gcs(r["gcs"], r.get("versions", r"^[0-9]+\.[0-9]+\.[0-9]+$"))
+                except Exception as e:
+                    warn(f"gcs {r['gcs']}", e)
+                    rel = None
+            else:
+                rel = latest_tag(p["repo"], r["tags"])
             if rel:
                 lock["providers"][p["id"]] = rel
             else:
-                print(f"{p['id']}: no release matching {p['release']['tags']}", file=sys.stderr)
+                print(f"{p['id']}: no release matching {p['release']}", file=sys.stderr)
 
     # Terraform, by the numbers: every surface's provider, and the top providers overall.
     top = terraform_top()
