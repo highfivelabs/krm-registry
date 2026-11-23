@@ -450,7 +450,7 @@ def build():
     print(f"examples with related kinds: {sum(1 for ks in shards.values() for k in ks if any(r['main'] == k['kind'] for r in k.get('related') or []))} kinds", file=sys.stderr)
 
     # Terraform resource types the catalog maps to kinds by hand (modules it tracks).
-    rt = P("src/catalog/docs/coverage/resource-types.csv")
+    rt = P("src/krm-packages/docs/coverage/resource-types.csv")
     if os.path.exists(rt):
         byg = {(k["group"], k["kind"]): k for ks in shards.values() for k in ks}
         bys = defaultdict(list)

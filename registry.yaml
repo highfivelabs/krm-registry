@@ -118,7 +118,7 @@ providers:
     kind_docs: src/config-connector-extensions/docs/kinds
     readme: src/config-connector-extensions/README.md
     coverage: src/config-connector-extensions/docs/coverage/resources.csv
-    terraform: src/catalog/docs/terraform/config-connector-extensions/terraform-resources.csv
+    terraform: src/krm-packages/docs/terraform/config-connector-extensions/terraform-resources.csv
     group_suffix: .gcp.hfl.dev
 
   - id: ack-extensions
@@ -132,7 +132,7 @@ providers:
     crds: [src/ack-extensions/config/crds/bases/*.yaml, src/ack-extensions/cloudcontrol/config/crds/*.yaml]
     readme: src/ack-extensions/README.md
     coverage: src/ack-extensions/docs/coverage/resources.csv
-    terraform: src/catalog/docs/terraform/ack-extensions/terraform-resources.csv
+    terraform: src/krm-packages/docs/terraform/ack-extensions/terraform-resources.csv
     group_suffix: .aws.hfl.dev
 
   - id: aso-extensions
@@ -146,7 +146,7 @@ providers:
     crds: [src/aso-extensions/config/crds/*.yaml]
     readme: src/aso-extensions/README.md
     coverage: src/aso-extensions/docs/coverage/resources.csv
-    terraform: src/catalog/docs/terraform/aso-extensions/terraform-resources.csv
+    terraform: src/krm-packages/docs/terraform/aso-extensions/terraform-resources.csv
     group_suffix: .azure.hfl.dev
 
   # The long tail. Operators: each at its latest release (resolve.py),
@@ -446,5 +446,5 @@ packages:
   - id: catalog
     title: High Five Labs catalog
     publisher: High Five Labs
-    repo: https://github.com/highfivelabs/catalog
-    charts: src/catalog/charts/*/*
+    repo: https://github.com/highfivelabs/krm-packages
+    charts: src/krm-packages/charts/*/*
