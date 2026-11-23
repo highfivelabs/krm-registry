@@ -53,7 +53,7 @@ manifest, dry-run it on the fake API): `go run ./cmd/mcp` there.
 
 ```
 build.sh <root> <site>
-  1. clone the catalog and every provider repo registry.yaml says is ours
+  1. clone krm-packages and every provider repo registry.yaml says is ours
   2. resolve.py   which releases exist (APIs)            → registry.lock.json
   3. fetch.sh, fetch_sources.py
                   the CRDs at those releases             → <root>/upstream

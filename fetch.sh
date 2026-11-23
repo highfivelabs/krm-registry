@@ -23,7 +23,7 @@ q "'\n'.join(c['repo']+' '+c['tag'] for c in d['providers']['ack']['controllers'
   while read -r repo tag; do echo "$repo $tag"; done |
   xargs -P 12 -n 2 bash -c "$(declare -f sparse); sparse https://github.com/aws-controllers-k8s/\$0.git $root/upstream/ack/\$0 \$1 helm/crds"
 
-for r in ack-extensions aso-extensions config-connector-extensions catalog; do
+for r in ack-extensions aso-extensions config-connector-extensions krm-packages; do
   [ -d "$root/src/$r/.git" ] || git clone -q --depth 1 "https://github.com/highfivelabs/$r.git" "$root/src/$r"
 done
 echo "fetched: kcc $(q "d['providers']['config-connector']['tag']"), aso $aso_tag, $(ls "$root/upstream/ack" | wc -l) ACK controllers" >&2

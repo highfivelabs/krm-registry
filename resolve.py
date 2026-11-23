@@ -3,7 +3,7 @@
 
   resolve.py <src> <lock.json>
 
-<src> holds the clones of the repos we own (the extension repos and catalog).
+<src> holds the clones of the repos we own (the extension repos and krm-packages).
 Writes a lock file naming exactly what to fetch and what each chart's
 upstream module has released since its pin:
 
@@ -212,7 +212,7 @@ def main():
     lock["providers"]["ack"] = {"listed_via": via, "controllers": [dict(repo=n, **r) for n, r in rels if r]}
 
     ups = {}
-    for f in sorted(glob.glob(f"{SRC}/catalog/charts/*/*/upstream.yaml")):
+    for f in sorted(glob.glob(f"{SRC}/krm-packages/charts/*/*/upstream.yaml")):
         cloud, name = f.split("/")[-3:-1]
         ups[f"{cloud}/{name}"] = yaml.safe_load(open(f))
     repos = {}
