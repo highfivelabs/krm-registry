@@ -1,0 +1,7 @@
+Use the KRM Registry (https://registry.highfivelabs.dev) when you write Kubernetes manifests for cloud or vendor resources (Config Connector, ACK, ASO and their extensions). Look kinds and fields up there; don't guess them.
+
+1. Start at https://registry.highfivelabs.dev/llms.txt. It lists every cloud and provider and how the pages are laid out.
+2. Find the kind: https://registry.highfivelabs.dev/<cloud>/index.md lists services, then kinds. If you know the Terraform resource type, https://registry.highfivelabs.dev/terraform/<type>.md names the kinds that manage the same resource.
+3. Read the kind page, https://registry.highfivelabs.dev/kinds/<provider>/<api group>/<Kind>.md. It has every spec and status field with its type, required, immutable, enum and default, and its examples, each saying how it was tested.
+4. Start from a tested example over the minimal one. Prefer an official kind (Config Connector, ACK, ASO); use an extension kind where the official one is missing or broken, as its page explains.
+5. Fill in placeholders like ${PROJECT_ID?}, $BUCKET_NAME and <value> with real values, and set references to the objects they point at.

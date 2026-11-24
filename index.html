@@ -128,9 +128,12 @@ body.home #q{visibility:hidden}
 .mini a{display:flex;flex-direction:column;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;color:inherit}
 .mini a:hover{border-color:var(--clay);text-decoration:none}.mini b{font-family:var(--display);font-size:16px}.mini span{font-size:12.5px;color:var(--ink3)}
 .mini .bar{margin:6px 0 0;height:4px}
-.agents{display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--ink);color:var(--panel);border-radius:12px;padding:22px 24px;margin-top:40px}
-.agents h3{margin:0 0 4px;font-size:19px;color:inherit}.agents p{margin:0;opacity:.8;font-size:14px}.agents code{color:inherit}
-.agents a{color:var(--ink);background:var(--panel);border-radius:999px;padding:8px 16px;font-weight:600;font-size:14px;white-space:nowrap}
+.agents{margin-top:40px;border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
+.agents .ah{display:flex;gap:8px 14px;align-items:baseline;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line2);font-size:14px}
+.agents .ah b{font-family:var(--display);font-size:16px}.agents .ah span{color:var(--ink3)}
+.agents .ah .acts{margin-left:auto;display:flex;gap:12px;align-items:baseline;font-size:13px}
+.agents button{font:inherit;font-size:13px;padding:4px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);cursor:pointer}.agents button:hover{border-color:var(--clay)}
+.agents pre{margin:0;padding:12px 16px;font-size:12px;line-height:1.6;color:var(--ink2);white-space:pre-wrap;max-height:9.6em;overflow:auto;background:var(--bg);cursor:copy}
 .more{display:flex;justify-content:space-between;align-items:baseline;gap:10px}.more a{font-size:14px}
 footer{max-width:1180px;margin:40px auto 0;padding:24px 28px 40px;border-top:1px solid var(--line);color:var(--ink3);font-size:13px;display:flex;gap:18px;flex-wrap:wrap}
 footer a{color:var(--ink2)}
@@ -254,7 +257,9 @@ function home(){
   <div class="card"><div class="k">Packages</div><h3>Modules, as charts</h3><p>Helm charts of those kinds, ported from popular Terraform modules.</p></div></div>
   <div class="more"><h2>Clouds</h2><a href="#surfaces">All clouds &amp; vendors →</a></div><div class="mini">${bySize(CLOUDS).map(miniCard).join('')}</div>
   <div class="more"><h2>Vendors</h2><a href="#numbers">Coverage by the numbers →</a></div><div class="mini">${bySize(VENDORS).map(miniCard).join('')}</div>
-  <div class="agents"><div><h3>Built for agents, too</h3><p>Markdown pages from cloud to kind, and an MCP server.</p></div><a href="llms.txt">Start at llms.txt</a></div>`}
+  <div class="agents"><div class="ah"><b>For agents</b><span>Paste this into your coding agent.</span><span class="acts"><button onclick="copyPrompt(this)">Copy prompt</button><a href="prompt.txt">Plain text</a><a href="llms.txt">llms.txt</a></span></div><pre id="aprompt" title="Click to copy" onclick="copyPrompt(this.parentNode.querySelector('button'))">${esc(PROMPT||'')}</pre></div>`}
+let PROMPT=''; fetch('prompt.txt').then(r=>r.ok?r.text():'').then(t=>{PROMPT=t.trim();const e=$('#aprompt');if(e)e.textContent=PROMPT}).catch(()=>{});
+function copyPrompt(b){navigator.clipboard.writeText(PROMPT).then(()=>{b.textContent='Copied';setTimeout(()=>b.textContent='Copy prompt',1500)})}
 function provTable(ps){return `<table><tr><th>Provider</th><th>Cloud</th><th>Publisher</th><th>Version</th><th style="text-align:right">Kinds</th></tr>${ps.map(p=>`<tr><td><a href="#pr-${p.id}"><b>${esc(p.title)}</b></a> ${tierBadge(p.tier)}${p.manages==='in-cluster'?' '+badge('runs in-cluster software','plain'):''}${p.extends?` <span class="muted">extends ${esc(PBY[p.extends].title)}</span>`:''}</td><td>${surfB(p.surface)}</td><td>${esc(p.publisher)}</td><td class="mono">${esc(p.version)}${p.controllers?` <span class="muted">(${p.controllers} controllers)</span>`:''}</td><td style="text-align:right">${fmt(p.nkinds)}</td></tr>`).join('')}</table>`}
 function providers(){return `<h1>Providers</h1><div class="sub">Official providers are the cloud vendors' own controllers. Extension providers add kinds the official ones lack, in their own API groups, and are documented beside them.</div><h2></h2>${provTable(C.providers)}`}
 function surfaces(){return `<h1>Clouds &amp; vendors</h1><div class="sub">Each surface's providers, merged by service: official and community operators beside High Five Labs' extensions.</div><h2>Clouds</h2><div class="grid g3">${CLOUDS.map(surfCard).join('')}</div><h2>Vendors</h2><div class="grid g3">${VENDORS.map(surfCard).join('')}</div>`}
@@ -477,7 +482,7 @@ ${row('<b>fake API</b>','Run against a fake API built from the vendor\'s spec on
 ${row('<b>minimal</b>','Required fields only, generated from the CRD. Untested.')}
 </table>
 <h2>For agents</h2>
-<p><a href="llms.txt">llms.txt</a> describes the layout. Every kind is one JSON fetch (all of its fields, examples and references), and the same pages exist as Markdown.</p>
+<p><a href="prompt.txt">prompt.txt</a> is a prompt to paste into a coding agent. <a href="llms.txt">llms.txt</a> describes the layout. Every kind is one JSON fetch (all of its fields, examples and references), and the same pages exist as Markdown.</p>
 <h2>This build</h2>
 <div class="kv" style="grid-template-columns:150px 1fr;font-size:14px"><div>Config Connector</div><div class="mono">${esc(PBY['config-connector'].version)}</div><div>ASO</div><div class="mono">${esc(PBY['aso'].version)}</div><div>ACK</div><div>${PBY['ack'].controllers} controllers, each at its latest release</div><div>Extensions, packages</div><div>main</div><div>Generated</div><div>${esc(C.generated)}</div></div>
 <details style="margin-top:28px"><summary><b>Adding a provider</b></summary>
