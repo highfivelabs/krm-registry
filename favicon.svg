@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><title>High Five Labs</title>
+<rect width="64" height="64" rx="14" fill="#b93d0b"/><g transform="translate(7.04 6.40) scale(0.96000) translate(-6 -12)"><g fill="#ffffff">
+    
+    <rect x="8" y="18" width="14" height="42" rx="7" transform="rotate(8 15 60)"/>
+    
+    <circle cx="32" cy="38" r="4.5"/>
+  </g>
+  <g class="machine" fill="#222a33">
+    
+    <rect x="42" y="18" width="14" height="42" rx="7" transform="rotate(-8 49 60)"/>
+  </g></g>
+</svg>
