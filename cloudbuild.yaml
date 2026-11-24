@@ -2,7 +2,8 @@
 #
 # Run by the Cloud Build trigger krm-registry-mcp in highfivelabs-prd
 # (tf-infra, README "KRM Registry") on every push to main that touches
-# mcp_server.py, the Dockerfile or this file, as image-builder@highfivelabs-prd.
+# the server (go.mod, cmd/mcp/), the Dockerfile or this file, as
+# image-builder@highfivelabs-prd.
 # Tags: the commit and "main". The Cloud Run service registry-mcp is
 # tf-infra's (sites/registry); this only moves it to the new image.
 steps:

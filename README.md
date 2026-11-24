@@ -34,14 +34,14 @@ Hosted: **`https://registry.highfivelabs.dev/mcp`**, streamable HTTP, no
 sign-in, read only. In Claude Code:
 `claude mcp add --transport http krm-registry https://registry.highfivelabs.dev/mcp`.
 
-`mcp_server.py` is that server. It speaks stdio by default, or streamable
+`cmd/mcp` (Go) is that server. It speaks stdio by default, or streamable
 HTTP with `--http PORT` (stateless: `POST /mcp`, one JSON-RPC message per
 request, a JSON response, no sessions or server-sent events; `GET /healthz`).
 It reads a built site's `data/`: a local build (`--site site`, which
 `.mcp.json` registers for sessions opened here) or the published registry
 (`--url <its base URL>`, over HTTPS). With `--http` it re-reads a file after
 `--ttl` seconds (300, the CDN's cache time), so a publish shows up without a
-restart. Python's standard library only.
+restart. Go's standard library only.
 
 The hosted one is the `Dockerfile` (`--url https://registry.highfivelabs.dev
 --http 0`) on Cloud Run as `registry-mcp` in highfivelabs-prd, behind the
@@ -59,9 +59,9 @@ trigger runs it on every push to `main` that changes the server.
 | `get_package` | a catalog chart: its upstream module, kinds, values and outputs |
 
 ```sh
-./build.sh /tmp/krm-root site && python3 mcp_server.py --site site
-python3 mcp_server.py --url https://registry.highfivelabs.dev --http 8080   # as hosted, locally
-python3 -m unittest discover -s tests   # the tools against tests/fixture-site
+./build.sh /tmp/krm-root site && go run ./cmd/mcp --site site
+go run ./cmd/mcp --url https://registry.highfivelabs.dev --http 8080   # as hosted, locally
+go test ./cmd/mcp   # the tools against cmd/mcp/testdata/site
 ```
 
 Each vendor repository also serves its own kinds in more depth (validate a

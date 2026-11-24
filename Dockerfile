@@ -1,9 +1,12 @@
-# The registry's hosted MCP server (registry.highfivelabs.dev/mcp): mcp_server.py
-# over streamable HTTP, reading the published site. Standard library only.
-FROM python:3.12-slim
-WORKDIR /app
-COPY mcp_server.py .
-ENV PYTHONUNBUFFERED=1
-USER nobody
+# The registry's hosted MCP server (registry.highfivelabs.dev/mcp): cmd/mcp
+# over streamable HTTP, reading the published site. Go's standard library only.
+FROM golang:1.25 AS build
+WORKDIR /src
+COPY go.mod ./
+COPY cmd/mcp/*.go ./cmd/mcp/
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /mcp ./cmd/mcp
+
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=build /mcp /mcp
 # Cloud Run sets $PORT; --http 0 listens on it.
-CMD ["python3", "mcp_server.py", "--url", "https://registry.highfivelabs.dev", "--http", "0"]
+ENTRYPOINT ["/mcp", "--url", "https://registry.highfivelabs.dev", "--http", "0"]
