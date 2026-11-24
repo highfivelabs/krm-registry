@@ -71,8 +71,8 @@ tr:last-child td{border-bottom:0}
 .big{width:100%;padding:14px 16px;font:inherit;font-size:16px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);margin:16px 0 6px}
 .layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px}
 @media(max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}header{flex-wrap:wrap}}
-.side .card{margin-bottom:14px}.side h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink3)}
-.kv{display:grid;grid-template-columns:90px 1fr;gap:4px 10px;font-size:13px}.kv div:nth-child(odd){color:var(--ink3)}
+.side .card{margin-bottom:14px;min-width:0;overflow-wrap:anywhere}.side h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink3)}
+.kv{display:grid;grid-template-columns:90px minmax(0,1fr);gap:4px 10px;font-size:13px}.kv div:nth-child(odd){color:var(--ink3)}
 .crumbs{font-size:13px;color:var(--ink3);margin-bottom:8px}
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:22px 0 0}
 .tabs button{font:inherit;font-weight:500;background:none;border:0;padding:8px 12px;color:var(--ink2);cursor:pointer;border-bottom:2px solid transparent}
@@ -387,7 +387,7 @@ async function kindPage(k){
     ${partner?`<label><input type="checkbox" ${KOVER?'checked':''} onchange="KOVER=this.checked;kindPage(KBY[location.hash.slice(1)])"> Compare with ${twin?'official':'extension'}</label>${KOVER?`<label><input type="checkbox" ${KDIFF?'checked':''} onchange="KDIFF=this.checked;renderFields()"> Differences only</label>`:''}`:''}</div>
    ${partner&&KOVER?`<div class="cmp" id="cmp"></div>`:''}<div id="fl"></div>`}</div>
   </div><div class="side">
-   ${apis.length?`<div class="card"><h4>Cloud API resource</h4>${apis.map(a=>`<div class="mono" style="font-size:12px">${esc(a)}</div>`).join('')}</div>`:''}
+   ${apis.length?`<div class="card"><h4>Cloud API resource</h4>${apis.map(a=>`<div class="mono" style="font-size:12px">${esc(a).replace(/\//g,'/<wbr>')}</div>`).join('')}</div>`:''}
    ${tf.length?`<div class="card"><h4>Terraform equivalent</h4>${tf.map(t=>`<div>${tfeq(t)}</div>`).join('')}</div>`:''}
    ${k.usedBy?.length?`<div class="card"><h4>Used by packages</h4>${k.usedBy.map(id=>{const c=C.chartById[id];return `<div><a href="#${cslug(c)}">${esc(id)}</a> <span class="muted mono">${esc(c.version)}</span></div>`}).join('')}</div>`:''}
    ${full.refs?.length?`<div class="card"><h4>References</h4>${full.refs.map(r=>`<div style="margin-bottom:4px"><code style="font-size:11.5px">${esc(r.field.replace(/^spec\./,''))}</code> → ${r.kinds.map(n=>{const t=C.kinds.find(o=>o.surface===k.surface&&o.kind===n&&o.tier==='official')||C.kinds.find(o=>o.surface===k.surface&&o.kind===n);return t?klink(t):esc(n)}).join(', ')}</div>`).join('')}</div>`:''}
