@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """The registry over the Model Context Protocol (stdio), for agents.
 
-  mcp_server.py [--site DIR | --url URL]
+  mcp_server.py [--site DIR | --url URL] [--http PORT]
+
+Over stdio by default; --http serves MCP's streamable HTTP transport on
+POST /mcp instead (stateless: no sessions, every response is JSON), which
+is how registry.highfivelabs.dev/mcp runs on Cloud Run.
 
 Answers from a built site's data/ (catalog.json, the per-group kind shards
 and the chart files): a local build (--site, default ./site), or the
@@ -9,6 +13,7 @@ published registry (--url, read over HTTPS on demand), so nothing new is
 hosted. Python's standard library only.
 
 Tools:
+  list_clouds          every cloud and vendor, with its services and kind counts
   search_kinds         kinds by text, cloud, service, provider or tier
   get_kind             one kind: its fields, Terraform equivalents, tested
                        example, and the examples with the kinds it needs
@@ -20,7 +25,10 @@ import argparse
 import json
 import os
 import sys
+import time
+import urllib.error
 import urllib.request
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 PROTOCOL_VERSIONS = ["2025-06-18", "2025-03-26", "2024-11-05"]
 
@@ -28,13 +36,17 @@ PROTOCOL_VERSIONS = ["2025-06-18", "2025-03-26", "2024-11-05"]
 class Source:
     """data/ files from a local site or the published one."""
 
-    def __init__(self, site=None, url=None):
+    def __init__(self, site=None, url=None, ttl=None):
         self.site, self.url = site, (url.rstrip("/") + "/" if url else None)
+        # A long-running server re-reads files after ttl seconds, so a publish
+        # shows up without a restart; None keeps them for the process's life.
+        self.ttl = ttl
         self.cache = {}
 
     def read(self, rel):
-        if rel in self.cache:
-            return self.cache[rel]
+        hit = self.cache.get(rel)
+        if hit and (self.ttl is None or time.monotonic() - hit[1] < self.ttl):
+            return hit[0]
         if self.url:
             req = urllib.request.Request(self.url + rel, headers={"User-Agent": "krm-registry-mcp"})
             try:
@@ -48,7 +60,7 @@ class Source:
         else:
             p = os.path.join(self.site, rel)
             v = json.load(open(p)) if os.path.exists(p) else None
-        self.cache[rel] = v
+        self.cache[rel] = (v, time.monotonic())
         return v
 
 
@@ -59,16 +71,27 @@ class Registry:
 
     @property
     def cat(self):
-        if self._cat is None:
-            self._cat = self.src.read("data/catalog.json")
-            if self._cat is None:
-                raise RuntimeError("no data/catalog.json: build the site first (build.sh), or pass --url")
-        return self._cat
+        cat = self.src.read("data/catalog.json")
+        if cat is None:
+            raise RuntimeError("no data/catalog.json: build the site first (build.sh), or pass --url")
+        return cat
 
     def shard(self, provider, group):
         return self.src.read(f"data/k/{provider}/{group}.json") or []
 
     # ------------------------------------------------------------ tools
+
+    def list_clouds(self):
+        services = {}
+        for k in self.cat["kinds"]:
+            sv = services.setdefault(k["surface"], {})
+            sv[k.get("service") or "other"] = sv.get(k.get("service") or "other", 0) + 1
+        provs = {}
+        for p in self.cat["providers"]:
+            provs.setdefault(p.get("surface"), []).append(p["id"])
+        return {"clouds": [{"id": sid, "title": s.get("title"), "category": s.get("category"), "providers": provs.get(sid, []),
+                            "kinds": sum(services.get(sid, {}).values()), "services": dict(sorted(services.get(sid, {}).items()))}
+                           for sid, s in self.cat["surfaces"].items()]}
 
     def search_kinds(self, query="", cloud="", service="", provider="", tier="", limit=25):
         words = [w for w in query.lower().split() if w]
@@ -86,9 +109,15 @@ class Registry:
             hay = " ".join([k["kind"], k["group"], k.get("service", ""), k.get("desc", "")] + tf).lower()
             if words and not all(w in hay for w in words):
                 continue
-            score = sum(3 if w in k["kind"].lower() else 1 for w in words) + (2 if k.get("readiness") == "live" else 0)
+            kl, q = k["kind"].lower(), "".join(words)
+            # Exact kind or Terraform type first, then a kind that ends in the
+            # word (StorageBucket for "bucket"), then a kind that has it; official
+            # and live-tested kinds before others, shorter names before longer.
+            score = (20 if q and (kl == q or any(t == query.strip().lower() for t in tf)) else 0) \
+                + sum(6 if kl.endswith(w) else 3 if w in kl else 1 for w in words) \
+                + (2 if k.get("tier") == "official" else 0) + (1 if k.get("readiness") == "live" else 0)
             out.append((score, k, tf))
-        out.sort(key=lambda x: (-x[0], x[1]["kind"]))
+        out.sort(key=lambda x: (-x[0], len(x[1]["kind"]), x[1]["kind"]))
         return {"count": len(out), "kinds": [summary(k, tf) for _, k, tf in out[: max(1, min(int(limit), 200))]]}
 
     def find(self, kind):
@@ -166,6 +195,8 @@ def summary(k, tf):
 
 S = {"type": "string"}
 TOOLS = [
+    {"name": "list_clouds", "description": "Every cloud and vendor the registry covers (gcp, aws, azure, cloudflare, datadog, ...): its providers and, per service, how many kinds. Use it to learn the names search_kinds filters on.",
+     "inputSchema": {"type": "object", "properties": {}}},
     {"name": "search_kinds", "description": "Find Kubernetes kinds across every provider in the registry (Config Connector, ACK, ASO, High Five Labs' extensions and REST vendor kinds) by text (kind, group, service, Terraform type, description; all words must match), and optionally cloud (gcp, aws, azure, cloudflare, ...), service, provider id or tier (official, extension).",
      "inputSchema": {"type": "object", "properties": {"query": S, "cloud": S, "service": S, "provider": S, "tier": S, "limit": {"type": "integer"}}}},
     {"name": "get_kind", "description": "One kind in full: description, every spec and status field (type, required, enum, default, immutable), its Terraform equivalents and API paths, the gap it fills, its tested example (live or fake), the samples from the official controller's own tests, and the examples that show it with the kinds it needs. Name it by id (provider/group/Kind), group/Kind or Kind.",
@@ -179,7 +210,13 @@ TOOLS = [
 ]
 
 
+for _t in TOOLS:  # every tool only reads
+    _t["annotations"] = {"readOnlyHint": True, "openWorldHint": False}
+
+
 def call(reg, name, args):
+    if name == "list_clouds":
+        return reg.list_clouds()
     if name == "search_kinds":
         return reg.search_kinds(**{k: v for k, v in args.items() if k in ("query", "cloud", "service", "provider", "tier", "limit")})
     if name == "get_kind":
@@ -204,7 +241,7 @@ def handle(reg, msg):
                   "capabilities": {"tools": {}},
                   "serverInfo": {"name": "krm-registry", "version": "1"},
                   "instructions": "The KRM Registry: Kubernetes kinds for clouds and SaaS vendors, and the Terraform types they stand in for. "
-                                  "Start with search_kinds or kinds_for_terraform, then get_kind for fields and a tested example."}
+                                  "list_clouds names the clouds, services and providers; search_kinds or kinds_for_terraform finds kinds; get_kind gives every field and the tested examples."}
     elif method == "ping":
         result = {}
     elif method == "tools/list":
@@ -220,12 +257,92 @@ def handle(reg, msg):
     return {"jsonrpc": "2.0", "id": mid, "result": result}
 
 
+class HTTPHandler(BaseHTTPRequestHandler):
+    """MCP's streamable HTTP transport, stateless: POST a JSON-RPC message to
+    /mcp, get its response as application/json (202 for a notification).
+    No server-sent events, so GET and DELETE are 405."""
+    reg = None
+    server_version = "krm-registry-mcp/1"
+    MAX_BODY = 1 << 20
+
+    def _send(self, code, body=None, ctype="application/json", extra=None):
+        data = b"" if body is None else (body if isinstance(body, bytes) else json.dumps(body).encode())
+        self.send_response(code)
+        # The data is public; any origin may call it.
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Accept, Mcp-Protocol-Version, Mcp-Session-Id")
+        self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+        self.send_header("Cache-Control", "no-store")
+        for k, v in (extra or {}).items():
+            self.send_header(k, v)
+        if body is not None:
+            self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        if data:
+            self.wfile.write(data)
+
+    def _mcp_path(self):
+        return self.path.split("?", 1)[0].rstrip("/") in ("/mcp", "")
+
+    def do_OPTIONS(self):
+        self._send(204)
+
+    def do_GET(self):
+        path = self.path.split("?", 1)[0]
+        if path == "/healthz":
+            return self._send(200, b"ok\n", "text/plain")
+        if self._mcp_path():
+            return self._send(405, {"error": "this server does not stream; POST JSON-RPC messages to /mcp"}, extra={"Allow": "POST, OPTIONS"})
+        self._send(404, {"error": "not found"})
+
+    def do_DELETE(self):
+        self._send(405, {"error": "no sessions to end"}, extra={"Allow": "POST, OPTIONS"})
+
+    def do_POST(self):
+        if not self._mcp_path():
+            return self._send(404, {"error": "not found"})
+        v = self.headers.get("Mcp-Protocol-Version")
+        if v and v not in PROTOCOL_VERSIONS:
+            return self._send(400, {"jsonrpc": "2.0", "id": None, "error": {"code": -32600, "message": f"unsupported MCP-Protocol-Version {v}"}})
+        n = int(self.headers.get("Content-Length") or 0)
+        if n <= 0 or n > self.MAX_BODY:
+            return self._send(400 if n <= 0 else 413, {"jsonrpc": "2.0", "id": None, "error": {"code": -32600, "message": "a JSON-RPC message of at most 1 MiB"}})
+        try:
+            msg = json.loads(self.rfile.read(n))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return self._send(400, {"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "parse error"}})
+        if not isinstance(msg, dict):
+            return self._send(400, {"jsonrpc": "2.0", "id": None, "error": {"code": -32600, "message": "one JSON-RPC message per request; batches are not supported"}})
+        try:
+            resp = handle(self.reg, msg)
+        except Exception as e:  # the data source failed: report it, keep serving
+            resp = {"jsonrpc": "2.0", "id": msg.get("id"), "error": {"code": -32603, "message": f"internal error: {e}"}}
+        if resp is None:
+            return self._send(202)
+        self._send(200, resp)
+
+    def log_message(self, fmt, *args):  # one line per request on stderr (Cloud Logging)
+        sys.stderr.write("%s %s\n" % (self.address_string(), fmt % args))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--site", default="site", help="a built site directory (default ./site)")
     ap.add_argument("--url", help="the published registry's base URL, read instead of --site")
+    ap.add_argument("--http", type=int, metavar="PORT", help="serve streamable HTTP on PORT (0: $PORT, else 8080) instead of stdio")
+    ap.add_argument("--ttl", type=float, default=300, help="with --http, seconds before a data file is read again (default 300, the CDN's cache time)")
     a = ap.parse_args()
-    reg = Registry(Source(url=a.url) if a.url else Source(site=a.site))
+    ttl = a.ttl if a.http is not None else None
+    reg = Registry(Source(url=a.url, ttl=ttl) if a.url else Source(site=a.site, ttl=ttl))
+    if a.http is not None:
+        port = a.http or int(os.environ.get("PORT", "8080"))
+        HTTPHandler.reg = reg
+        srv = ThreadingHTTPServer(("", port), HTTPHandler)
+        srv.daemon_threads = True
+        print(f"krm-registry MCP on :{port}/mcp, data from {a.url or a.site}", file=sys.stderr)
+        srv.serve_forever()
+        return
     for line in sys.stdin:
         line = line.strip()
         if not line:

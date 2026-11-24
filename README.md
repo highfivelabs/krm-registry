@@ -30,14 +30,28 @@ An official kind (Config Connector, ACK, ASO) shows the samples from its control
 
 ## For agents (MCP)
 
-`mcp_server.py` serves the registry over the Model Context Protocol
-(stdio), from a built site's `data/`: a local build (`--site site`, which
-`.mcp.json` registers for sessions opened here), or the published registry
-(`--url <its base URL>`, read over HTTPS on demand), so nothing new is
-hosted. Python's standard library only.
+Hosted: **`https://registry.highfivelabs.dev/mcp`**, streamable HTTP, no
+sign-in, read only. In Claude Code:
+`claude mcp add --transport http krm-registry https://registry.highfivelabs.dev/mcp`.
+
+`mcp_server.py` is that server. It speaks stdio by default, or streamable
+HTTP with `--http PORT` (stateless: `POST /mcp`, one JSON-RPC message per
+request, a JSON response, no sessions or server-sent events; `GET /healthz`).
+It reads a built site's `data/`: a local build (`--site site`, which
+`.mcp.json` registers for sessions opened here) or the published registry
+(`--url <its base URL>`, over HTTPS). With `--http` it re-reads a file after
+`--ttl` seconds (300, the CDN's cache time), so a publish shows up without a
+restart. Python's standard library only.
+
+The hosted one is the `Dockerfile` (`--url https://registry.highfivelabs.dev
+--http 0`) on Cloud Run as `registry-mcp` in highfivelabs-prd, behind the
+registry's load balancer at `/mcp` (tf-infra, README "KRM Registry").
+`cloudbuild.yaml` builds and rolls it out: Cloud Build's `krm-registry-mcp`
+trigger runs it on every push to `main` that changes the server.
 
 | Tool | Answers |
 | --- | --- |
+| `list_clouds` | every cloud and vendor: its providers and, per service, how many kinds |
 | `search_kinds` | kinds across every provider by text (kind, group, service, Terraform type, description), cloud, service, provider or tier |
 | `get_kind` | one kind: every spec and status field, Terraform equivalents, API paths, the gap it fills, its tested example, the samples from the official controller's tests, and the examples that show it with the kinds it needs (or that use it) |
 | `kinds_for_terraform` | Terraform resource types to the kinds that stand in for each |
@@ -46,6 +60,7 @@ hosted. Python's standard library only.
 
 ```sh
 ./build.sh /tmp/krm-root site && python3 mcp_server.py --site site
+python3 mcp_server.py --url https://registry.highfivelabs.dev --http 8080   # as hosted, locally
 python3 -m unittest discover -s tests   # the tools against tests/fixture-site
 ```
 

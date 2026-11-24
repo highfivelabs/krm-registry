@@ -137,6 +137,7 @@ body.home #q{visibility:hidden}
 .agents .ah b{font-family:var(--display);font-size:16px}.agents .ah span{color:var(--ink3)}
 .agents .ah .acts{margin-left:auto;display:flex;gap:12px;align-items:baseline;font-size:13px}
 .agents button{font:inherit;font-size:13px;padding:4px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);cursor:pointer}.agents button:hover{border-color:var(--clay)}
+.agents .ah.mcp{border-top:1px solid var(--line2);border-bottom:0}.agents .ah.mcp b{font-size:14px}.agents .ah.mcp code{font-size:12.5px;overflow-wrap:anywhere}
 .agents pre{margin:0;padding:12px 16px;font-size:12px;line-height:1.6;color:var(--ink2);white-space:pre-wrap;max-height:9.6em;overflow:auto;background:var(--bg);cursor:copy}
 .more{display:flex;justify-content:space-between;align-items:baseline;gap:10px}.more a{font-size:14px}
 footer{max-width:1180px;margin:40px auto 0;padding:24px 28px 40px;border-top:1px solid var(--line);color:var(--ink3);font-size:13px;display:flex;gap:18px;flex-wrap:wrap}
@@ -261,7 +262,10 @@ function home(){
   <div class="card"><div class="k">Packages</div><h3>Modules, as charts</h3><p>Helm charts of those kinds, ported from popular Terraform modules.</p></div></div>
   <div class="more"><h2>Clouds</h2><a href="#surfaces">All clouds &amp; vendors →</a></div><div class="mini">${bySize(CLOUDS).map(miniCard).join('')}</div>
   <div class="more"><h2>Vendors</h2><a href="#numbers">Coverage by the numbers →</a></div><div class="mini">${bySize(VENDORS).map(miniCard).join('')}</div>
-  <div class="agents"><div class="ah"><b>For agents</b><span>Paste this into your coding agent.</span><span class="acts"><button onclick="copyPrompt(this)">Copy prompt</button><a href="prompt.txt">Plain text</a><a href="llms.txt">llms.txt</a></span></div><pre id="aprompt" title="Click to copy" onclick="copyPrompt(this.parentNode.querySelector('button'))">${esc(PROMPT||'')}</pre></div>`}
+  <div class="agents"><div class="ah"><b>For agents</b><span>Paste this into your coding agent.</span><span class="acts"><button onclick="copyPrompt(this)">Copy prompt</button><a href="prompt.txt">Plain text</a><a href="llms.txt">llms.txt</a></span></div><pre id="aprompt" title="Click to copy" onclick="copyPrompt(this.parentNode.querySelector('button'))">${esc(PROMPT||'')}</pre>
+  <div class="ah mcp"><b>MCP</b><code>${esc(MCP_URL)}</code><span>streamable HTTP, no sign-in</span><span class="acts"><button onclick="copyText(MCP_ADD,this)">Copy Claude Code command</button></span></div></div>`}
+const MCP_URL='https://registry.highfivelabs.dev/mcp', MCP_ADD='claude mcp add --transport http krm-registry '+MCP_URL;
+function copyText(t,b){const was=b.textContent;navigator.clipboard.writeText(t).then(()=>{b.textContent='Copied';setTimeout(()=>b.textContent=was,1500)})}
 let PROMPT=''; fetch('prompt.txt').then(r=>r.ok?r.text():'').then(t=>{PROMPT=t.trim();const e=$('#aprompt');if(e)e.textContent=PROMPT}).catch(()=>{});
 function copyPrompt(b){navigator.clipboard.writeText(PROMPT).then(()=>{b.textContent='Copied';setTimeout(()=>b.textContent='Copy prompt',1500)})}
 function provTable(ps){return `<table><tr><th>Provider</th><th>Cloud</th><th>Publisher</th><th>Version</th><th style="text-align:right">Kinds</th></tr>${ps.map(p=>`<tr><td><a href="#pr-${p.id}"><b>${esc(p.title)}</b></a> ${tierBadge(p.tier)}${p.manages==='in-cluster'?' '+badge('runs in-cluster software','plain'):''}${p.extends?` <span class="muted">extends ${esc(PBY[p.extends].title)}</span>`:''}</td><td>${surfB(p.surface)}</td><td>${esc(p.publisher)}</td><td class="mono">${esc(p.version)}${p.controllers?` <span class="muted">(${p.controllers} controllers)</span>`:''}</td><td style="text-align:right">${fmt(p.nkinds)}</td></tr>`).join('')}</table>`}
@@ -487,6 +491,7 @@ ${row('<b>fake API</b>','Run against a fake API built from the vendor\'s spec on
 ${row('<b>minimal</b>','Required fields only, generated from the CRD. Untested.')}
 </table>
 <h2>For agents</h2>
+<p>MCP server: <code>https://registry.highfivelabs.dev/mcp</code> (streamable HTTP, no sign-in), with <code>list_clouds</code>, <code>search_kinds</code>, <code>get_kind</code>, <code>kinds_for_terraform</code>, <code>list_providers</code> and <code>get_package</code>. In Claude Code: <code>claude mcp add --transport http krm-registry https://registry.highfivelabs.dev/mcp</code>.</p>
 <p><a href="prompt.txt">prompt.txt</a> is a prompt to paste into a coding agent. <a href="llms.txt">llms.txt</a> describes the layout. Every kind is one JSON fetch (all of its fields, examples and references), and the same pages exist as Markdown.</p>
 <h2>This build</h2>
 <div class="kv" style="grid-template-columns:150px 1fr;font-size:14px"><div>Config Connector</div><div class="mono">${esc(PBY['config-connector'].version)}</div><div>ASO</div><div class="mono">${esc(PBY['aso'].version)}</div><div>ACK</div><div>${PBY['ack'].controllers} controllers, each at its latest release</div><div>Extensions, packages</div><div>main</div><div>Generated</div><div>${esc(C.generated)}</div></div>
