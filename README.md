@@ -18,31 +18,49 @@ as source, an API the REST runtime does not drive) carries `notes` in
 | --- | --- | --- |
 | `index.html` + `data/` | people | the browsable site: clouds, providers, kinds, packages, search, filters |
 | `llms.txt` | agents | the entry point: what this is, where to start, how to look up |
+| `prompt.txt` | people, for their agents | a prompt to paste into a coding agent; the landing page shows it with a copy button (source: `prompt.txt` in this repo) |
 | `<cloud>/index.md` → `<cloud>/<service>/index.md` → `kinds/<provider>/<group>/<Kind>.md` | agents | drill-down, a few KB per step; a kind page has front matter, links, an example manifest, every spec and status field |
 
-A REST extension kind's example is the spec its live tests ran against the real API (`hack/live/live.yaml`, with the date from `records.json`), else the sample its fake-API test runs; the page and the front matter (`example_tested: live|live-failing|fake|none`) say which (`examples.py`). A kind also shows its repository's `examples/<Kind>/*.yaml` (krm-rest-runtime's `gen/examples.py`): the kind with the kinds it needs, joined by `spec.fieldRefs`, each tested on the fake API; a kind others need lists those examples under "Used by".
+A REST extension kind's example is the spec its live tests ran against the real API (`hack/live/live.yaml`, with the date from `records.json`), else the sample its fake-API test runs; the page and the front matter (`example_tested: live|live-failing|fake|none`) say which (`examples.py`). A kind also shows its repository's `examples/<Kind>/*.yaml` (krm-rest-runtime's `gen/examples.py`): the kind with the kinds it needs, joined by `spec.fieldRefs`, each tested on the fake API; a kind others need lists those examples under "Also needed by".
+
+An official kind (Config Connector, ACK, ASO) shows the samples from its controller's own tests, at the release indexed (`samples.py`): Config Connector's `config/samples/resources/<kind>/` (one per directory, with the objects it needs), each ACK controller's `test/e2e/resources/*.yaml` (adoption and negative cases left out), and ASO's `v2/samples/<group>/<version>/` at the kind's version, joined with its `refs/` and owner chain. `fetch.sh` adds those paths to the sparse checkouts. The page, the Markdown (`## From the controller's tests`) and `get_kind` (`upstreamSamples`) carry them.
 | `terraform/<type>.md` | agents | a Terraform resource type → the kinds that stand in for it |
 | `providers/`, `packages/` | agents | each provider's kinds; each chart's source module, kinds, values, outputs |
 | `registry.lock.json` | both | exactly which releases this build documents |
 
 ## For agents (MCP)
 
-`mcp_server.py` serves the registry over the Model Context Protocol
-(stdio), from a built site's `data/`: a local build (`--site site`, which
-`.mcp.json` registers for sessions opened here), or the published registry
-(`--url <its base URL>`, read over HTTPS on demand), so nothing new is
-hosted. Python's standard library only.
+Hosted: **`https://registry.highfivelabs.dev/mcp`**, streamable HTTP, no
+sign-in, read only. In Claude Code:
+`claude mcp add --transport http krm-registry https://registry.highfivelabs.dev/mcp`.
+
+`mcp_server.py` is that server. It speaks stdio by default, or streamable
+HTTP with `--http PORT` (stateless: `POST /mcp`, one JSON-RPC message per
+request, a JSON response, no sessions or server-sent events; `GET /healthz`).
+It reads a built site's `data/`: a local build (`--site site`, which
+`.mcp.json` registers for sessions opened here) or the published registry
+(`--url <its base URL>`, over HTTPS). With `--http` it re-reads a file after
+`--ttl` seconds (300, the CDN's cache time), so a publish shows up without a
+restart. Python's standard library only.
+
+The hosted one is the `Dockerfile` (`--url https://registry.highfivelabs.dev
+--http 0`) on Cloud Run as `registry-mcp` in highfivelabs-prd, behind the
+registry's load balancer at `/mcp` (tf-infra, README "KRM Registry").
+`cloudbuild.yaml` builds and rolls it out: Cloud Build's `krm-registry-mcp`
+trigger runs it on every push to `main` that changes the server.
 
 | Tool | Answers |
 | --- | --- |
+| `list_clouds` | every cloud and vendor: its providers and, per service, how many kinds |
 | `search_kinds` | kinds across every provider by text (kind, group, service, Terraform type, description), cloud, service, provider or tier |
-| `get_kind` | one kind: every spec and status field, Terraform equivalents, API paths, the gap it fills, its tested example, and the examples that show it with the kinds it needs (or that use it) |
+| `get_kind` | one kind: every spec and status field, Terraform equivalents, API paths, the gap it fills, its tested example, the samples from the official controller's tests, and the examples that show it with the kinds it needs (or that use it) |
 | `kinds_for_terraform` | Terraform resource types to the kinds that stand in for each |
 | `list_providers` | every provider: cloud, tier, publisher, version, number of kinds |
 | `get_package` | a catalog chart: its upstream module, kinds, values and outputs |
 
 ```sh
 ./build.sh /tmp/krm-root site && python3 mcp_server.py --site site
+python3 mcp_server.py --url https://registry.highfivelabs.dev --http 8080   # as hosted, locally
 python3 -m unittest discover -s tests   # the tools against tests/fixture-site
 ```
 

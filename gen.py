@@ -18,6 +18,7 @@ from collections import defaultdict
 import yaml
 
 import examples
+import samples
 
 L = yaml.CSafeLoader
 ROOT, OUT, LOCKF = sys.argv[1], sys.argv[2], sys.argv[3]
@@ -385,6 +386,31 @@ def build():
                 if tg:
                     refs.append({"field": f["p"], "kinds": sorted(set(tg))})
             k["refs"] = refs
+
+    # Examples from the official controllers' own tests.
+    official = {}
+    kcc = providers.get("config-connector")
+    if kcc and os.path.isdir(P("upstream/kcc/config/samples")):
+        official["config-connector"] = samples.kcc(P("upstream/kcc"), kcc["repo"], kcc["version"])
+    aso = providers.get("aso")
+    if aso and os.path.isdir(P("upstream/aso/v2/samples")):
+        vers = {(g, k["kind"]): k["version"] for (pid, g), ks in shards.items() if pid == "aso" for k in ks}
+        official["aso"] = samples.aso(P("upstream/aso"), aso["repo"], aso["version"], vers)
+    ack_s = {}
+    for d in sorted(glob.glob(P("upstream/ack/*"))):
+        ctrl = os.path.basename(d)
+        tag = (next((c for c in LOCK["providers"]["ack"]["controllers"] if c["repo"] == ctrl), None) or {}).get("tag")
+        if tag:
+            ack_s.update(samples.ack(d, f"https://github.com/aws-controllers-k8s/{ctrl}", tag))
+    official["ack"] = ack_s
+    n_samples = 0
+    for (pid, group), ks in shards.items():
+        for k in ks:
+            got = (official.get(pid) or {}).get((group, k["kind"]))
+            if got:
+                k["samples"] = got
+                n_samples += 1
+    print(f"upstream test samples: {n_samples} kinds", file=sys.stderr)
 
     # Extension metadata, coverage and Terraform mapping.
     for prov in CFG["providers"]:

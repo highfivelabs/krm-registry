@@ -1,0 +1,25 @@
+# The hosted MCP server's image, and a rollout of it.
+#
+# Run by the Cloud Build trigger krm-registry-mcp in highfivelabs-prd
+# (tf-infra, README "KRM Registry") on every push to main that touches
+# mcp_server.py, the Dockerfile or this file, as image-builder@highfivelabs-prd.
+# Tags: the commit and "main". The Cloud Run service registry-mcp is
+# tf-infra's (sites/registry); this only moves it to the new image.
+steps:
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args: ["build", "-t", "${_IMAGE}:${SHORT_SHA}", "-t", "${_IMAGE}:main", "."]
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args: ["push", "--all-tags", "${_IMAGE}"]
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: gcloud
+    args: ["run", "services", "update", "${_SERVICE}", "--region", "${_REGION}", "--image", "${_IMAGE}:${SHORT_SHA}", "--quiet"]
+substitutions:
+  _IMAGE: us-central1-docker.pkg.dev/highfivelabs-prd/krm-registry/mcp
+  _SERVICE: registry-mcp
+  _REGION: us-central1
+options:
+  # Builds run as a named service account, so logs go to Cloud Logging only.
+  logging: CLOUD_LOGGING_ONLY

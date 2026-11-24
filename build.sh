@@ -15,4 +15,5 @@ bash "$here/fetch.sh" "$root/registry.lock.json" "$root"
 python3 "$here/fetch_sources.py" "$root/registry.lock.json" "$root"
 rm -rf "$site"
 GEN_DATE=${GEN_DATE:-$(date -u +%F)} python3 "$here/gen.py" "$root" "$site" "$root/registry.lock.json"
-cp "$here/index.html" "$root/registry.lock.json" "$site/"
+# Favicons: High Five Labs brand icons (website repo, brand/icons).
+cp "$here/index.html" "$here/prompt.txt" "$here/favicon.svg" "$here/favicon.ico" "$here/apple-touch-icon.png" "$root/registry.lock.json" "$site/"
