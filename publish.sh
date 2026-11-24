@@ -9,22 +9,25 @@
 # CDN, 300 s cache, so no invalidation). Only registry-publisher@ may write
 # it; this script impersonates that account, so the caller needs
 # roles/iam.serviceAccountTokenCreator on it (tf-infra grants that) and no
-# key exists anywhere. Calls are billed to REGISTRY_PROJECT (--billing-project),
-# where the publisher holds serviceUsageConsumer, never to the caller's own
-# gcloud billing/quota_project. Objects that are no longer in the site are
-# deleted.
+# key exists anywhere. Calls are billed to REGISTRY_QUOTA_PROJECT
+# (--billing-project), where the publisher holds serviceUsageConsumer, never
+# to the caller's own gcloud billing/quota_project. Objects that are no
+# longer in the site are deleted.
 #
 # A build clones the private highfivelabs repos and asks GitHub's API for
 # releases: GITHUB_TOKEN, else `gh auth token`.
 #
-# Environment: REGISTRY_BUCKET, REGISTRY_PUBLISHER, REGISTRY_PROJECT, REGISTRY_ROOT (the build's
-# work directory, kept between runs for faster clones), DRY_RUN=1 (show what
-# would change, write nothing).
+# Environment: REGISTRY_BUCKET, REGISTRY_PUBLISHER, REGISTRY_QUOTA_PROJECT,
+# REGISTRY_ROOT (the build's work directory, kept between runs for faster
+# clones), DRY_RUN=1 (show what would change, write nothing).
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 bucket=${REGISTRY_BUCKET:-highfivelabs-prd-registry}
 publisher=${REGISTRY_PUBLISHER:-registry-publisher@highfivelabs-prd.iam.gserviceaccount.com}
-project=${REGISTRY_PROJECT:-highfivelabs-prd}
+# The quota project for calls made as the publisher. tf-infra grants it
+# serviceUsageConsumer there only, so it must not fall back to the caller's
+# own billing/quota_project (often hfl-dev-514205), which it cannot use.
+quota_project=${REGISTRY_QUOTA_PROJECT:-highfivelabs-prd}
 site=${1:-}
 
 if [[ -z "$site" ]]; then
@@ -39,7 +42,7 @@ fi
 [[ -f "$site/404.html" ]] || cp "$site/index.html" "$site/404.html"
 
 args=(storage rsync "$site" "gs://$bucket" --recursive --delete-unmatched-destination-objects
-  --impersonate-service-account="$publisher" --billing-project="$project")
+  --impersonate-service-account="$publisher" --billing-project="$quota_project")
 [[ "${DRY_RUN:-}" == 1 ]] && args+=(--dry-run)
 gcloud "${args[@]}"
 
