@@ -9,7 +9,10 @@
 # CDN, 300 s cache, so no invalidation). Only registry-publisher@ may write
 # it; this script impersonates that account, so the caller needs
 # roles/iam.serviceAccountTokenCreator on it (tf-infra grants that) and no
-# key exists anywhere. Objects that are no longer in the site are deleted.
+# key exists anywhere. Calls are billed to REGISTRY_QUOTA_PROJECT
+# (--billing-project), where the publisher holds serviceUsageConsumer, never
+# to the caller's own gcloud billing/quota_project. Objects that are no
+# longer in the site are deleted.
 #
 # A build clones the private highfivelabs repos and asks GitHub's API for
 # releases: GITHUB_TOKEN, else `gh auth token`.
