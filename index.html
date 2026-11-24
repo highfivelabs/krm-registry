@@ -105,6 +105,7 @@ pre.ex{margin:0;padding:12px 14px 14px;overflow:auto;max-height:640px}
 .callout{border:1px solid var(--line);border-left:3px solid var(--ext);background:var(--panel);border-radius:8px;padding:12px 14px;margin:14px 0}
 .callout.o{border-left-color:var(--off)}
 .md{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px 20px;margin-top:14px;overflow:auto}
+.md.doc{padding:0 20px}.md.doc summary{cursor:pointer;padding:12px 0;list-style-position:outside}.md.doc[open] summary{border-bottom:1px solid var(--line2);margin-bottom:4px}
 .md table{font-size:13px}.md pre{background:var(--bg);padding:10px;border-radius:6px;overflow:auto}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{font:inherit;font-size:12.5px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:var(--panel);color:var(--ink2);cursor:pointer}
@@ -379,7 +380,8 @@ async function kindPage(k){
   ${twin?`<div class="callout"><b>Overlays ${klink(twin,twin.kind)}</b> <span class="mono muted">${esc(twin.group)}/${esc(twin.version)}</span> from ${esc(PBY[twin.provider].title)}, in this provider's own group. Compared with it: ${diffSummary(D)}.</div>`:''}
   ${exts.length?`<div class="callout"><b>Extended by</b> ${exts.map(e=>klink(e,e.group+'/'+e.version)).join(', ')}. Compared with ${exts.length>1?'the first':'it'}: ${diffSummary(D)}.</div>`:''}
   ${others.length?`<div class="callout o"><b>Same kind name elsewhere on ${k.surface.toUpperCase()}:</b> ${others.map(o=>`${klink(o,o.group+'/'+o.version)} ${tierB(o)}`).join(', ')}</div>`:''}
-  ${full.doc?`<div class="md">${md(full.doc.md)}</div>`:''}
+  ${full.doc?(()=>{const body=full.doc.md.replace(/^# .*\n+/,'').replace(/^`[^`\n]+\/[^`\n]+`\s*\n+/,''), words=body.split(/\s+/).length;
+    return `<details class="md doc"><summary><b>Notes</b> <span class="muted">from the kind's doc · ${Math.max(1,Math.round(words/220))} min read</span></summary>${md(body)}</details>`})():''}
   <div class="tabs">${['spec','status','example'].map(t=>`<button class="${KTAB===t?'on':''}" onclick="KTAB='${t}';kindPage(KBY[location.hash.slice(1)])">${t==='spec'?`Spec <span class="muted">${full.spec.length}</span>`:t==='status'?`Status <span class="muted">${full.status.length}</span>`:`Examples <span class="muted">${exList(k,full).length}</span>`}</button>`).join('')}</div>
   <div class="fields">${KTAB==='example'?'<div id="exp"></div>':`
    <div class="ff"><input placeholder="Filter fields" value="${esc(KFILTER)}" oninput="KFILTER=this.value;renderFields()">
