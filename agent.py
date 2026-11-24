@@ -123,7 +123,7 @@ def kind_page(k, providers, charts):
         fm["terraform_equivalents"] = tfs(k)
     if k.get("overlays"):
         fm["overlays"] = k["overlays"]["id"]
-    fm["example_tested"] = (k.get("example") or {}).get("tested", "none")
+    fm["example_tested"] = (k.get("example") or {}).get("tested", "upstream" if k.get("samples") else "none")
     if any(r["main"] == k["kind"] for r in k.get("related") or []):
         fm["example_with_related"] = [r["file"] for r in k["related"] if r["main"] == k["kind"]]
     if (k.get("example") or {}).get("tested") in ("live", "live-failing") and k["example"].get("date"):
@@ -173,6 +173,11 @@ def kind_page(k, providers, charts):
         L += [f"The object reaches the API through the Connection named `default` in its namespace (see {link(me, f'providers/{p['id']}.md', p['title'])}).", ""]
     else:
         L += ["## Example", "", "Every required field, with placeholders; untested.", "", "```yaml", example(k).rstrip(), "```", ""]
+    ups = k.get("samples") or []
+    if ups:
+        L += ["## From the controller's tests", "", ups[0]["line"], ""]
+        for x in ups:
+            L += [f"### {x['title']}", "", f"From [`{x['file']}`]({x['url']}):", "", "```yaml", x["yaml"].rstrip(), "```", ""]
     rel = k.get("related") or []
     own = [r for r in rel if r["main"] == k["kind"]]
     used = [r for r in rel if r["main"] != k["kind"]]

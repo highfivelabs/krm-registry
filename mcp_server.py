@@ -124,6 +124,9 @@ class Registry:
         if ex:
             out["example"] = {"tested": ex.get("tested"), "line": ex.get("line"), "manifest": ex.get("yaml"),
                               **({"liveDate": ex["date"]} if ex.get("date") else {}), **({"notes": ex["notes"]} if ex.get("notes") else {})}
+        if full.get("samples"):
+            out["upstreamSamples"] = [{"title": x["title"], "file": x["file"], "url": x["url"], "kinds": x["kinds"], "line": x["line"], "manifest": x["yaml"]}
+                                      for x in full["samples"]]
         rel = full.get("related") or []
         if rel:
             out["withRelated"] = [{"file": r["file"], "url": r["url"], "kinds": r["kinds"], "manifest": r["yaml"]} for r in rel if r["main"] == full["kind"]]
@@ -165,7 +168,7 @@ S = {"type": "string"}
 TOOLS = [
     {"name": "search_kinds", "description": "Find Kubernetes kinds across every provider in the registry (Config Connector, ACK, ASO, High Five Labs' extensions and REST vendor kinds) by text (kind, group, service, Terraform type, description; all words must match), and optionally cloud (gcp, aws, azure, cloudflare, ...), service, provider id or tier (official, extension).",
      "inputSchema": {"type": "object", "properties": {"query": S, "cloud": S, "service": S, "provider": S, "tier": S, "limit": {"type": "integer"}}}},
-    {"name": "get_kind", "description": "One kind in full: description, every spec and status field (type, required, enum, default, immutable), its Terraform equivalents and API paths, the gap it fills, its tested example (live or fake) and the examples that show it with the kinds it needs. Name it by id (provider/group/Kind), group/Kind or Kind.",
+    {"name": "get_kind", "description": "One kind in full: description, every spec and status field (type, required, enum, default, immutable), its Terraform equivalents and API paths, the gap it fills, its tested example (live or fake), the samples from the official controller's own tests, and the examples that show it with the kinds it needs. Name it by id (provider/group/Kind), group/Kind or Kind.",
      "inputSchema": {"type": "object", "properties": {"kind": S, "fields": {"type": "array", "items": S, "description": "only fields whose path starts with one of these"}}, "required": ["kind"]}},
     {"name": "kinds_for_terraform", "description": "Terraform resource types (e.g. google_storage_bucket, cloudflare_access_rule) -> the kinds that stand in for each, with provider, tier and readiness.",
      "inputSchema": {"type": "object", "properties": {"types": {"type": "array", "items": S}}, "required": ["types"]}},
