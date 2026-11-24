@@ -1,2 +1,4 @@
 *
-!mcp_server.py
+!go.mod
+!cmd/mcp/*.go
+cmd/mcp/*_test.go
