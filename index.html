@@ -153,7 +153,7 @@ footer a{color:var(--ink2)}
 .loading{color:var(--ink3);padding:40px 0}
 .fbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:16px 0 8px;position:sticky;top:57px;background:var(--bg);padding:8px 0;z-index:3}
 .fin{flex:1;min-width:220px;max-width:400px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:inherit}
-.tfeq{display:inline-block;font-family:var(--mono);font-size:11.5px;color:var(--ink2);border:1px dashed var(--ink3);border-radius:5px;padding:0 6px;margin:1px 0;cursor:help;max-width:100%;overflow-wrap:anywhere}
+.tfeq{display:inline-block;font-family:var(--mono);font-size:11.5px;color:var(--ink2);border:1px dashed var(--ink3);border-radius:5px;padding:0 6px;margin:1px 0;max-width:100%;overflow-wrap:anywhere}
 .tfeq::before{content:'≈ ';color:var(--ink3);font-family:var(--body)}
 .tfmap{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:3px 0}.tfmap .arr{color:var(--ink3)}
 .fcount{font-size:12.5px;margin-left:auto}
@@ -208,8 +208,7 @@ function applyF(view){const st=FIL[view]||{q:'',tag:''}, terms=st.q.toLowerCase(
   document.querySelectorAll('#app [data-f]').forEach(el=>{t++;const ok=terms.every(x=>el.dataset.f.includes(x))&&(!st.tag||(' '+(el.dataset.tags||'')+' ').includes(' '+st.tag+' '));el.hidden=!ok;if(ok)n++});
   document.querySelectorAll('#app .fgroup').forEach(g=>g.hidden=!g.querySelector('[data-f]:not([hidden])'));
   const c=$('#app .fcount'); if(c) c.textContent=(terms.length||st.tag)?`${fmt(n)} of ${fmt(t)}`:`${fmt(t)}`}
-const TFTIP='Terraform equivalent: manages the same cloud resource.';
-const tfeq=t=>`<span class="tfeq" title="${TFTIP}">${esc(t).replace(/_/g,'_<wbr>')}</span>`;
+const tfeq=t=>`<span class="tfeq">${esc(t).replace(/_/g,'_<wbr>')}</span>`;
 const modRepo=m=>esc(m.repoName||'');
 const modPath=m=>m.path&&m.path!=='.'?esc(m.path):'';
 const upB=c=>{const u=c.upstream||{};return !u.latest?'':u.behind?`<span class="badge b-alpha" title="Found via ${esc(u.via)}">${esc(u.latest)} out</span>`:`<span class="badge b-ga" title="Found via ${esc(u.via)}">latest</span>`};
@@ -244,7 +243,7 @@ function surfCard(s){const t=surfStats(s);return `<a class="card" href="#s-${s}"
   <div class="bar"><i class="o" style="width:${100*t.o/t.n}%"></i><i class="e" style="width:${100*t.e/t.n}%"></i></div>
   <div class="muted" style="font-size:12.5px"><span class="dot" style="background:var(--off)"></span>${fmt(t.o)} official/community &nbsp; <span class="dot" style="background:var(--ext)"></span>${fmt(t.e)} extension${t.ch?` &nbsp;· ${t.ch} packages`:''}</div>${tfLine(s)}</a>`}
 function tfLine(s){const t=C.terraform?.surfaces?.[s]; if(!t) return ''; const pct=Math.round(100*t.covered/t.total);
-  return `<div style="font-size:12.5px;margin-top:8px;border-top:1px solid var(--line2);padding-top:8px" title="${TFTIP}">Terraform ${tfeq(t.name)} #${t.rank} by downloads<br><b>${t.covered}</b> of ${t.total} resources have a kind (${pct}%)</div>`}
+  return `<div style="font-size:12.5px;margin-top:8px;border-top:1px solid var(--line2);padding-top:8px">Terraform ${tfeq(t.name)} #${t.rank} by downloads<br><b>${t.covered}</b> of ${t.total} resources have a kind (${pct}%)</div>`}
 function bySize(l){return [...l].sort((a,b)=>(surfStats(a).n?0:1)-(surfStats(b).n?0:1))}
 function miniCard(s){const t=surfStats(s);if(!t.n) return `<a class="soon" href="#s-${s}"><b>${SURF[s]}</b><span>coming soon</span></a>`;return `<a href="#s-${s}"><b>${SURF[s]}</b><span>${fmt(t.n)} kinds · ${t.svcs} services</span><div class="bar"><i class="o" style="width:${100*t.o/t.n}%"></i><i class="e" style="width:${100*t.e/t.n}%"></i></div></a>`}
 function home(){
@@ -323,7 +322,7 @@ function service(sl){
   $('#app').innerHTML=`<div class="crumbs"><a href="#surfaces">Clouds &amp; vendors</a> / <a href="#s-${s}">${SURF[s]}</a> /</div><h1>${esc(name)}</h1>
   <div class="sub">${ks.length} kinds. A row is one kind name; where an extension complements an official kind of the same name, both sit on the row.</div><h2></h2>
   ${fbar('svc-'+sl,'Filter kinds, Terraform types',[['','All'],['both','Official + extension'],['official','Official'],['extension','Extension'],['overlay','Overlays']])}
-  <table><tr><th>Kind</th><th>Official / community</th><th>Extension</th><th title="${TFTIP}">Terraform equivalent</th></tr>${Object.keys(rows).sort().map(n=>{const r=rows[n];const all=[...r.o,...r.e];
+  <table><tr><th>Kind</th><th>Official / community</th><th>Extension</th><th>Terraform equivalent</th></tr>${Object.keys(rows).sort().map(n=>{const r=rows[n];const all=[...r.o,...r.e];
     const tags=[r.o.length&&'official',r.e.length&&'extension',r.o.length&&r.e.length&&'both',r.e.some(k=>k.overlays)&&'overlay'].filter(Boolean).join(' ');
     return `<tr data-f="${lc(n,all.map(k=>[k.group,tfOf(k)]))}" data-tags="${tags}"><td><b>${esc(n)}</b></td><td>${r.o.map(k=>`${klink(k,k.version)} ${stabB(k)}`).join('<br>')||'<span class="muted">—</span>'}</td>
     <td>${r.e.map(k=>`${klink(k,k.group.split('.').slice(0,-3).join('.')||k.group)}/${esc(k.version)} ${stabB(k)}${k.overlays?` <span class="muted">+${k.overlays.added} fields</span>`:''}${k.gap?`<div class="muted" style="font-size:12px;max-width:380px">${esc(k.gap.gap.slice(0,110))}…</div>`:''}`).join('<br>')||'<span class="muted">—</span>'}</td>
