@@ -135,9 +135,16 @@ account (granted in tf-infra), and no key exists. Objects no longer in the
 site are deleted. `404.html` is a copy of `index.html`, so an unknown path
 still loads the app.
 
-Run it after merging to `main`, and after a provider release you want
-listed. GitHub Actions and Pages are off for the org, so nothing runs it on a
-schedule yet; the old Pages workflow is gone.
+Cloud Build runs it for you (`cloudbuild.site.yaml`): the `krm-registry-site`
+trigger in highfivelabs-prd (tf-infra, README "KRM Registry") fires on every
+push to `main` that changes what the site is built from, and Cloud Scheduler
+runs it once a day, so upstream releases show up with no merge here. It runs
+as `registry-publisher@` itself (`REGISTRY_IMPERSONATE=0`). Its GitHub token
+comes from the `krm-registry-reader` GitHub App, which holds Metadata: read
+and nothing else (every repository the build reads is public; the token is
+for the API's rate limit and release data). `hack/github-app-token.sh` mints
+it from the App's key in the secret `registry-github-app-key`. Run
+`./publish.sh` by hand only to publish a branch or between runs.
 
 ## Joining the registry
 
