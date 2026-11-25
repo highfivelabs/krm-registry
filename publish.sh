@@ -19,7 +19,9 @@
 #
 # Environment: REGISTRY_BUCKET, REGISTRY_PUBLISHER, REGISTRY_QUOTA_PROJECT,
 # REGISTRY_ROOT (the build's work directory, kept between runs for faster
-# clones), DRY_RUN=1 (show what would change, write nothing).
+# clones), DRY_RUN=1 (show what would change, write nothing),
+# REGISTRY_IMPERSONATE=0 (the caller already is the publisher, as in
+# cloudbuild.site.yaml, so write as it without impersonating).
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 bucket=${REGISTRY_BUCKET:-highfivelabs-prd-registry}
@@ -42,7 +44,8 @@ fi
 [[ -f "$site/404.html" ]] || cp "$site/index.html" "$site/404.html"
 
 args=(storage rsync "$site" "gs://$bucket" --recursive --delete-unmatched-destination-objects
-  --impersonate-service-account="$publisher" --billing-project="$quota_project")
+  --billing-project="$quota_project")
+[[ "${REGISTRY_IMPERSONATE:-1}" == 0 ]] || args+=(--impersonate-service-account="$publisher")
 [[ "${DRY_RUN:-}" == 1 ]] && args+=(--dry-run)
 gcloud "${args[@]}"
 
