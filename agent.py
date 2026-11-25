@@ -17,6 +17,7 @@ from collections import defaultdict
 import yaml
 
 SURF = {}  # filled from the catalog's surfaces
+MCP_URL = "https://registry.highfivelabs.dev/mcp"  # the hosted MCP server (README "For agents (MCP)")
 TFNOTE = ("Terraform equivalents manage the same cloud resource. They are not used here: "
           "a kind is a Kubernetes object that its provider's controller keeps in sync, with no state file and no plan/apply.")
 
@@ -331,6 +332,10 @@ def write_agent_tree(out, cat, full_kinds, charts_full):
          f"> Documentation for {nk} Kubernetes Resource Model kinds from {len(cat['providers'])} providers (Config Connector, AWS Controllers for Kubernetes, "
          f"Azure Service Operator, and High Five Labs' extensions that fill their gaps), and {nc} Helm chart packages built from them.", "",
          "Every page below is Markdown. A kind page has front matter, an example manifest, and tables of every spec and status field.", "",
+         "## MCP server", "",
+         f"If you can connect MCP servers, connect {MCP_URL} (streamable HTTP, no sign-in, read only) and use its tools instead of walking these pages: "
+         "`list_clouds`, `search_kinds`, `get_kind`, `kinds_for_terraform`, `list_providers`, `get_package`. "
+         f"In Claude Code: `claude mcp add --transport http krm-registry {MCP_URL}`.", "",
          "## Start here", "",
          *[f"- [{SURF[s]}]({s}/index.md): services, then the kinds in each" for s in cat["surfaces"] if any(k["surface"] == s for k in full_kinds) or cat["surfaces"][s].get("notes")],
          "- [Terraform, by the numbers](terraform/index.md): how much of each Terraform provider the kinds cover",
