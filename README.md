@@ -91,6 +91,12 @@ build.sh <root> <site>
   `{tag}`) becomes an Install card on its page and a section of its agent page,
   e.g. the operator's GKE Standard and GKE Autopilot manifests. A provider that
   `installs:` another is linked from it ("installed by").
+  A variant with `oci: <repo>` (e.g. `charts/config-connector`) is our OCI
+  chart on `cr.highfivelabs.dev`. `resolve.py` asks `cr` for that chart's
+  manifest at the provider's resolved version and records the digest in the
+  lock (`providers.<id>.oci`). `gen.py` shows the variant only when it is
+  published, so a new upstream release falls back to upstream's own steps
+  until our chart for it is pushed.
 - **Terraform, by the numbers.** For each surface's Terraform provider: rank,
   downloads, latest version and full resource list (Terraform Registry API),
   plus the top 200 providers for the long-tail table. Operator kinds map to

@@ -70,6 +70,25 @@ providers:
     crds: [upstream/config-connector-operator/operator-system/configconnector-operator.yaml]
     group_suffix: .cnrm.cloud.google.com
     install:
+      # Shown only while cr.highfivelabs.dev serves this chart at the version
+      # documented (resolve.py checks the manifest; see README "Install variants").
+      - name: High Five Labs chart
+        oci: charts/config-connector
+        when: GKE Standard, GKE Autopilot (--set variant=autopilot), and clusters outside GKE
+        note: >-
+          One chart: Google's operator and its CRDs, unmodified, plus a ConfigConnector made from
+          values; the operator then installs Config Connector itself. The operator image is
+          Google's, copied by digest; the last two commands should print the same digest.
+          Uninstall with helm uninstall (a hook deletes the ConfigConnector first).
+        steps: |
+          helm install config-connector oci://cr.highfivelabs.dev/charts/config-connector \
+            --version {tag} \
+            --namespace configconnector-operator-system --create-namespace \
+            --set googleServiceAccount=kcc@PROJECT_ID.iam.gserviceaccount.com
+
+          # Same bytes as Google's release:
+          crane digest cr.highfivelabs.dev/upstream/config-connector/operator:{tag}
+          crane digest gcr.io/gke-release/cnrm/operator:{tag}
       - name: GKE Standard
         when: Standard clusters, and clusters outside GKE
         steps: |

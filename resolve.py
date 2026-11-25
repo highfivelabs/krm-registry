@@ -18,7 +18,7 @@ Terraform Registry's public API. Without a token it falls back to reading tags
 over git (`git ls-remote`), which needs no API at all, and to the ACK
 controller list that ack-extensions pins.
 """
-import glob, json, os, re, subprocess, sys, urllib.parse, urllib.request
+import glob, json, os, re, subprocess, sys, urllib.error, urllib.parse, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
 import yaml
@@ -41,6 +41,28 @@ def get(url, auth=False):
         h["Authorization"] = f"Bearer {TOKEN}"
     with urllib.request.urlopen(urllib.request.Request(url, headers=h), timeout=30) as r:
         return json.load(r)
+
+
+CR = "cr.highfivelabs.dev"
+OCI_ACCEPT = ", ".join(["application/vnd.oci.image.manifest.v1+json", "application/vnd.oci.image.index.v1+json",
+                        "application/vnd.docker.distribution.manifest.v2+json"])
+
+
+def oci_digest(repo, tag):
+    """The digest cr.highfivelabs.dev serves for repo:tag, or None when it is not
+    published. The proxy answers anonymously (no token dance), so a plain GET does."""
+    url = f"https://{CR}/v2/{repo}/manifests/{urllib.parse.quote(tag.replace('+', '_'))}"
+    req = urllib.request.Request(url, method="GET", headers={"Accept": OCI_ACCEPT, "User-Agent": "krm-registry"})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return r.headers.get("Docker-Content-Digest") or "unknown"
+    except urllib.error.HTTPError as e:
+        if e.code not in (401, 403, 404):
+            print(f"{url}: HTTP {e.code}", file=sys.stderr)
+        return None
+    except Exception as e:  # network: hide the variant rather than point at nothing
+        print(f"{url}: {e}", file=sys.stderr)
+        return None
 
 
 def gh(path):
@@ -244,6 +266,16 @@ def main():
                 lock["providers"][p["id"]] = rel
             else:
                 print(f"{p['id']}: no release matching {p['release']}", file=sys.stderr)
+    # OCI installs: which of our charts cr.highfivelabs.dev serves at each provider's
+    # resolved version. An install variant naming one (oci:) is shown only if it is.
+    for p in cfg["providers"]:
+        rel = lock["providers"].get(p["id"]) or {}
+        for v in p.get("install") or []:
+            if v.get("oci") and rel.get("tag"):
+                d = oci_digest(v["oci"], rel["tag"])
+                rel.setdefault("oci", {})[v["oci"]] = d
+                if not d:
+                    print(f"{p['id']}: {CR}/{v['oci']}:{rel['tag']} not published; its install variant is hidden", file=sys.stderr)
 
     # Terraform, by the numbers: every surface's provider, and the top providers overall.
     top = terraform_top()
