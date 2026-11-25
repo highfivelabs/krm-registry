@@ -21,7 +21,8 @@ steps:
       - pipefail
       - -c
       - |
-        apt-get -qq update && apt-get -qq install -y --no-install-recommends python3-yaml >/dev/null
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get -qq update && apt-get -qq install -y --no-install-recommends python3-yaml openssl git curl ca-certificates >/dev/null
         umask 077 && printf '%s\n' "$$APP_KEY" > /tmp/app.pem
         token=$$(hack/github-app-token.sh "${_APP_ID}" /tmp/app.pem)
         rm /tmp/app.pem
