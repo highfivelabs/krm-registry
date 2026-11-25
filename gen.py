@@ -185,9 +185,14 @@ def docs_url(prov, k):
 
 def install_of(prov):
     """Install variants, with {tag} filled in: [{name, when, steps}] (Config Connector's
-    operator: one manifest for GKE Standard, another for Autopilot)."""
+    operator: one manifest for GKE Standard, another for Autopilot). A variant naming
+    one of our OCI charts (oci:) is left out unless resolve.py found it published at
+    this version, so the site never points at a chart that is not there."""
     out = []
+    published = (LOCK["providers"].get(prov["id"]) or {}).get("oci") or {}
     for v in prov.get("install") or []:
+        if v.get("oci") and not published.get(v["oci"]):
+            continue
         out.append({"name": v["name"], "when": v.get("when"), "note": v.get("note"),
                     "steps": v["steps"].format(tag=prov.get("version") or "latest").strip()})
     return out or None
