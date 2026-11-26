@@ -1,6 +1,6 @@
 Use the KRM Registry (https://registry.highfivelabs.dev) when you write Kubernetes manifests for cloud or vendor resources (Config Connector, ACK, ASO and their extensions). Look kinds and fields up there; don't guess them.
 
-If you can connect MCP servers, connect https://registry.highfivelabs.dev/mcp (streamable HTTP, no sign-in) and use its tools instead of the steps below: list_clouds names the clouds, services and providers; search_kinds finds kinds (by name, service or Terraform type); get_kind gives every field and the tested examples.
+If you can connect MCP servers, connect https://registry.highfivelabs.dev/mcp (streamable HTTP, no sign-in) and use its tools instead of the steps below: list_clouds names the clouds, services and providers; search_kinds finds kinds (by name, service or Terraform type); get_kind gives every field and the tested examples; get_install gives the credentials and install steps for a provider (an operator or an extension), to run with the user.
 
 Otherwise, read the pages:
 

@@ -68,6 +68,8 @@ var tools = []tool{
 		json.RawMessage(`{"type":"object","properties":{"types":{"type":"array","items":{"type":"string"}}},"required":["types"]}`), readOnly},
 	{"list_providers", "Every provider the registry indexes: cloud, tier (official or extension), publisher, version, number of kinds, and how to install it (credentials, then steps per variant, where the registry has them).",
 		json.RawMessage(`{"type":"object","properties":{}}`), readOnly},
+	{"get_install", "How to install a provider (an operator, or one of High Five Labs' extensions), as steps to run with the user: the credentials to set up first (the cloud identity and roles it acts as), then the install commands, for the variant chosen (e.g. {\"Method\":\"High Five Labs chart\",\"Cluster\":\"GKE Autopilot\"}; choices lists them, the first is the default), the placeholders to ask the user for, how to verify, and how_to_run: the order and the confirmations to follow. A provider installed by another (Config Connector, by its operator) answers with that one (via). Name the provider by id (list_providers).",
+		json.RawMessage(`{"type":"object","properties":{"provider":{"type":"string"},"choice":{"type":"object","additionalProperties":{"type":"string"},"description":"axis -> value, from choices"}},"required":["provider"]}`), readOnly},
 	{"get_package", "A catalog Helm chart (a Terraform module ported to KRM kinds): its upstream module, the kinds it uses, its values and outputs. Name it by id (aws/acm), package (aws-acm) or name.",
 		json.RawMessage(`{"type":"object","properties":{"package":{"type":"string"}},"required":["package"]}`), readOnly},
 }
@@ -105,6 +107,18 @@ func (r *registry) call(name string, args json.RawMessage) (any, error) {
 			return nil, errorf("get_kind: kind is required")
 		}
 		return r.getKind(*a.Kind, a.Fields)
+	case "get_install":
+		var a struct {
+			Provider *string           `json:"provider"`
+			Choice   map[string]string `json:"choice"`
+		}
+		if err := decode(&a); err != nil {
+			return nil, err
+		}
+		if a.Provider == nil {
+			return nil, errorf("get_install: provider is required")
+		}
+		return r.getInstall(*a.Provider, a.Choice)
 	case "kinds_for_terraform":
 		var a struct {
 			Types *[]string `json:"types"`

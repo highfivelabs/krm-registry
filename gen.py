@@ -216,7 +216,7 @@ def install_of(prov, key="install"):
         steps = fill(v["steps"])
         pick = v.get("pick") or None
         out.append({"name": v.get("name") or " · ".join(pick.values()), "pick": pick, "when": v.get("when"),
-                    "note": fill(v.get("note")) or None, "tested": v.get("tested"), "steps": steps,
+                    "note": fill(v.get("note")) or None, "verify": fill(v.get("verify")) or None, "tested": v.get("tested"), "steps": steps,
                     "source": prov.get(key + "_source"), "ours": bool(v.get("oci")) or None})
     return out or None
 

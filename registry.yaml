@@ -140,6 +140,9 @@ providers:
           rm key.json
     install:
       - pick: {Method: High Five Labs chart, Cluster: GKE Standard}
+        verify: |
+          kubectl get configconnector configconnector.core.cnrm.cloud.google.com -o jsonpath='{.status.healthy}'
+          kubectl get pods --namespace cnrm-system
         oci: charts/config-connector
         note: &hfl-note >-
           One chart: Google's operator and its CRDs, unmodified, plus a ConfigConnector made from
@@ -156,6 +159,9 @@ providers:
           crane digest cr.highfivelabs.dev/upstream/config-connector/operator:{tag}
           crane digest gcr.io/gke-release/cnrm/operator:{tag}
       - pick: {Method: High Five Labs chart, Cluster: GKE Autopilot}
+        verify: |
+          kubectl get configconnector configconnector.core.cnrm.cloud.google.com -o jsonpath='{.status.healthy}'
+          kubectl get pods --namespace cnrm-system
         oci: charts/config-connector
         note: *hfl-note
         steps: |
@@ -169,6 +175,9 @@ providers:
           crane digest cr.highfivelabs.dev/upstream/config-connector/operator:{tag}
           crane digest gcr.io/gke-release/cnrm/operator:{tag}
       - pick: {Method: High Five Labs chart, Cluster: Outside GKE}
+        verify: |
+          kubectl get configconnector configconnector.core.cnrm.cloud.google.com -o jsonpath='{.status.healthy}'
+          kubectl get pods --namespace cnrm-system
         oci: charts/config-connector
         note: *hfl-note
         steps: |
@@ -181,6 +190,9 @@ providers:
           crane digest cr.highfivelabs.dev/upstream/config-connector/operator:{tag}
           crane digest gcr.io/gke-release/cnrm/operator:{tag}
       - pick: {Method: Google's manifests, Cluster: GKE Standard}
+        verify: |
+          kubectl get configconnector configconnector.core.cnrm.cloud.google.com -o jsonpath='{.status.healthy}'
+          kubectl get pods --namespace cnrm-system
         note: &google-note >-
           The operator, then a ConfigConnector telling it which identity to use; the operator
           installs Config Connector in cnrm-system. Check with
@@ -199,6 +211,9 @@ providers:
             googleServiceAccount: kcc@$PROJECT_ID.iam.gserviceaccount.com
           EOF
       - pick: {Method: Google's manifests, Cluster: GKE Autopilot}
+        verify: |
+          kubectl get configconnector configconnector.core.cnrm.cloud.google.com -o jsonpath='{.status.healthy}'
+          kubectl get pods --namespace cnrm-system
         note: *google-note
         steps: |
           gcloud storage cp gs://configconnector-operator/{tag}/release-bundle.tar.gz release-bundle.tar.gz
@@ -214,6 +229,9 @@ providers:
             googleServiceAccount: kcc@$PROJECT_ID.iam.gserviceaccount.com
           EOF
       - pick: {Method: Google's manifests, Cluster: Outside GKE}
+        verify: |
+          kubectl get configconnector configconnector.core.cnrm.cloud.google.com -o jsonpath='{.status.healthy}'
+          kubectl get pods --namespace cnrm-system
         note: *google-note
         steps: |
           gcloud storage cp gs://configconnector-operator/{tag}/release-bundle.tar.gz release-bundle.tar.gz

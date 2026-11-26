@@ -10,6 +10,8 @@ registry's build clones it into <src>/<repo>/). Today it carries one field:
         when: which clusters this variant is for
         note: one paragraph shown under the steps
         tested: how and when these steps were last run
+        verify: |                    # optional: commands that show it worked (else derived from --namespace)
+          kubectl get pods --namespace ...
         steps: |
           helm install ... --version {version}
     credentials:        # shown above the install steps: the identity the controller acts as
