@@ -1,8 +1,9 @@
 # The registry's sources: which providers and package catalogs it indexes,
-# where their CRDs and docs are, and how they relate. In the real registry
-# each repository publishes its own block of this (a `krm-registry.yaml` at
-# its root, like terraform-registry-manifest.json) and the registry reads it
-# at a release tag; here they are listed in one place for the prototype.
+# where their CRDs and docs are, and how they relate. Each repository of ours
+# may also describe itself in a `krm-registry.yaml` at its root (like
+# terraform-registry-manifest.json); today that carries `install:`, read by
+# config.py. A provider's `install:` here overrides its repository's: that is
+# the registry's account of providers we do not control (README, "Install variants").
 schema: 1
 
 # A surface is a cloud or a vendor. `terraform` names its Terraform provider:
@@ -113,6 +114,24 @@ providers:
     version: per controller   # each controller's latest release, resolved into registry.lock.json
     crds: [upstream/ack/*/helm/crds/*.yaml]
     group_suffix: .services.k8s.aws
+    # Not ours: registry.yaml's install: is the registry's account of upstream's steps.
+    install:
+      - name: Helm (one controller per service)
+        when: any cluster; one release per AWS service, each at that controller's own latest release
+        note: >-
+          Credentials: on EKS, an IAM role for the controller's service account (Pod Identity, or
+          IRSA with --set serviceAccount.annotations.eks\.amazonaws\.com/role-arn=ROLE_ARN);
+          elsewhere, an AWS credentials Secret (aws.credentials.secretName). Pulls from
+          public.ecr.aws are anonymous; a helm registry login raises its rate limit.
+        tested: 2026-11-25, references resolved at this version and the chart rendered with these values (helm template)
+        steps: |
+          SERVICE=s3 AWS_REGION=us-west-2
+          RELEASE_VERSION=$(curl -sL https://api.github.com/repos/aws-controllers-k8s/$SERVICE-controller/releases/latest \
+            | jq -r '.tag_name | ltrimstr("v")')
+          helm install ack-$SERVICE-controller oci://public.ecr.aws/aws-controllers-k8s/$SERVICE-chart \
+            --version $RELEASE_VERSION \
+            --namespace ack-system --create-namespace \
+            --set aws.region=$AWS_REGION
 
   - id: aso
     title: Azure Service Operator v2
@@ -124,6 +143,27 @@ providers:
     version: latest v2 release
     crds: [upstream/aso-crds.yaml]
     group_suffix: .azure.com
+    install:
+      - name: Helm
+        when: any cluster with cert-manager (installed first below)
+        note: >-
+          crdPattern chooses which groups' CRDs the operator installs; it installs none without it.
+          Credentials here are a service principal's secret; for workload identity set
+          useWorkloadIdentityAuth=true and drop azureClientSecret
+          (azure.github.io/azure-service-operator/guide/authentication).
+        tested: 2026-11-25, references resolved at this version and the chart rendered with these values (helm template)
+        steps: |
+          kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.21.3/cert-manager.yaml
+          kubectl wait -n cert-manager --for=condition=Available deployment --all --timeout=5m
+
+          helm repo add aso2 https://raw.githubusercontent.com/Azure/azure-service-operator/main/v2/charts
+          helm install aso2 aso2/azure-service-operator --version {version} \
+            --namespace azureserviceoperator-system --create-namespace \
+            --set crdPattern='resources.azure.com/*;containerservice.azure.com/*;keyvault.azure.com/*;managedidentity.azure.com/*' \
+            --set azureSubscriptionID=$AZURE_SUBSCRIPTION_ID \
+            --set azureTenantID=$AZURE_TENANT_ID \
+            --set azureClientID=$AZURE_CLIENT_ID \
+            --set azureClientSecret=$AZURE_CLIENT_SECRET
 
   - id: config-connector-extensions
     title: config-connector-extensions
@@ -183,6 +223,14 @@ providers:
     release: {tags: '^v[0-9]+[.][0-9]+[.][0-9]+$'}
     source: {asset: 'https://github.com/grafana/grafana-operator/releases/download/{tag}/crds.yaml'}
     crds: [upstream/grafana-operator/*.yaml]
+    install:
+      - name: Helm (OCI)
+        note: A Grafana instance it manages is a Grafana resource (in-cluster, or external with an API key Secret).
+        tested: 2026-11-25, references resolved at this version and the chart rendered with these values (helm template)
+        steps: |
+          helm install grafana-operator oci://ghcr.io/grafana/helm-charts/grafana-operator \
+            --version {version} \
+            --namespace grafana-operator --create-namespace
 
   - id: datadog-operator
     title: Datadog Operator
@@ -195,6 +243,24 @@ providers:
     release: {tags: '^v[0-9]+[.][0-9]+[.][0-9]+$'}
     source: {path: config/crd/bases/v1}
     crds: [upstream/datadog-operator/config/crd/bases/v1/*.yaml]
+    install:
+      - name: Helm
+        note: >-
+          The chart's version is not the operator's: chart 2.33.0 ships operator 1.32.0
+          (helm search repo datadog/datadog-operator --versions lists which carries which).
+          The monitor, dashboard, SLO and generic-resource controllers are off by default; the
+          --set flags below turn them on. The app key needs the scopes of what it manages.
+        tested: 2026-11-25, references resolved at this version and the chart rendered with these values (helm template)
+        steps: |
+          helm repo add datadog https://helm.datadoghq.com
+          kubectl create namespace datadog
+          kubectl create secret generic datadog-secret -n datadog \
+            --from-literal api-key=$DD_API_KEY --from-literal app-key=$DD_APP_KEY
+          helm install datadog-operator datadog/datadog-operator -n datadog \
+            --set apiKeyExistingSecret=datadog-secret --set appKeyExistingSecret=datadog-secret \
+            --set site=datadoghq.com \
+            --set datadogMonitor.enabled=true --set datadogDashboard.enabled=true \
+            --set datadogSLO.enabled=true --set datadogGenericResource.enabled=true
 
   - id: stringke-cloudflare-operator
     title: cloudflare-operator (StringKe)
@@ -206,6 +272,15 @@ providers:
     release: {tags: '^v[0-9]+[.][0-9]+[.][0-9]+$'}
     source: {asset: 'https://github.com/StringKe/cloudflare-operator/releases/download/{tag}/cloudflare-operator-crds.yaml'}
     crds: [upstream/stringke-cloudflare-operator/*.yaml]
+    install:
+      - name: Release manifest
+        note: >-
+          CRDs, namespace, RBAC and the operator, without the webhook. cloudflare-operator-full.yaml
+          at the same release adds the webhook and needs cert-manager. Each resource names a
+          Secret holding a Cloudflare API token.
+        tested: 2026-11-25, the release asset fetched at this version
+        steps: |
+          kubectl apply -f https://github.com/StringKe/cloudflare-operator/releases/download/{tag}/cloudflare-operator-full-no-webhook.yaml
 
   - id: adyanth-cloudflare-operator
     title: cloudflare-operator (adyanth)
@@ -217,6 +292,13 @@ providers:
     release: {tags: '^v[0-9]+[.][0-9]+[.][0-9]+$'}
     source: {path: config/crd/bases}
     crds: [upstream/adyanth-cloudflare-operator/config/crd/bases/*.yaml]
+    install:
+      - name: Kustomize
+        when: clusters with cert-manager (config/default carries a cert-manager Issuer and Certificates)
+        note: Into cloudflare-operator-system. Each Tunnel names a Secret with a Cloudflare API token or key.
+        tested: 2026-11-25, the tag's config/default built (kubectl kustomize)
+        steps: |
+          kubectl apply -k 'https://github.com/adyanth/cloudflare-operator.git//config/default?ref={tag}'
 
   - id: git-hubby
     title: git-hubby
@@ -228,6 +310,18 @@ providers:
     release: {tags: '^v[0-9]+[.][0-9]+[.][0-9]+$'}
     source: {path: config/crd/bases}
     crds: [upstream/git-hubby/config/crd/bases/*.yaml]
+    install:
+      - name: Helm (OCI)
+        when: clusters with cert-manager (for its webhook and metrics certificates)
+        note: >-
+          The chart is versioned apart from the operator (chart 1.25.0 ships operator 0.13.0); omit
+          --version for the newest. It authenticates as a GitHub App installation: values.yaml
+          names the App's credentials Secret (github.com/Interhyp/git-hubby-helm).
+        tested: 2026-11-25, references resolved at this version and the chart rendered with these values (helm template)
+        steps: |
+          helm install git-hubby oci://ghcr.io/interhyp/git-hubby-helm/git-hubby \
+            --namespace git-hubby --create-namespace \
+            -f values.yaml
 
   - id: actions-runner-controller
     title: Actions Runner Controller
@@ -240,6 +334,17 @@ providers:
     release: {tags: '^gha-runner-scale-set-[0-9]+[.][0-9]+[.][0-9]+$'}
     source: {path: charts/gha-runner-scale-set-controller/crds}
     crds: [upstream/actions-runner-controller/charts/gha-runner-scale-set-controller/crds/*.yaml]
+    install:
+      - name: Helm (OCI)
+        note: >-
+          The controller; each runner scale set is then its own release of
+          oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set, with a GitHub
+          App or token Secret and the repository, organization or enterprise URL.
+        tested: 2026-11-25, references resolved at this version and the chart rendered with these values (helm template)
+        steps: |
+          helm install arc oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set-controller \
+            --version {version} \
+            --namespace arc-systems --create-namespace
 
   - id: gitlab-operator
     title: GitLab Operator
@@ -252,6 +357,14 @@ providers:
     release: {tags: '^[0-9]+[.][0-9]+[.][0-9]+$'}
     source: {path: config/crd/bases}
     crds: [upstream/gitlab-operator/config/crd/bases/*.yaml]
+    install:
+      - name: Helm
+        when: clusters with cert-manager and an ingress controller (docs.gitlab.com/operator/installation)
+        tested: 2026-11-25, references resolved at this version and the chart rendered with these values (helm template)
+        steps: |
+          helm repo add gitlab-operator https://gitlab.com/api/v4/projects/18899486/packages/helm/stable
+          helm install gitlab-operator gitlab-operator/gitlab-operator --version {version} \
+            --namespace gitlab-system --create-namespace
 
   - id: gitlab-runner-operator
     title: GitLab Runner Operator
@@ -264,6 +377,17 @@ providers:
     release: {tags: '^v[0-9]+[.][0-9]+[.][0-9]+$'}
     source: {path: config/crd/bases}
     crds: [upstream/gitlab-runner-operator/config/crd/bases/*.yaml]
+    install:
+      - name: OperatorHub (OLM)
+        when: Kubernetes with the Operator Lifecycle Manager (installed first below); on OpenShift, from OperatorHub
+        note: >-
+          The Subscription follows the stable channel, so OLM installs its newest release, not
+          necessarily the one documented here. Runners are then Runner resources naming a Secret
+          with a runner authentication token.
+        tested: 2026-11-25, the OLM installer and the OperatorHub Subscription fetched
+        steps: |
+          curl -sL https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.46.0/install.sh | bash -s v0.46.0
+          kubectl create -f https://operatorhub.io/install/gitlab-runner-operator.yaml
 
   - id: oci-service-operator
     title: OCI Service Operator
@@ -276,6 +400,20 @@ providers:
     release: {tags: '^v[0-9]+[.][0-9]+[.][0-9]+(-alpha)?$'}
     source: {path: config/crd/bases}
     crds: [upstream/oci-service-operator/config/crd/bases/*.yaml]
+    install:
+      - name: OLM bundle, per service
+        when: Kubernetes with the Operator Lifecycle Manager; one bundle per OCI service package
+        note: >-
+          GROUP is the package (apigateway, containerengine, containerinstances, core-network,
+          database, dataflow, functions, identity, mysql, nosql, objectstorage, opensearch, psql,
+          queue, redis, streaming, vault). Each runs in oci-service-operator-GROUP-system and reads
+          an ocicredentials Secret there, or uses instance principals (Oracle's docs/installation.md).
+          Oracle marks this release alpha: try it in a test cluster first.
+        tested: 2026-11-25, the mysql and streaming bundles resolved at this tag
+        steps: |
+          operator-sdk olm install
+          GROUP=mysql
+          operator-sdk run bundle ghcr.io/oracle/oci-service-operator-$GROUP-bundle:{tag}
 
   - id: atlas-kubernetes-operator
     title: Atlas Kubernetes Operator
@@ -288,6 +426,20 @@ providers:
     release: {tags: '^v[0-9]+[.][0-9]+[.][0-9]+$'}
     source: {path: 'releases/{newest}/deploy/crds'}
     crds: [upstream/atlas-kubernetes-operator/crds/*.yaml]
+    install:
+      - name: Helm
+        note: >-
+          The global connection Secret takes an Atlas service account (clientId, clientSecret;
+          recommended) or a legacy API key (publicApiKey, privateApiKey) in place of the two
+          service-account flags below.
+        tested: 2026-11-25, references resolved at this version and the chart rendered with these values (helm template)
+        steps: |
+          helm repo add mongodb https://mongodb.github.io/helm-charts
+          helm install atlas-operator mongodb/mongodb-atlas-operator --version {version} \
+            --namespace mongodb-atlas-system --create-namespace \
+            --set globalConnectionSecret.orgId=$ATLAS_ORG_ID \
+            --set globalConnectionSecret.clientId=$ATLAS_CLIENT_ID \
+            --set globalConnectionSecret.clientSecret=$ATLAS_CLIENT_SECRET
 
   - id: vault-config-operator
     title: vault-config-operator
@@ -299,6 +451,19 @@ providers:
     release: {tags: '^v[0-9]+[.][0-9]+[.][0-9]+$'}
     source: {path: config/crd/bases}
     crds: [upstream/vault-config-operator/config/crd/bases/*.yaml]
+    install:
+      - name: Helm
+        when: clusters with cert-manager, for its webhooks' certificates (on OpenShift, drop enableCertManager)
+        note: >-
+          It reaches Vault through Vault's standard environment variables (VAULT_ADDR, VAULT_CACERT, ...)
+          on its deployment; each resource names the Kubernetes auth role it signs in with.
+        tested: 2026-11-25, references resolved at this version and the chart rendered with these values (helm template)
+        steps: |
+          helm repo add vault-config-operator https://redhat-cop.github.io/vault-config-operator
+          helm install vault-config-operator vault-config-operator/vault-config-operator --version {tag} \
+            --namespace vault-config-operator --create-namespace \
+            --set enableCertManager=true \
+            --set 'env[0].name=VAULT_ADDR' --set 'env[0].value=https://vault.example.com:8200'
 
   - id: vault-secrets-operator
     title: Vault Secrets Operator
@@ -311,6 +476,14 @@ providers:
     release: {tags: '^v[0-9]+[.][0-9]+[.][0-9]+$'}
     source: {path: config/crd/bases}
     crds: [upstream/vault-secrets-operator/config/crd/bases/*.yaml]
+    install:
+      - name: Helm
+        note: Point it at Vault with a VaultConnection and VaultAuth (or the chart's defaultVaultConnection and defaultAuthMethod values).
+        tested: 2026-11-25, references resolved at this version and the chart rendered with these values (helm template)
+        steps: |
+          helm repo add hashicorp https://helm.releases.hashicorp.com
+          helm install vault-secrets-operator hashicorp/vault-secrets-operator --version {version} \
+            --namespace vault-secrets-operator-system --create-namespace
 
   - id: databricks-kube-operator
     title: databricks-kube-operator
@@ -322,6 +495,19 @@ providers:
     release: {tags: '^databricks-kube-operator-[0-9]+[.][0-9]+[.][0-9]+$'}
     source: {path: charts/databricks-kube-operator/templates}
     crds: [upstream/databricks-kube-operator/charts/databricks-kube-operator/templates/crds.yaml]
+    install:
+      - name: Helm
+        note: The operator reads its workspace URL and token from the Secret its ConfigMap names (both below, in the release's namespace).
+        tested: 2026-11-25, references resolved at this version and the chart rendered with these values (helm template)
+        steps: |
+          helm repo add mach https://mach-kernel.github.io/databricks-kube-operator
+          helm install databricks-kube-operator mach/databricks-kube-operator --version {version} \
+            --namespace databricks --create-namespace
+          kubectl create configmap databricks-kube-operator -n databricks \
+            --from-literal api_secret_name=databricks-api-secret
+          kubectl create secret generic databricks-api-secret -n databricks \
+            --from-literal access_token=$DATABRICKS_TOKEN \
+            --from-literal databricks_url=https://my-tenant.cloud.databricks.com/api
 
   # High Five Labs' REST extensions (krm-rest-runtime), at main.
   - id: datadog-krm-extensions

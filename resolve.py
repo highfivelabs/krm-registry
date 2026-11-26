@@ -23,6 +23,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 import yaml
 
+import config
+
 SRC, LOCK = sys.argv[1], sys.argv[2]
 TOKEN = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
 WARNED = set()
@@ -63,6 +65,42 @@ def oci_digest(repo, tag):
     except Exception as e:  # network: hide the variant rather than point at nothing
         print(f"{url}: {e}", file=sys.stderr)
         return None
+
+
+def oci_tags(repo):
+    """Every tag cr.highfivelabs.dev lists for repo ([] when none, or unreachable)."""
+    url = f"https://{CR}/v2/{repo}/tags/list"
+    req = urllib.request.Request(url, headers={"User-Agent": "krm-registry"})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return json.load(r).get("tags") or []
+    except urllib.error.HTTPError as e:
+        if e.code not in (401, 403, 404):
+            print(f"{url}: HTTP {e.code}", file=sys.stderr)
+        return []
+    except Exception as e:
+        print(f"{url}: {e}", file=sys.stderr)
+        return []
+
+
+def chart_version(tag):
+    """The semver in a release tag, as charts carry it: v5.26.0 → 5.26.0,
+    gha-runner-scale-set-0.15.1 → 0.15.1, v2.1.0-alpha → 2.1.0-alpha."""
+    m = re.search(r"[0-9]+[.][0-9]+[.][0-9]+[-+.A-Za-z0-9]*$", tag or "")
+    return m.group(0) if m else tag
+
+
+def oci_version(variant, tag):
+    """The chart version an OCI install variant points at: its own `version:` if it
+    names one, else the provider's resolved release (an official chart's version is
+    upstream's, factory docs/oci-distribution.md 2.3), else, for a provider at main
+    (our extensions), the newest release-shaped tag cr serves."""
+    if variant.get("version"):
+        return variant["version"].replace("{tag}", tag or "").replace("{version}", chart_version(tag))
+    if tag:
+        return chart_version(tag)
+    rel = [t for t in oci_tags(variant["oci"]) if re.match(r"^[0-9]+[.][0-9]+[.][0-9]+([-_][A-Za-z0-9.]+)?$", t)]
+    return max(rel, key=lambda t: [int(x) if x.isdigit() else -1 for x in re.split(r"[.\-_]", t)]).replace("_", "+") if rel else None
 
 
 def gh(path):
@@ -250,7 +288,7 @@ def main():
         lock["modules"][cid] = {"pinned": pin, "latest": lt.get("version"), "published": lt.get("published"),
                                 "via": lt.get("via"), "behind": behind}
     # Operators and other providers that name a release pattern.
-    cfg = yaml.safe_load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "registry.yaml")))
+    cfg = config.load(SRC)  # registry.yaml + each of our repos' krm-registry.yaml
     for p in cfg["providers"]:
         if p.get("release"):
             r = p["release"]
@@ -266,16 +304,20 @@ def main():
                 lock["providers"][p["id"]] = rel
             else:
                 print(f"{p['id']}: no release matching {p['release']}", file=sys.stderr)
-    # OCI installs: which of our charts cr.highfivelabs.dev serves at each provider's
-    # resolved version. An install variant naming one (oci:) is shown only if it is.
+    # OCI installs: which of our charts cr.highfivelabs.dev serves, and at which version
+    # (lock "oci": {provider: {repo: {version, digest} | null}}). gen.py shows an install
+    # variant naming one (oci:) only when it is published.
+    lock["oci"] = {}
     for p in cfg["providers"]:
-        rel = lock["providers"].get(p["id"]) or {}
+        tag = (lock["providers"].get(p["id"]) or {}).get("tag")
         for v in p.get("install") or []:
-            if v.get("oci") and rel.get("tag"):
-                d = oci_digest(v["oci"], rel["tag"])
-                rel.setdefault("oci", {})[v["oci"]] = d
-                if not d:
-                    print(f"{p['id']}: {CR}/{v['oci']}:{rel['tag']} not published; its install variant is hidden", file=sys.stderr)
+            if not v.get("oci"):
+                continue
+            ver = oci_version(v, tag)
+            d = oci_digest(v["oci"], ver) if ver else None
+            lock["oci"].setdefault(p["id"], {})[v["oci"]] = {"version": ver, "digest": d} if d else None
+            if not d:
+                print(f"{p['id']}: {CR}/{v['oci']}:{ver or '(no release)'} not published; its install variant is hidden", file=sys.stderr)
 
     # Terraform, by the numbers: every surface's provider, and the top providers overall.
     top = terraform_top()
