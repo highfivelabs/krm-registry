@@ -13,6 +13,20 @@
 <meta name="theme-color" content="#b93d0b">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
 <script>try{var t=localStorage.getItem("krm-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>
+/* Google Analytics (GA4): people's page views, countries and referrers
+   (tf-infra README "KRM Registry", "Monitoring"). The pages are # routes
+   that never reach the server, and GA4 drops the #, so route() sends each
+   as a page view of its own path: #k-... -> /k-.... An empty GA leaves
+   analytics off. */
+var GA='';
+window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}
+if(GA){var g=document.createElement('script');g.async=1;g.src='https://www.googletagmanager.com/gtag/js?id='+GA;document.head.appendChild(g);
+  gtag('js',new Date());gtag('config',GA,{send_page_view:false})}
+var lastPV;
+function pageView(){var h=location.hash.slice(1)||'';if(!GA||h===lastPV)return;lastPV=h;
+  gtag('event','page_view',{page_location:location.origin+'/'+h,page_title:document.title})}
+</script>
 <style>
 :root{
   /* High Five Labs tokens (website repo, brand/tokens.css), mapped onto this page's names. */
@@ -215,7 +229,7 @@ const upB=c=>{const u=c.upstream||{};return !u.latest?'':u.behind?`<span class="
 const famB=m=>`<span class="badge b-plain">${esc(m.family)}</span>`;
 const lc=(...a)=>esc(a.flat().filter(Boolean).join(' ').toLowerCase());
 const tfOf=k=>(k.api||[]).flatMap(a=>[a.api,...a.tf]);
-function route(){document.body.classList.toggle('home',(location.hash.slice(1)||'home')==='home');route0();const b=$('#app .fbar');if(b)applyF(b.dataset.view)}
+function route(){document.body.classList.toggle('home',(location.hash.slice(1)||'home')==='home');route0();const b=$('#app .fbar');if(b)applyF(b.dataset.view);if(C)pageView()}
 function route0(){
   if(!C) return; const h=location.hash.slice(1)||'home', A=$('#app');
   document.title='KRM Registry';
