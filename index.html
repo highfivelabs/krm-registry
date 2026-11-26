@@ -120,7 +120,10 @@ pre.ex{margin:0;padding:12px 14px 14px;overflow:auto;max-height:640px}
 .callout.o{border-left-color:var(--off)}
 .md{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px 20px;margin-top:14px;overflow:auto}
 .md.doc{padding:0 20px}.md.doc summary{cursor:pointer;padding:12px 0;list-style-position:outside}.md.doc[open] summary{border-bottom:1px solid var(--line2);margin-bottom:4px}
-.inst{margin:18px 0 6px}.inst h3{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink3)}
+.inst{margin:18px 0 6px}.inst summary{display:flex;align-items:center;gap:10px;cursor:pointer;list-style:none}.inst summary::-webkit-details-marker{display:none}
+.inst summary::before{content:'▸';color:var(--ink3);font-size:11px;transition:transform .15s}.inst[open] summary::before{transform:rotate(90deg)}
+.inst summary .tb{margin-left:auto}.inst .isel{font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.inst .ibody{margin-top:12px}
+.inst h3{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink3)}
 .inst .tb{font:inherit;font-size:12px;font-weight:500;text-transform:none;letter-spacing:0;padding:2px 9px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink2);cursor:pointer}.inst .tb:hover{border-color:var(--clay);color:var(--ink)}
 .cpw{position:relative}.cpw .cp{position:absolute;top:6px;right:6px;z-index:1}
 .inst pre{margin:0;background:var(--bg);border-radius:6px;padding:10px 64px 10px 12px;overflow-x:auto;white-space:pre;font-size:12px}
@@ -355,7 +358,8 @@ function service(sl){
 // Install: one radio group per axis the variants' pick names (Method, Cluster, ...; a
 // variant without pick is its own value on an unnamed axis). The choice holds across
 // providers; credentials follow the install variant on the axes they share.
-let IPICK={}, ILAST='';
+let IPICK={}, ILAST='', IOPEN=localStorage.getItem('krm-install-open')==='1';
+function itoggle(d){IOPEN=d.open;localStorage.setItem('krm-install-open',d.open?'1':'0')}
 function ipick(e){IPICK[e.dataset.k]=e.dataset.x;ILAST=e.dataset.k;route()}
 const vpick=v=>v.pick||{'':v.name}, vmatch=(v,s)=>Object.entries(vpick(v)).every(([k,x])=>s[k]===undefined||s[k]===x);
 function provenance(p,v){
@@ -374,8 +378,9 @@ function installCard(p,via){
   const radios=axes.filter(a=>a.xs.length>1).map(a=>`<div class="pick" role="radiogroup"${a.k?` aria-label="${esc(a.k)}"`:''}>${a.k?`<span>${esc(a.k)}</span>`:''}${a.xs.map(x=>`<label class="${x===sel[a.k]?'on':''}${vs.some(w=>vmatch(w,{...sel,[a.k]:x}))?'':' off'}"><input type="radio" name="ip-${esc(a.k)}" data-k="${esc(a.k)}" data-x="${esc(x)}" ${x===sel[a.k]?'checked':''} onchange="ipick(this)">${esc(x)}</label>`).join('')}</div>`).join('');
   const all=[c&&'# 1. Credentials\n'+c.steps,v&&(c?'# 2. Install\n':'')+v.steps].filter(Boolean).join('\n\n');
   window._IALL=all;
-  return `<div class="card inst"><h3>Install${c&&v?`<button class="tb" style="float:right;margin-top:-4px" onclick="copyText(window._IALL,this)">Copy all steps</button>`:''}</h3>${via?`<div style="font-size:13px;margin-bottom:8px">With the <a href="#pr-${p.id}">${esc(p.title)}</a> ${esc(p.version||'')}</div>`:''}${radios}
-  ${c?`<div class="step">1. Credentials${c.pick?'':`: ${esc(c.name)}`}</div>${ivariant(p,c)}<div class="step">2. Install</div>`:''}${v?ivariant(p,v):''}</div>`}
+  const chosen=axes.filter(a=>a.xs.length>1).map(a=>sel[a.k]).join(' · ');
+  return `<details class="card inst"${IOPEN?' open':''} ontoggle="itoggle(this)"><summary><h3>Install</h3>${chosen?`<span class="muted isel">${esc(chosen)}</span>`:''}${v?`<button class="tb" onclick="event.preventDefault();event.stopPropagation();copyText(window._IALL,this)">${c?'Copy all steps':'Copy'}</button>`:''}</summary><div class="ibody">${via?`<div style="font-size:13px;margin-bottom:8px">With the <a href="#pr-${p.id}">${esc(p.title)}</a> ${esc(p.version||'')}</div>`:''}${radios}
+  ${c?`<div class="step">1. Credentials${c.pick?'':`: ${esc(c.name)}`}</div>${ivariant(p,c)}<div class="step">2. Install</div>`:''}${v?ivariant(p,v):''}</div></details>`}
 function provider(id){const p=PBY[id];if(!p) return '<h1>Not found</h1>';
   const by_=C.providers.filter(x=>x.installs===id);
   const ks=C.kinds.filter(k=>k.provider===id), by={};ks.forEach(k=>(by[k.service]??=[]).push(k));
