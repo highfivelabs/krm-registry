@@ -116,7 +116,7 @@ func TestToolsList(t *testing.T) {
 	ts := s.rpc("tools/list", nil)["result"].(map[string]any)["tools"]
 	names := pluck(ts, "name")
 	sort.Strings(names)
-	eqs(t, "tools", names, []string{"get_kind", "get_package", "kinds_for_terraform", "list_clouds", "list_providers", "search_kinds"})
+	eqs(t, "tools", names, []string{"get_install", "get_kind", "get_package", "kinds_for_terraform", "list_clouds", "list_providers", "search_kinds"})
 	for _, x := range ts.([]any) {
 		tl := x.(map[string]any)
 		if tl["description"] == "" || tl["inputSchema"].(map[string]any)["type"] != "object" {
@@ -218,7 +218,7 @@ func TestListProvidersAndPackage(t *testing.T) {
 	s := newSession(t)
 	ids := pluck(sc(s.tool("list_providers", nil))["providers"], "id")
 	sort.Strings(ids)
-	eqs(t, "providers", ids, []string{"cloudflare-krm-extensions", "config-connector", "gitlab-krm-extensions"})
+	eqs(t, "providers", ids, []string{"cloudflare-krm-extensions", "config-connector", "config-connector-operator", "gitlab-krm-extensions"})
 	for _, name := range []string{"aws/acm", "aws-acm", "acm"} {
 		pkg := sc(s.tool("get_package", map[string]any{"package": name}))
 		eq(t, name, pkg["id"], any("aws/acm"))
@@ -228,6 +228,56 @@ func TestListProvidersAndPackage(t *testing.T) {
 	}
 	if s.tool("get_package", map[string]any{"package": "nope"})["isError"] != true {
 		t.Error("nope: no error")
+	}
+}
+
+func TestGetInstall(t *testing.T) {
+	s := newSession(t)
+	// Config Connector is installed by its operator; the default is the first variant.
+	p := sc(s.tool("get_install", map[string]any{"provider": "config-connector"}))
+	eq(t, "via", p["via"], any("config-connector-operator"))
+	eq(t, "published", p["published"], any(true))
+	eq(t, "default install", p["install"].(map[string]any)["name"], any("High Five Labs chart · GKE Standard"))
+	eq(t, "matching credentials", p["credentials"].(map[string]any)["name"], any("GKE Standard"))
+	eq(t, "namespace", p["namespace"], any("configconnector-operator-system"))
+	eqs(t, "placeholders", pluck(p["placeholders"], "name"), []string{"PROJECT_ID", "CLUSTER"})
+	if len(p["how_to_run"].([]any)) == 0 || len(p["verify"].([]any)) == 0 {
+		t.Error("no how_to_run or verify")
+	}
+	// A choice on one axis picks the credentials that follow it.
+	p = sc(s.tool("get_install", map[string]any{"provider": "config-connector-operator", "choice": map[string]string{"Cluster": "Outside GKE"}}))
+	eq(t, "outside GKE install", p["install"].(map[string]any)["name"], any("High Five Labs chart · Outside GKE"))
+	eq(t, "outside GKE credentials", p["credentials"].(map[string]any)["name"], any("Outside GKE"))
+	// Not published yet: says where, no steps.
+	p = sc(s.tool("get_install", map[string]any{"provider": "gitlab-krm-extensions"}))
+	eq(t, "pending published", p["published"], any(false))
+	eqs(t, "pending", toStrings(p["pending"]), []string{"charts/gitlab-krm-extensions"})
+	for _, bad := range []map[string]any{
+		{"provider": "nope"},
+		{"provider": "config-connector-operator", "choice": map[string]string{"Cluster": "Mars"}},
+		{"provider": "config-connector-operator", "choice": map[string]string{"Method": "Google's manifests", "Cluster": "Outside GKE"}},
+		{},
+	} {
+		if s.tool("get_install", bad)["isError"] != true {
+			t.Errorf("%v: no error", bad)
+		}
+	}
+}
+
+func toStrings(v any) []string {
+	var out []string
+	for _, x := range v.([]any) {
+		out = append(out, x.(string))
+	}
+	return out
+}
+
+func TestPlaceholders(t *testing.T) {
+	got := placeholders("AWS_REGION=us-west-2\nwhile read -r SERVICE VERSION; do\n  helm install ack-$SERVICE-controller --version $VERSION --set aws.region=$AWS_REGION --set x=$ROLE_ARN\ndone",
+		"RELEASE_VERSION=$(curl -sL x)\necho $RELEASE_VERSION")
+	b, _ := json.Marshal(got)
+	if string(b) != `[{"name":"AWS_REGION","example":"us-west-2"},{"name":"ROLE_ARN"}]` {
+		t.Errorf("placeholders %s", b)
 	}
 }
 

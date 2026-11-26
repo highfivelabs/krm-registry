@@ -268,6 +268,10 @@ def write_agent_tree(out, cat, full_kinds, charts_full):
             L += [f"Installs {link(me, f'providers/{p['installs']}.md', p['installs'])}.", ""]
         if by_:
             L += ["Installed by " + ", ".join(link(me, f"providers/{x['id']}.md", x["title"]) for x in by_) + ".", ""]
+        if p.get("install"):
+            L += [f"To install with an agent: the MCP server https://registry.highfivelabs.dev/mcp, tool `get_install` with "
+                  f"`{{\"provider\": \"{p['id']}\"}}` (add `choice` for a variant), returns the steps below for one variant, "
+                  "the placeholders to ask the user for, how to verify, and how to run them with the user.", ""]
         for v in p.get("credentials") or []:
             L += [f"## Credentials: {v['name']}", "", "```sh", v["steps"], "```", ""] + ([v["note"], ""] if v.get("note") else [])
         if p.get("pending") and not p.get("install"):
@@ -276,6 +280,7 @@ def write_agent_tree(out, cat, full_kinds, charts_full):
         for v in p.get("install") or []:
             L += [f"## Install: {v['name']}", ""] + ([f"For {v['when']}."] if v.get("when") else []) + \
                  ["", "```sh", v["steps"], "```", ""] + ([v["note"], ""] if v.get("note") else []) + \
+                 (["Check it worked:", "", "```sh", v["verify"], "```", ""] if v.get("verify") else []) + \
                  ([f"Steps from the provider's [krm-registry.yaml]({p['repo']}/blob/main/krm-registry.yaml)."
                    + (f" Tested: {v['tested']}." if v.get("tested") else ""), ""] if v.get("source") == "repo" else
                   [((f"Steps written by High Five Labs from {p['publisher'].removesuffix(' (community)')}'s documentation."

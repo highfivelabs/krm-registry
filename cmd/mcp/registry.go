@@ -145,16 +145,18 @@ func (ss *surfaces) UnmarshalJSON(b []byte) error {
 }
 
 type provider struct {
-	ID        string  `json:"id"`
-	Title     raw     `json:"title"`
-	Surface   *string `json:"surface"`
-	Tier      raw     `json:"tier"`
-	Publisher raw     `json:"publisher"`
-	Version   raw     `json:"version"`
-	NKinds    raw     `json:"nkinds"`
-	Repo      raw     `json:"repo"`
-	Install   raw     `json:"install"`
-	Creds     raw     `json:"credentials"`
+	ID        string   `json:"id"`
+	Title     raw      `json:"title"`
+	Surface   *string  `json:"surface"`
+	Tier      raw      `json:"tier"`
+	Publisher raw      `json:"publisher"`
+	Version   raw      `json:"version"`
+	NKinds    raw      `json:"nkinds"`
+	Repo      raw      `json:"repo"`
+	Install   raw      `json:"install"`
+	Creds     raw      `json:"credentials"`
+	Installs  *string  `json:"installs"`
+	Pending   []string `json:"pending"`
 }
 
 type api struct {

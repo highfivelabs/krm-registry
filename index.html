@@ -122,7 +122,7 @@ pre.ex{margin:0;padding:12px 14px 14px;overflow:auto;max-height:640px}
 .md.doc{padding:0 20px}.md.doc summary{cursor:pointer;padding:12px 0;list-style-position:outside}.md.doc[open] summary{border-bottom:1px solid var(--line2);margin-bottom:4px}
 .inst{margin:18px 0 6px}.inst summary{display:flex;align-items:center;gap:10px;cursor:pointer;list-style:none}.inst summary::-webkit-details-marker{display:none}
 .inst summary::before{content:'▸';color:var(--ink3);font-size:11px;transition:transform .15s}.inst[open] summary::before{transform:rotate(90deg)}
-.inst summary .tb{margin-left:auto}.inst .isel{font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.inst .ibody{margin-top:12px}
+.inst summary .tb{margin-left:auto}.inst summary .tb+.tb{margin-left:6px}.inst .isel{font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.inst .ibody{margin-top:12px}
 .inst h3{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink3)}
 .inst .tb{font:inherit;font-size:12px;font-weight:500;text-transform:none;letter-spacing:0;padding:2px 9px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink2);cursor:pointer}.inst .tb:hover{border-color:var(--clay);color:var(--ink)}
 .cpw{position:relative}.cpw .cp{position:absolute;top:6px;right:6px;z-index:1}
@@ -365,7 +365,16 @@ const vpick=v=>v.pick||{'':v.name}, vmatch=(v,s)=>Object.entries(vpick(v)).every
 function provenance(p,v){
   const who=v.source==='repo'?`Steps from the provider's <a href="${esc(p.repo)}/blob/main/krm-registry.yaml">krm-registry.yaml</a>.`:p.publisher==='High Five Labs'||v.ours?'':`Steps written by High Five Labs from ${esc(p.publisher.replace(/ \(community\)$/,''))}'s documentation; check theirs if they differ.`;
   return who||v.tested?`<div class="muted prov">${who}${v.tested?` Tested: ${esc(v.tested)}.`:''}</div>`:''}
-function ivariant(p,v){return `${v.when?`<div class="muted" style="font-size:12.5px;margin-bottom:6px">For ${esc(v.when)}.</div>`:''}<div class="cpw"><button class="tb cp" onclick="copyText(this.nextElementSibling.textContent,this)">Copy</button><pre class="mono">${esc(v.steps)}</pre></div>${v.note?`<div class="muted" style="font-size:12.5px;margin-top:6px">${esc(v.note)}</div>`:''}${provenance(p,v)}`}
+function ivariant(p,v){return `${v.when?`<div class="muted" style="font-size:12.5px;margin-bottom:6px">For ${esc(v.when)}.</div>`:''}<div class="cpw"><button class="tb cp" onclick="copyText(this.nextElementSibling.textContent,this)">Copy</button><pre class="mono">${esc(v.steps)}</pre></div>${v.note?`<div class="muted" style="font-size:12.5px;margin-top:6px">${esc(v.note)}</div>`:''}${v.verify?`<div class="step" style="font-weight:500">Check it worked</div><div class="cpw"><button class="tb cp" onclick="copyText(this.nextElementSibling.textContent,this)">Copy</button><pre class="mono">${esc(v.verify)}</pre></div>`:''}${provenance(p,v)}`}
+// The prompt "Ask an agent" copies: it points the agent at get_install on the
+// MCP server for this exact choice, so the steps come from there, current.
+function agentInstall(p,v,chosen){
+  const choice=v.pick||{variant:v.name}, call=JSON.stringify({provider:p.id,choice});
+  return `Install ${p.title}${chosen?` (${chosen})`:''} on my Kubernetes cluster, using the KRM Registry.
+
+Connect the MCP server https://registry.highfivelabs.dev/mcp (streamable HTTP, no sign-in) and call get_install with ${call}. It returns the credentials to set up first, the install commands, the placeholders to ask me for, how to verify, and how_to_run; follow how_to_run. If you cannot connect MCP servers, read https://registry.highfivelabs.dev/providers/${p.id}.md and follow its Credentials and Install sections the same way.
+
+Before running anything: confirm my kube context and that this choice fits my cluster, ask me for each placeholder's value, and show me each command first. The credentials steps change cloud IAM; run them only after I say so.`}
 function installCard(p,via){
   if(p&&!p.install&&p.pending) return `<div class="card inst"><h3>Install</h3><div style="font-size:13px">Not published yet. Once released, it installs with one command from <code>${p.pending.map(o=>'oci://cr.highfivelabs.dev/'+esc(o)).join(', ')}</code>; this section shows it from then.</div></div>`;
   if(!p||!(p.install||p.credentials)) return '';
@@ -379,7 +388,8 @@ function installCard(p,via){
   const all=[c&&'# 1. Credentials\n'+c.steps,v&&(c?'# 2. Install\n':'')+v.steps].filter(Boolean).join('\n\n');
   window._IALL=all;
   const chosen=axes.filter(a=>a.xs.length>1).map(a=>sel[a.k]).join(' · ');
-  return `<details class="card inst"${IOPEN?' open':''} ontoggle="itoggle(this)"><summary><h3>Install</h3>${chosen?`<span class="muted isel">${esc(chosen)}</span>`:''}${v?`<button class="tb" onclick="event.preventDefault();event.stopPropagation();copyText(window._IALL,this)">${c?'Copy all steps':'Copy'}</button>`:''}</summary><div class="ibody">${via?`<div style="font-size:13px;margin-bottom:8px">With the <a href="#pr-${p.id}">${esc(p.title)}</a> ${esc(p.version||'')}</div>`:''}${radios}
+  window._IAGENT=v?agentInstall(p,v,chosen):'';
+  return `<details class="card inst"${IOPEN?' open':''} ontoggle="itoggle(this)"><summary><h3>Install</h3>${chosen?`<span class="muted isel">${esc(chosen)}</span>`:''}${v?`<button class="tb" title="Copy a prompt that has your coding agent run these steps with you, through the registry's MCP server" onclick="event.preventDefault();event.stopPropagation();copyText(window._IAGENT,this)">Ask an agent</button><button class="tb" onclick="event.preventDefault();event.stopPropagation();copyText(window._IALL,this)">${c?'Copy all steps':'Copy'}</button>`:''}</summary><div class="ibody">${via?`<div style="font-size:13px;margin-bottom:8px">With the <a href="#pr-${p.id}">${esc(p.title)}</a> ${esc(p.version||'')}</div>`:''}${radios}
   ${c?`<div class="step">1. Credentials${c.pick?'':`: ${esc(c.name)}`}</div>${ivariant(p,c)}<div class="step">2. Install</div>`:''}${v?ivariant(p,v):''}</div></details>`}
 function provider(id){const p=PBY[id];if(!p) return '<h1>Not found</h1>';
   const by_=C.providers.filter(x=>x.installs===id);
