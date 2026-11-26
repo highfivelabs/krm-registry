@@ -361,3 +361,43 @@ func TestHTTP(t *testing.T) {
 		eq(t, "healthz", code, 200)
 	})
 }
+
+// Over HTTP the server logs one JSON line per initialize and tool call, for
+// Cloud Logging; stdio (events nil) logs none.
+func TestEvents(t *testing.T) {
+	var buf bytes.Buffer
+	events = &buf
+	defer func() { events = nil }()
+	s := newSession(t)
+	s.rpc("initialize", map[string]any{"protocolVersion": protocolVersions[0], "clientInfo": map[string]any{"name": "claude-code", "version": "2.1"}})
+	s.tool("search_kinds", map[string]any{"query": "bucket"})
+	s.tool("get_kind", map[string]any{"kind": "NoSuchKind"})
+
+	var got []map[string]any
+	for _, line := range strings.Split(strings.TrimSpace(buf.String()), "\n") {
+		var e map[string]any
+		if err := json.Unmarshal([]byte(line), &e); err != nil {
+			t.Fatalf("%q: %v", line, err)
+		}
+		got = append(got, e)
+	}
+	if len(got) != 3 {
+		t.Fatalf("%d events, want 3: %s", len(got), buf.String())
+	}
+	if got[0]["event"] != "initialize" || got[0]["client"] != "claude-code" || got[0]["clientVersion"] != "2.1" || got[0]["severity"] != "INFO" {
+		t.Errorf("initialize: %v", got[0])
+	}
+	if got[1]["tool"] != "search_kinds" || got[1]["outcome"] != "ok" || got[1]["args"] != `{"query":"bucket"}` {
+		t.Errorf("search_kinds: %v", got[1])
+	}
+	if got[2]["tool"] != "get_kind" || got[2]["outcome"] != "tool_error" {
+		t.Errorf("get_kind: %v", got[2])
+	}
+
+	buf.Reset()
+	events = nil
+	s.tool("list_providers", nil)
+	if buf.Len() != 0 {
+		t.Errorf("logged with events nil: %s", buf.String())
+	}
+}

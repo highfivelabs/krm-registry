@@ -210,12 +210,17 @@ func (r *registry) handle(msg []byte) (resp *response) {
 	case "initialize":
 		var p struct {
 			ProtocolVersion string `json:"protocolVersion"`
+			ClientInfo      struct {
+				Name    string `json:"name"`
+				Version string `json:"version"`
+			} `json:"clientInfo"`
 		}
 		_ = json.Unmarshal(m.Params, &p)
 		v := protocolVersions[0]
 		if slices.Contains(protocolVersions, p.ProtocolVersion) {
 			v = p.ProtocolVersion
 		}
+		logEvent("initialize "+p.ClientInfo.Name, map[string]any{"event": "initialize", "client": p.ClientInfo.Name, "clientVersion": p.ClientInfo.Version, "protocolVersion": p.ProtocolVersion})
 		result = initResult{v, map[string]any{"tools": map[string]any{}}, map[string]string{"name": "krm-registry", "version": "1"},
 			"The KRM Registry: Kubernetes kinds for clouds and SaaS vendors, and the Terraform types they stand in for. " +
 				"list_clouds names the clouds, services and providers; search_kinds or kinds_for_terraform finds kinds; get_kind gives every field and the tested examples."}
@@ -231,8 +236,16 @@ func (r *registry) handle(msg []byte) (resp *response) {
 		if err := json.Unmarshal(m.Params, &p); err != nil && len(m.Params) > 0 {
 			return errResponse(m.ID, -32602, "invalid params: "+err.Error())
 		}
+		start := time.Now()
 		out, err := r.call(p.Name, p.Arguments)
 		var te *toolError
+		outcome := "ok"
+		if errors.As(err, &te) {
+			outcome = "tool_error"
+		} else if err != nil {
+			outcome = "error"
+		}
+		logEvent("tool "+p.Name, map[string]any{"event": "tool", "tool": p.Name, "args": clip(string(p.Arguments), 300), "outcome": outcome, "ms": time.Since(start).Milliseconds()})
 		switch {
 		case errors.As(err, &te):
 			result = callResult{Content: []content{{"text", te.msg}}, IsError: true}
@@ -373,6 +386,33 @@ func (r *registry) httpHandler() http.Handler {
 	})
 }
 
+// events gets one JSON line per initialize and tool call: Cloud Run turns
+// each into a structured entry (jsonPayload.tool, .client, ...), which is how
+// the registry counts what agents ask (tf-infra README "KRM Registry",
+// "Monitoring"). nil, as on stdio, logs nothing.
+var events io.Writer
+
+func logEvent(msg string, fields map[string]any) {
+	if events == nil {
+		return
+	}
+	fields["severity"] = "INFO"
+	fields["message"] = msg
+	b, err := json.Marshal(fields)
+	if err != nil {
+		return
+	}
+	events.Write(append(b, '\n'))
+}
+
+// clip shortens s to at most n bytes, for logging what an agent sent.
+func clip(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n] + "..."
+}
+
 // logged writes one line per request on stderr (Cloud Logging).
 func logged(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -429,6 +469,7 @@ func main() {
 			*port = p
 		}
 	}
+	events = os.Stdout
 	srv := &http.Server{Addr: fmt.Sprintf(":%d", *port), Handler: logged(reg.httpHandler()), ReadHeaderTimeout: 10 * time.Second}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
