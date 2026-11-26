@@ -87,16 +87,30 @@ build.sh <root> <site>
   (`release: {gcs: bucket}`) gets its newest version-named folder, and
   `source: {gcs: bucket/{tag}/file.tar.gz}` unpacks the tarball there. The
   Config Connector operator is fetched this way.
-- **Install variants.** A provider's `install:` list (name, when, steps with
-  `{tag}`) becomes an Install card on its page and a section of its agent page,
-  e.g. the operator's GKE Standard and GKE Autopilot manifests. A provider that
-  `installs:` another is linked from it ("installed by").
-  A variant with `oci: <repo>` (e.g. `charts/config-connector`) is our OCI
-  chart on `cr.highfivelabs.dev`. `resolve.py` asks `cr` for that chart's
-  manifest at the provider's resolved version and records the digest in the
-  lock (`providers.<id>.oci`). `gen.py` shows the variant only when it is
-  published, so a new upstream release falls back to upstream's own steps
-  until our chart for it is pushed.
+- **Install variants.** A provider's `install:` list becomes an Install card
+  on its page, a section of its agent page and the `install` field of the MCP
+  server's `list_providers`. Each variant has a `name`, `steps` and optionally
+  `when`, `note` and `tested` (how and when the steps were last run, shown
+  under them). In `steps`, `{tag}` is the release tag the lock resolved and
+  `{version}` its semver as charts carry it (`v5.26.0` → `5.26.0`,
+  `gha-runner-scale-set-0.15.1` → `0.15.1`). A provider that `installs:`
+  another is linked from it ("installed by").
+  - **Where the steps come from** (`config.py`). A repository of ours may
+    carry a `krm-registry.yaml` at its root with its own `install:` (format in
+    `config.py`'s docstring); `build.sh` clones it, and the page says the steps
+    came from there. `registry.yaml` wins: a provider with `install:` there
+    keeps it. That is how the registry describes the operators we do not
+    control (ACK, ASO, the vendor and community operators), written from
+    upstream's docs and checked (`tested:`), and how it overrides one of ours.
+  - **Our OCI charts.** A variant with `oci: <repo>` (e.g.
+    `charts/config-connector`) installs a chart from `cr.highfivelabs.dev`.
+    `resolve.py` finds the version (the variant's `version:`, else the
+    provider's resolved release, else, for a provider at `main`, the newest
+    release tag `cr` lists), asks `cr` for that manifest and records it in the
+    lock (`oci.<provider>.<repo>: {version, digest}`, or null). `gen.py` shows
+    the variant only when it is published, so a new upstream release falls
+    back to upstream's own steps until our chart for it is pushed, and an
+    extension's card appears with its first published chart.
 - **Terraform, by the numbers.** For each surface's Terraform provider: rank,
   downloads, latest version and full resource list (Terraform Registry API),
   plus the top 200 providers for the long-tail table. Operator kinds map to

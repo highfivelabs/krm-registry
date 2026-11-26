@@ -17,6 +17,7 @@ from collections import defaultdict
 
 import yaml
 
+import config
 import examples
 import samples
 
@@ -24,7 +25,7 @@ L = yaml.CSafeLoader
 ROOT, OUT, LOCKF = sys.argv[1], sys.argv[2], sys.argv[3]
 LOCK = json.load(open(LOCKF))
 HERE = os.path.dirname(os.path.abspath(__file__))
-CFG = yaml.load(open(os.path.join(HERE, "registry.yaml")), Loader=L)
+CFG = config.load(os.path.join(ROOT, "src"), loader=L)  # registry.yaml + our repos' krm-registry.yaml
 for _p in CFG["providers"]:  # providers document the release the lock resolved
     _l = LOCK["providers"].get(_p["id"])
     if _l and _p["id"] != "ack":
@@ -184,17 +185,27 @@ def docs_url(prov, k):
 
 
 def install_of(prov):
-    """Install variants, with {tag} filled in: [{name, when, steps}] (Config Connector's
-    operator: one manifest for GKE Standard, another for Autopilot). A variant naming
-    one of our OCI charts (oci:) is left out unless resolve.py found it published at
-    this version, so the site never points at a chart that is not there."""
+    """Install variants, with {tag} (the release tag) and {version} (its semver, as a
+    chart carries it) filled in: [{name, when, note, tested, steps, source}]. Config
+    Connector's operator has three: our chart, upstream's GKE Standard manifest and its
+    Autopilot one. A variant naming one of our OCI charts (oci:) is left out unless
+    resolve.py found it published, and takes the version it found there, so the site
+    never points at a chart that is not there."""
     out = []
-    published = (LOCK["providers"].get(prov["id"]) or {}).get("oci") or {}
+    published = (LOCK.get("oci") or {}).get(prov["id"]) or {}
+    tag = prov.get("version") if prov.get("version") not in (None, "main") else None
     for v in prov.get("install") or []:
-        if v.get("oci") and not published.get(v["oci"]):
-            continue
-        out.append({"name": v["name"], "when": v.get("when"), "note": v.get("note"),
-                    "steps": v["steps"].format(tag=prov.get("version") or "latest").strip()})
+        t, ver = tag or "latest", re.search(r"[0-9]+[.][0-9]+[.][0-9]+[-+.A-Za-z0-9]*$", tag or "")
+        ver = ver.group(0) if ver else t
+        if v.get("oci"):
+            pub = published.get(v["oci"])
+            if not pub:
+                continue
+            ver = pub["version"]
+            t = t if tag else ver
+        steps = v["steps"].replace("{tag}", t).replace("{version}", ver).strip()
+        out.append({"name": v["name"], "when": v.get("when"), "note": v.get("note"), "tested": v.get("tested"),
+                    "steps": steps, "source": prov.get("install_source"), "ours": bool(v.get("oci")) or None})
     return out or None
 
 

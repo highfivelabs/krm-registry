@@ -270,7 +270,13 @@ def write_agent_tree(out, cat, full_kinds, charts_full):
             L += ["Installed by " + ", ".join(link(me, f"providers/{x['id']}.md", x["title"]) for x in by_) + ".", ""]
         for v in p.get("install") or []:
             L += [f"## Install: {v['name']}", ""] + ([f"For {v['when']}."] if v.get("when") else []) + \
-                 ["", "```sh", v["steps"], "```", ""] + ([v["note"], ""] if v.get("note") else [])
+                 ["", "```sh", v["steps"], "```", ""] + ([v["note"], ""] if v.get("note") else []) + \
+                 ([f"Steps from the provider's [krm-registry.yaml]({p['repo']}/blob/main/krm-registry.yaml)."
+                   + (f" Tested: {v['tested']}." if v.get("tested") else ""), ""] if v.get("source") == "repo" else
+                  [((f"Steps written by High Five Labs from {p['publisher'].removesuffix(' (community)')}'s documentation."
+                     if p.get("publisher") != "High Five Labs" and not v.get("ours") else "")
+                    + (f" Tested: {v['tested']}." if v.get("tested") else "")).strip(), ""]
+                  if v.get("tested") or (p.get("publisher") != "High Five Labs" and not v.get("ours")) else [])
         bysvc = defaultdict(list)
         for k in mine:
             bysvc[k["service"]].append(k)
