@@ -12,6 +12,10 @@ registry's build clones it into <src>/<repo>/). Today it carries one field:
         tested: how and when these steps were last run
         steps: |
           helm install ... --version {version}
+    credentials:        # shown above the install steps: the identity the controller acts as
+      - pick: {Cluster: GKE Standard}  # matched to the install variant on shared axes
+        steps: |
+          gcloud iam service-accounts create ...
 
 registry.yaml is read first and wins: a provider whose entry there has its own
 `install:` keeps it, which is how the registry describes the repositories we
@@ -24,7 +28,7 @@ import yaml
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OURS = "https://github.com/highfivelabs/"
-FROM_REPO = ("install",)  # fields a provider repository may set for itself
+FROM_REPO = ("install", "credentials")  # fields a provider repository may set for itself
 
 
 def repo_file(src, prov):
@@ -38,11 +42,12 @@ def repo_file(src, prov):
 
 def load(src, loader=yaml.SafeLoader):
     """registry.yaml with each owned provider's krm-registry.yaml folded in.
-    Each provider gains install_source: "registry" (registry.yaml) or "repo"."""
+    Each field gains <field>_source: "registry" (registry.yaml) or "repo"."""
     cfg = yaml.load(open(os.path.join(HERE, "registry.yaml")), Loader=loader)
     for p in cfg["providers"]:
-        if p.get("install"):
-            p["install_source"] = "registry"
+        for k in FROM_REPO:
+            if p.get(k):
+                p[k + "_source"] = "registry"
         f = repo_file(src, p)
         if not f:
             continue
@@ -52,6 +57,5 @@ def load(src, loader=yaml.SafeLoader):
         for k in FROM_REPO:
             if own.get(k) and not p.get(k):
                 p[k] = own[k]
-                if k == "install":
-                    p["install_source"] = "repo"
+                p[k + "_source"] = "repo"
     return cfg

@@ -66,7 +66,7 @@ var tools = []tool{
 		json.RawMessage(`{"type":"object","properties":{"kind":{"type":"string"},"fields":{"type":"array","items":{"type":"string"},"description":"only fields whose path starts with one of these"}},"required":["kind"]}`), readOnly},
 	{"kinds_for_terraform", "Terraform resource types (e.g. google_storage_bucket, cloudflare_access_rule) -> the kinds that stand in for each, with provider, tier and readiness.",
 		json.RawMessage(`{"type":"object","properties":{"types":{"type":"array","items":{"type":"string"}}},"required":["types"]}`), readOnly},
-	{"list_providers", "Every provider the registry indexes: cloud, tier (official or extension), publisher, version, number of kinds, and how to install it (steps per variant, where the registry has them).",
+	{"list_providers", "Every provider the registry indexes: cloud, tier (official or extension), publisher, version, number of kinds, and how to install it (credentials, then steps per variant, where the registry has them).",
 		json.RawMessage(`{"type":"object","properties":{}}`), readOnly},
 	{"get_package", "A catalog Helm chart (a Terraform module ported to KRM kinds): its upstream module, the kinds it uses, its values and outputs. Name it by id (aws/acm), package (aws-acm) or name.",
 		json.RawMessage(`{"type":"object","properties":{"package":{"type":"string"}},"required":["package"]}`), readOnly},

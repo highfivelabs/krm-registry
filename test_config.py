@@ -29,6 +29,24 @@ class Load(unittest.TestCase):
         self.assertEqual(p["install"][0]["oci"], "charts/github-krm-extensions")
         self.assertEqual(p["install_source"], "repo")
 
+    def test_repo_file_supplies_credentials(self):
+        write(f"{self.src}/okta-krm-extensions/krm-registry.yaml", """
+            schema: 1
+            credentials:
+              - pick: {Cluster: Any}
+                steps: kubectl create secret generic okta
+            """)
+        p = self.by_id()["okta-krm-extensions"]
+        self.assertEqual(p["credentials"][0]["pick"], {"Cluster": "Any"})
+        self.assertEqual(p["credentials_source"], "repo")
+        self.assertNotIn("install_source", p)
+
+    def test_registry_yaml_credentials_are_registry(self):
+        p = self.by_id()["config-connector-operator"]
+        self.assertEqual(p["credentials_source"], "registry")
+        clusters = {c["pick"]["Cluster"] for c in p["credentials"]}
+        self.assertEqual(clusters, {v["pick"]["Cluster"] for v in p["install"]})
+
     def test_registry_yaml_overrides_and_others_untouched(self):
         ps = self.by_id()
         self.assertEqual(ps["config-connector-operator"]["install_source"], "registry")

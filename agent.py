@@ -268,6 +268,11 @@ def write_agent_tree(out, cat, full_kinds, charts_full):
             L += [f"Installs {link(me, f'providers/{p['installs']}.md', p['installs'])}.", ""]
         if by_:
             L += ["Installed by " + ", ".join(link(me, f"providers/{x['id']}.md", x["title"]) for x in by_) + ".", ""]
+        for v in p.get("credentials") or []:
+            L += [f"## Credentials: {v['name']}", "", "```sh", v["steps"], "```", ""] + ([v["note"], ""] if v.get("note") else [])
+        if p.get("pending") and not p.get("install"):
+            L += ["## Install", "", "Not published yet; once released it installs from "
+                  + ", ".join(f"oci://cr.highfivelabs.dev/{o}" for o in p["pending"]) + ".", ""]
         for v in p.get("install") or []:
             L += [f"## Install: {v['name']}", ""] + ([f"For {v['when']}."] if v.get("when") else []) + \
                  ["", "```sh", v["steps"], "```", ""] + ([v["note"], ""] if v.get("note") else []) + \

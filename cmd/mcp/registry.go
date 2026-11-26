@@ -154,6 +154,7 @@ type provider struct {
 	NKinds    raw     `json:"nkinds"`
 	Repo      raw     `json:"repo"`
 	Install   raw     `json:"install"`
+	Creds     raw     `json:"credentials"`
 }
 
 type api struct {
@@ -706,7 +707,8 @@ type providerOut struct {
 	Version   raw     `json:"version"`
 	Kinds     raw     `json:"kinds"`
 	Repo      raw     `json:"repo"`
-	Install   raw     `json:"install,omitempty"` // [{name, when, note, tested, steps, source}]
+	Install   raw     `json:"install,omitempty"`     // [{name, pick, when, note, tested, steps, source}]
+	Creds     raw     `json:"credentials,omitempty"` // same shape: the identity to set up first
 }
 
 func (r *registry) listProviders() (any, error) {
@@ -716,7 +718,7 @@ func (r *registry) listProviders() (any, error) {
 	}
 	out := []providerOut{}
 	for _, p := range c.Providers {
-		out = append(out, providerOut{p.ID, p.Title, p.Surface, p.Tier, p.Publisher, p.Version, p.NKinds, p.Repo, nullless(p.Install)})
+		out = append(out, providerOut{p.ID, p.Title, p.Surface, p.Tier, p.Publisher, p.Version, p.NKinds, p.Repo, nullless(p.Install), nullless(p.Creds)})
 	}
 	return map[string]any{"providers": out}, nil
 }

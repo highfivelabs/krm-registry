@@ -94,7 +94,22 @@ build.sh <root> <site>
   under them). In `steps`, `{tag}` is the release tag the lock resolved and
   `{version}` its semver as charts carry it (`v5.26.0` → `5.26.0`,
   `gha-runner-scale-set-0.15.1` → `0.15.1`). A provider that `installs:`
-  another is linked from it ("installed by").
+  another is linked from it ("installed by"). Each block of steps has a Copy
+  button, and "Copy all steps" copies credentials and install together.
+  - **Choices.** A variant may have `pick: {Axis: value, ...}` instead of a
+    `name` (Config Connector: `Method` × `Cluster`). The page shows one radio
+    group per axis and the variant matching the choice; a variant without
+    `pick` is its own value on one unnamed axis.
+  - **Credentials.** `credentials:` (same shape) is shown above the install
+    steps as step 1: the identity the controller acts as and the roles it
+    needs. A credentials entry follows the install choice on the axes its
+    `pick` names (Config Connector's follow `Cluster`).
+  - **Every controller.** For a provider with one controller per service
+    (ACK), `{controllers}` in steps becomes one `<service> <version>` line per
+    controller the lock resolved and `{ncontrollers}` their count, so the
+    "All services" variant installs each at its own latest release.
+  - **Not published yet.** A provider whose only variants are unpublished OCI
+    charts shows where the chart will be instead of steps.
   - **Where the steps come from** (`config.py`). A repository of ours may
     carry a `krm-registry.yaml` at its root with its own `install:` (format in
     `config.py`'s docstring); `build.sh` clones it, and the page says the steps
