@@ -184,17 +184,21 @@ def docs_url(prov, k):
     return None
 
 
-def install_of(prov):
-    """Install variants, with {tag} (the release tag) and {version} (its semver, as a
-    chart carries it) filled in: [{name, when, note, tested, steps, source}]. Config
-    Connector's operator has three: our chart, upstream's GKE Standard manifest and its
-    Autopilot one. A variant naming one of our OCI charts (oci:) is left out unless
-    resolve.py found it published, and takes the version it found there, so the site
-    never points at a chart that is not there."""
+def install_of(prov, key="install"):
+    """Install variants (key "install") or credential steps (key "credentials"), with
+    {tag} (the release tag) and {version} (its semver, as a chart carries it) filled in:
+    [{name, pick, when, note, tested, steps, source, ours}]. A variant's pick ({axis:
+    value}, e.g. {Method: High Five Labs chart, Cluster: GKE Autopilot}) places it on the
+    page's radio buttons; credentials are matched to the install variant on the axes they
+    share. In an ACK-style provider (one controller per service), {controllers} becomes
+    one "<service> <version>" line per controller the lock resolved, {ncontrollers} their
+    count. A variant naming one of our OCI charts (oci:) is left out unless resolve.py
+    found it published, and takes the version it found there, so the site never points
+    at a chart that is not there."""
     out = []
     published = (LOCK.get("oci") or {}).get(prov["id"]) or {}
     tag = prov.get("version") if prov.get("version") not in (None, "main") else None
-    for v in prov.get("install") or []:
+    for v in prov.get(key) or []:
         t, ver = tag or "latest", re.search(r"[0-9]+[.][0-9]+[.][0-9]+[-+.A-Za-z0-9]*$", tag or "")
         ver = ver.group(0) if ver else t
         if v.get("oci"):
@@ -203,9 +207,17 @@ def install_of(prov):
                 continue
             ver = pub["version"]
             t = t if tag else ver
-        steps = v["steps"].replace("{tag}", t).replace("{version}", ver).strip()
-        out.append({"name": v["name"], "when": v.get("when"), "note": v.get("note"), "tested": v.get("tested"),
-                    "steps": steps, "source": prov.get("install_source"), "ours": bool(v.get("oci")) or None})
+        ctrls = sorted((c["repo"].removesuffix("-controller"), c["tag"].lstrip("v"))
+                       for c in ((LOCK.get("providers") or {}).get(prov["id"]) or {}).get("controllers") or [] if c.get("tag"))
+        fill = lambda x: (x or "").replace("{tag}", t).replace("{version}", ver).replace(
+            "{controllers}", "\n".join(f"{n} {cv}" for n, cv in ctrls)).replace("{ncontrollers}", str(len(ctrls))).strip()
+        if "{controllers}" in v["steps"] and not ctrls:
+            continue
+        steps = fill(v["steps"])
+        pick = v.get("pick") or None
+        out.append({"name": v.get("name") or " · ".join(pick.values()), "pick": pick, "when": v.get("when"),
+                    "note": fill(v.get("note")) or None, "tested": v.get("tested"), "steps": steps,
+                    "source": prov.get(key + "_source"), "ours": bool(v.get("oci")) or None})
     return out or None
 
 
@@ -594,7 +606,9 @@ def build():
     for p in CFG["providers"]:
         mine = [k for k in kinds if k["provider"] == p["id"]]
         provs.append({x: p.get(x) for x in ("id", "title", "surface", "publisher", "tier", "extends", "repo", "docs", "version", "commit", "manages", "installs")} |
-                     {"install": install_of(p)} |
+                     {"install": install_of(p), "credentials": install_of(p, "credentials"),
+                      "pending": [v["oci"] for v in p.get("install") or [] if v.get("oci")
+                                  and not ((LOCK.get("oci") or {}).get(p["id"]) or {}).get(v["oci"])] or None} |
                      {"nkinds": len(mine), "ngroups": len({k["group"] for k in mine}), "nservices": len({k["service"] for k in mine}),
                       "controllers": len({k["controller"]["repo"] for k in mine if k.get("controller")}) or None})
     # Terraform, by the numbers: how much of each surface's provider the kinds cover.

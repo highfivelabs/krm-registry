@@ -70,13 +70,78 @@ providers:
     # Standard and Autopilot manifests carry the same CRDs; read one.
     crds: [upstream/config-connector-operator/operator-system/configconnector-operator.yaml]
     group_suffix: .cnrm.cloud.google.com
-    install:
-      # Shown only while cr.highfivelabs.dev serves this chart at the version
-      # documented (resolve.py checks the manifest; see README "Install variants").
-      - name: High Five Labs chart
-        oci: charts/config-connector
-        when: GKE Standard, GKE Autopilot (--set variant=autopilot), and clusters outside GKE
+    # The page's radio buttons: Method (our chart or Google's manifests) by Cluster.
+    # Credentials come first and follow the Cluster choice. Our chart's variants are
+    # shown only while cr.highfivelabs.dev serves it at the version documented
+    # (resolve.py checks the manifest; see README "Install variants").
+    credentials:
+      - pick: {Cluster: GKE Standard}
         note: >-
+          Config Connector acts as this Google service account in cluster mode. roles/editor
+          covers most kinds; the IAM kinds (IAMPolicy, IAMPolicyMember, IAMPartialPolicy) also
+          need roles/resourcemanager.projectIamAdmin. For least privilege, grant only the roles
+          of the services you manage. In namespaced mode (--set mode=namespaced), make one
+          service account per namespace and bind it to
+          cnrm-system/cnrm-controller-manager-NAMESPACE instead.
+        steps: |
+          PROJECT_ID=my-project CLUSTER=my-cluster LOCATION=us-central1
+          # Workload Identity on the cluster and its node pools (once per cluster):
+          gcloud container clusters update $CLUSTER --location $LOCATION \
+            --workload-pool=$PROJECT_ID.svc.id.goog
+          gcloud container node-pools update default-pool --cluster $CLUSTER --location $LOCATION \
+            --workload-metadata=GKE_METADATA
+
+          gcloud iam service-accounts create kcc --project $PROJECT_ID
+          gcloud projects add-iam-policy-binding $PROJECT_ID \
+            --member serviceAccount:kcc@$PROJECT_ID.iam.gserviceaccount.com --role roles/editor
+          gcloud projects add-iam-policy-binding $PROJECT_ID \
+            --member serviceAccount:kcc@$PROJECT_ID.iam.gserviceaccount.com \
+            --role roles/resourcemanager.projectIamAdmin   # only for the IAM kinds
+          # Let Config Connector's controller (a Kubernetes service account) act as it:
+          gcloud iam service-accounts add-iam-policy-binding kcc@$PROJECT_ID.iam.gserviceaccount.com \
+            --member "serviceAccount:$PROJECT_ID.svc.id.goog[cnrm-system/cnrm-controller-manager]" \
+            --role roles/iam.workloadIdentityUser
+      - pick: {Cluster: GKE Autopilot}
+        note: >-
+          Autopilot always has Workload Identity. roles/editor covers most kinds; the IAM kinds
+          (IAMPolicy, IAMPolicyMember, IAMPartialPolicy) also need
+          roles/resourcemanager.projectIamAdmin. For least privilege, grant only the roles of the
+          services you manage.
+        steps: |
+          PROJECT_ID=my-project
+          gcloud iam service-accounts create kcc --project $PROJECT_ID
+          gcloud projects add-iam-policy-binding $PROJECT_ID \
+            --member serviceAccount:kcc@$PROJECT_ID.iam.gserviceaccount.com --role roles/editor
+          gcloud projects add-iam-policy-binding $PROJECT_ID \
+            --member serviceAccount:kcc@$PROJECT_ID.iam.gserviceaccount.com \
+            --role roles/resourcemanager.projectIamAdmin   # only for the IAM kinds
+          # Let Config Connector's controller (a Kubernetes service account) act as it:
+          gcloud iam service-accounts add-iam-policy-binding kcc@$PROJECT_ID.iam.gserviceaccount.com \
+            --member "serviceAccount:$PROJECT_ID.svc.id.goog[cnrm-system/cnrm-controller-manager]" \
+            --role roles/iam.workloadIdentityUser
+      - pick: {Cluster: Outside GKE}
+        note: >-
+          Without GKE's Workload Identity, Config Connector reads a service account key from a
+          Secret in cnrm-system. The key is a long-lived credential: keep it out of Git, and
+          rotate it. roles/editor covers most kinds; the IAM kinds also need
+          roles/resourcemanager.projectIamAdmin.
+        steps: |
+          PROJECT_ID=my-project
+          gcloud iam service-accounts create kcc --project $PROJECT_ID
+          gcloud projects add-iam-policy-binding $PROJECT_ID \
+            --member serviceAccount:kcc@$PROJECT_ID.iam.gserviceaccount.com --role roles/editor
+          gcloud projects add-iam-policy-binding $PROJECT_ID \
+            --member serviceAccount:kcc@$PROJECT_ID.iam.gserviceaccount.com \
+            --role roles/resourcemanager.projectIamAdmin   # only for the IAM kinds
+          gcloud iam service-accounts keys create key.json \
+            --iam-account kcc@$PROJECT_ID.iam.gserviceaccount.com
+          kubectl create namespace cnrm-system
+          kubectl create secret generic gcp-key --namespace cnrm-system --from-file key.json
+          rm key.json
+    install:
+      - pick: {Method: High Five Labs chart, Cluster: GKE Standard}
+        oci: charts/config-connector
+        note: &hfl-note >-
           One chart: Google's operator and its CRDs, unmodified, plus a ConfigConnector made from
           values; the operator then installs Config Connector itself. The operator image is
           Google's, copied by digest; the last two commands should print the same digest.
@@ -85,24 +150,84 @@ providers:
           helm install config-connector oci://cr.highfivelabs.dev/charts/config-connector \
             --version {tag} \
             --namespace configconnector-operator-system --create-namespace \
-            --set googleServiceAccount=kcc@PROJECT_ID.iam.gserviceaccount.com
+            --set googleServiceAccount=kcc@$PROJECT_ID.iam.gserviceaccount.com
 
           # Same bytes as Google's release:
           crane digest cr.highfivelabs.dev/upstream/config-connector/operator:{tag}
           crane digest gcr.io/gke-release/cnrm/operator:{tag}
-      - name: GKE Standard
-        when: Standard clusters, and clusters outside GKE
+      - pick: {Method: High Five Labs chart, Cluster: GKE Autopilot}
+        oci: charts/config-connector
+        note: *hfl-note
+        steps: |
+          helm install config-connector oci://cr.highfivelabs.dev/charts/config-connector \
+            --version {tag} \
+            --namespace configconnector-operator-system --create-namespace \
+            --set variant=autopilot \
+            --set googleServiceAccount=kcc@$PROJECT_ID.iam.gserviceaccount.com
+
+          # Same bytes as Google's release:
+          crane digest cr.highfivelabs.dev/upstream/config-connector/operator:{tag}
+          crane digest gcr.io/gke-release/cnrm/operator:{tag}
+      - pick: {Method: High Five Labs chart, Cluster: Outside GKE}
+        oci: charts/config-connector
+        note: *hfl-note
+        steps: |
+          helm install config-connector oci://cr.highfivelabs.dev/charts/config-connector \
+            --version {tag} \
+            --namespace configconnector-operator-system --create-namespace \
+            --set credentialSecretName=gcp-key
+
+          # Same bytes as Google's release:
+          crane digest cr.highfivelabs.dev/upstream/config-connector/operator:{tag}
+          crane digest gcr.io/gke-release/cnrm/operator:{tag}
+      - pick: {Method: Google's manifests, Cluster: GKE Standard}
+        note: &google-note >-
+          The operator, then a ConfigConnector telling it which identity to use; the operator
+          installs Config Connector in cnrm-system. Check with
+          kubectl get configconnector configconnector.core.cnrm.cloud.google.com -o jsonpath='{.status.healthy}'.
         steps: |
           gcloud storage cp gs://configconnector-operator/{tag}/release-bundle.tar.gz release-bundle.tar.gz
           tar zxvf release-bundle.tar.gz
           kubectl apply -f operator-system/configconnector-operator.yaml
-      - name: GKE Autopilot
-        when: Autopilot clusters
-        note: Same kinds; the operator installs Config Connector from its Autopilot channel.
+          kubectl apply -f - <<EOF
+          apiVersion: core.cnrm.cloud.google.com/v1beta1
+          kind: ConfigConnector
+          metadata:
+            name: configconnector.core.cnrm.cloud.google.com
+          spec:
+            mode: cluster
+            googleServiceAccount: kcc@$PROJECT_ID.iam.gserviceaccount.com
+          EOF
+      - pick: {Method: Google's manifests, Cluster: GKE Autopilot}
+        note: *google-note
         steps: |
           gcloud storage cp gs://configconnector-operator/{tag}/release-bundle.tar.gz release-bundle.tar.gz
           tar zxvf release-bundle.tar.gz
           kubectl apply -f operator-system/autopilot-configconnector-operator.yaml
+          kubectl apply -f - <<EOF
+          apiVersion: core.cnrm.cloud.google.com/v1beta1
+          kind: ConfigConnector
+          metadata:
+            name: configconnector.core.cnrm.cloud.google.com
+          spec:
+            mode: cluster
+            googleServiceAccount: kcc@$PROJECT_ID.iam.gserviceaccount.com
+          EOF
+      - pick: {Method: Google's manifests, Cluster: Outside GKE}
+        note: *google-note
+        steps: |
+          gcloud storage cp gs://configconnector-operator/{tag}/release-bundle.tar.gz release-bundle.tar.gz
+          tar zxvf release-bundle.tar.gz
+          kubectl apply -f operator-system/configconnector-operator.yaml
+          kubectl apply -f - <<EOF
+          apiVersion: core.cnrm.cloud.google.com/v1beta1
+          kind: ConfigConnector
+          metadata:
+            name: configconnector.core.cnrm.cloud.google.com
+          spec:
+            mode: cluster
+            credentialSecretName: gcp-key
+          EOF
 
   - id: ack
     title: AWS Controllers for Kubernetes
@@ -116,7 +241,7 @@ providers:
     group_suffix: .services.k8s.aws
     # Not ours: registry.yaml's install: is the registry's account of upstream's steps.
     install:
-      - name: Helm (one controller per service)
+      - pick: {Services: One service}
         when: any cluster; one release per AWS service, each at that controller's own latest release
         note: >-
           Credentials: on EKS, an IAM role for the controller's service account (Pod Identity, or
@@ -132,6 +257,24 @@ providers:
             --version $RELEASE_VERSION \
             --namespace ack-system --create-namespace \
             --set aws.region=$AWS_REGION
+      - pick: {Services: All services}
+        when: a cluster that should manage every AWS service ACK covers
+        note: >-
+          One release per controller ({ncontrollers}), each at its own latest release as of this
+          registry's build; rerunning upgrades them. Every controller is a pod (about 64-128 MiB
+          each), so prefer the services you use. Credentials as for one service, but each
+          controller has its own service account (ack-SERVICE-controller): with Pod Identity or
+          IRSA, map each one to a role allowed that service.
+        steps: |
+          AWS_REGION=us-west-2
+          while read -r SERVICE VERSION; do
+            helm upgrade --install ack-$SERVICE-controller oci://public.ecr.aws/aws-controllers-k8s/$SERVICE-chart \
+              --version $VERSION \
+              --namespace ack-system --create-namespace \
+              --set aws.region=$AWS_REGION
+          done <<'EOF'
+          {controllers}
+          EOF
 
   - id: aso
     title: Azure Service Operator v2
