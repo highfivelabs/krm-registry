@@ -6,13 +6,18 @@
 # the registry's account of operators we do not control (README, "Install variants").
 schema: 1
 
-# A provider is a cloud or a vendor, as Terraform uses the word. `terraform` names its Terraform provider:
+# A provider is a cloud or a vendor, as Terraform uses the word. `api` names the operator
+# whose repository counts the provider's whole API (docs/coverage/services.csv) and what it
+# counts; gen.py shows those totals as the provider's API coverage. `terraform` names its Terraform provider:
 # resolve.py reads its rank, downloads and resource list from the Terraform
 # Registry API, and the registry shows how much of it the kinds cover.
 providers:
-  gcp:        {title: Google Cloud, category: cloud, terraform: hashicorp/google}
-  aws:        {title: Amazon Web Services, category: cloud, terraform: hashicorp/aws}
-  azure:      {title: Microsoft Azure, category: cloud, terraform: hashicorp/azurerm}
+  gcp:        {title: Google Cloud, category: cloud, terraform: hashicorp/google,
+               api: {from: config-connector-extensions, of: "Google's API discovery documents (stable versions)"}}
+  aws:        {title: Amazon Web Services, category: cloud, terraform: hashicorp/aws,
+               api: {from: ack-extensions, of: "the CloudFormation resource schemas"}}
+  azure:      {title: Microsoft Azure, category: cloud, terraform: hashicorp/azurerm,
+               api: {from: aso-extensions, of: "the Azure Resource Manager OpenAPI specs"}}
   datadog:    {title: Datadog, category: observability, terraform: DataDog/datadog}
   github:     {title: GitHub, category: developer platform, terraform: integrations/github}
   cloudflare: {title: Cloudflare, category: edge and DNS, terraform: cloudflare/cloudflare}
