@@ -665,6 +665,20 @@ def build():
         terraform["providers"][sid] = {k: tfp.get(k) for k in ("name", "rank", "downloads", "version", "tier", "source")} | {
             "stars": STARS.get(tfp.get("source")), "total": len(res), "covered": len(cov), "byTier": tiers,
             "uncovered": sorted(res - set(cov))}
+    # API coverage: a provider whose `api` names an operator reads that repository's own
+    # rollup (docs/coverage/services.csv, beside its coverage: resources.csv): every resource
+    # of the provider's API, how many an official kind covers, how many ours cover beyond.
+    for pid, pv in CFG["providers"].items():
+        a = pv.get("api")
+        op = providers.get((a or {}).get("from"))
+        f = os.path.join(os.path.dirname(P(op["coverage"])), "services.csv") if op and op.get("coverage") else None
+        if not f or not os.path.exists(f):
+            continue
+        rows = list(csv.DictReader(open(f)))
+        n = lambda c: sum(int(float(r.get(c) or 0)) for r in rows)
+        pv["apiCoverage"] = {"total": n("resources_total"), "official": n("resources_official"), "hfl": n("resources_ours_beyond"),
+                             "of": a["of"], "url": f"{op['repo']}/blob/main/docs/coverage/README.md"}
+        print(f"{pid}: API coverage {pv['apiCoverage']['official'] + pv['apiCoverage']['hfl']} of {pv['apiCoverage']['total']} resources", file=sys.stderr)
     cat = {"terraform": terraform, "generated": os.environ.get("GEN_DATE", ""), "lock": {"aso": LOCK["operators"]["aso"]["tag"], "config-connector": LOCK["operators"]["config-connector"]["tag"]}, "providers": CFG["providers"], "operators": provs,
            "kinds": kinds, "charts": charts}
     write_json("data/catalog.json", cat)
