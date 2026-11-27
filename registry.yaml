@@ -76,6 +76,27 @@ providers:
     # (resolve.py checks the manifest; see README "Install variants").
     credentials:
       - pick: {Cluster: GKE Standard}
+        package:
+          note: >-
+            The cluster and its node pools need Workload Identity on as well: the first two
+            gcloud commands, once per cluster, or a cluster made by krm-packages' gke-cluster,
+            which sets its workload pool.
+          # The same identity as Config Connector objects (krm-packages' iam-service-account),
+          # applied by a Config Connector that already manages the project: a management
+          # cluster's. It also lets our extensions' manager act as the account.
+          chart: gcp/iam-service-account
+          release: config-connector-identity
+          vars: PROJECT_ID=my-project NAMESPACE=config-control
+          values: |
+            project_id: $PROJECT_ID
+            name: config-connector
+            display_name: Config Connector
+            iam:
+              roles/iam.workloadIdentityUser:
+                - serviceAccount:$PROJECT_ID.svc.id.goog[cnrm-system/cnrm-controller-manager]
+                - serviceAccount:$PROJECT_ID.svc.id.goog[cnrm-system/config-connector-extensions-manager]
+            iam_project_roles:
+              $PROJECT_ID: [roles/editor, roles/resourcemanager.projectIamAdmin]
         note: >-
           Config Connector acts as this Google service account in cluster mode. roles/editor
           covers most kinds; the IAM kinds (IAMPolicy, IAMPolicyMember, IAMPartialPolicy) also
@@ -91,17 +112,34 @@ providers:
           gcloud container node-pools update default-pool --cluster $CLUSTER --location $LOCATION \
             --workload-metadata=GKE_METADATA
 
-          gcloud iam service-accounts create kcc --project $PROJECT_ID
+          gcloud iam service-accounts create config-connector --project $PROJECT_ID
           gcloud projects add-iam-policy-binding $PROJECT_ID \
-            --member serviceAccount:kcc@$PROJECT_ID.iam.gserviceaccount.com --role roles/editor
+            --member serviceAccount:config-connector@$PROJECT_ID.iam.gserviceaccount.com --role roles/editor
           gcloud projects add-iam-policy-binding $PROJECT_ID \
-            --member serviceAccount:kcc@$PROJECT_ID.iam.gserviceaccount.com \
+            --member serviceAccount:config-connector@$PROJECT_ID.iam.gserviceaccount.com \
             --role roles/resourcemanager.projectIamAdmin   # only for the IAM kinds
           # Let Config Connector's controller (a Kubernetes service account) act as it:
-          gcloud iam service-accounts add-iam-policy-binding kcc@$PROJECT_ID.iam.gserviceaccount.com \
+          gcloud iam service-accounts add-iam-policy-binding config-connector@$PROJECT_ID.iam.gserviceaccount.com \
             --member "serviceAccount:$PROJECT_ID.svc.id.goog[cnrm-system/cnrm-controller-manager]" \
             --role roles/iam.workloadIdentityUser
       - pick: {Cluster: GKE Autopilot}
+        package:
+          # The same identity as Config Connector objects (krm-packages' iam-service-account),
+          # applied by a Config Connector that already manages the project: a management
+          # cluster's. It also lets our extensions' manager act as the account.
+          chart: gcp/iam-service-account
+          release: config-connector-identity
+          vars: PROJECT_ID=my-project NAMESPACE=config-control
+          values: |
+            project_id: $PROJECT_ID
+            name: config-connector
+            display_name: Config Connector
+            iam:
+              roles/iam.workloadIdentityUser:
+                - serviceAccount:$PROJECT_ID.svc.id.goog[cnrm-system/cnrm-controller-manager]
+                - serviceAccount:$PROJECT_ID.svc.id.goog[cnrm-system/config-connector-extensions-manager]
+            iam_project_roles:
+              $PROJECT_ID: [roles/editor, roles/resourcemanager.projectIamAdmin]
         note: >-
           Autopilot always has Workload Identity. roles/editor covers most kinds; the IAM kinds
           (IAMPolicy, IAMPolicyMember, IAMPartialPolicy) also need
@@ -109,14 +147,14 @@ providers:
           services you manage.
         steps: |
           PROJECT_ID=my-project
-          gcloud iam service-accounts create kcc --project $PROJECT_ID
+          gcloud iam service-accounts create config-connector --project $PROJECT_ID
           gcloud projects add-iam-policy-binding $PROJECT_ID \
-            --member serviceAccount:kcc@$PROJECT_ID.iam.gserviceaccount.com --role roles/editor
+            --member serviceAccount:config-connector@$PROJECT_ID.iam.gserviceaccount.com --role roles/editor
           gcloud projects add-iam-policy-binding $PROJECT_ID \
-            --member serviceAccount:kcc@$PROJECT_ID.iam.gserviceaccount.com \
+            --member serviceAccount:config-connector@$PROJECT_ID.iam.gserviceaccount.com \
             --role roles/resourcemanager.projectIamAdmin   # only for the IAM kinds
           # Let Config Connector's controller (a Kubernetes service account) act as it:
-          gcloud iam service-accounts add-iam-policy-binding kcc@$PROJECT_ID.iam.gserviceaccount.com \
+          gcloud iam service-accounts add-iam-policy-binding config-connector@$PROJECT_ID.iam.gserviceaccount.com \
             --member "serviceAccount:$PROJECT_ID.svc.id.goog[cnrm-system/cnrm-controller-manager]" \
             --role roles/iam.workloadIdentityUser
       - pick: {Cluster: Outside GKE}
@@ -127,14 +165,14 @@ providers:
           roles/resourcemanager.projectIamAdmin.
         steps: |
           PROJECT_ID=my-project
-          gcloud iam service-accounts create kcc --project $PROJECT_ID
+          gcloud iam service-accounts create config-connector --project $PROJECT_ID
           gcloud projects add-iam-policy-binding $PROJECT_ID \
-            --member serviceAccount:kcc@$PROJECT_ID.iam.gserviceaccount.com --role roles/editor
+            --member serviceAccount:config-connector@$PROJECT_ID.iam.gserviceaccount.com --role roles/editor
           gcloud projects add-iam-policy-binding $PROJECT_ID \
-            --member serviceAccount:kcc@$PROJECT_ID.iam.gserviceaccount.com \
+            --member serviceAccount:config-connector@$PROJECT_ID.iam.gserviceaccount.com \
             --role roles/resourcemanager.projectIamAdmin   # only for the IAM kinds
           gcloud iam service-accounts keys create key.json \
-            --iam-account kcc@$PROJECT_ID.iam.gserviceaccount.com
+            --iam-account config-connector@$PROJECT_ID.iam.gserviceaccount.com
           kubectl create namespace cnrm-system
           kubectl create secret generic gcp-key --namespace cnrm-system --from-file key.json
           rm key.json
@@ -153,7 +191,7 @@ providers:
           helm install config-connector oci://cr.highfivelabs.dev/charts/config-connector \
             --version {tag} \
             --namespace configconnector-operator-system --create-namespace \
-            --set googleServiceAccount=kcc@$PROJECT_ID.iam.gserviceaccount.com
+            --set googleServiceAccount=config-connector@$PROJECT_ID.iam.gserviceaccount.com
 
           # Same bytes as Google's release:
           crane digest cr.highfivelabs.dev/upstream/config-connector/operator:{tag}
@@ -169,7 +207,7 @@ providers:
             --version {tag} \
             --namespace configconnector-operator-system --create-namespace \
             --set variant=autopilot \
-            --set googleServiceAccount=kcc@$PROJECT_ID.iam.gserviceaccount.com
+            --set googleServiceAccount=config-connector@$PROJECT_ID.iam.gserviceaccount.com
 
           # Same bytes as Google's release:
           crane digest cr.highfivelabs.dev/upstream/config-connector/operator:{tag}
@@ -208,7 +246,7 @@ providers:
             name: configconnector.core.cnrm.cloud.google.com
           spec:
             mode: cluster
-            googleServiceAccount: kcc@$PROJECT_ID.iam.gserviceaccount.com
+            googleServiceAccount: config-connector@$PROJECT_ID.iam.gserviceaccount.com
           EOF
       - pick: {Method: Google's manifests, Cluster: GKE Autopilot}
         verify: |
@@ -226,7 +264,7 @@ providers:
             name: configconnector.core.cnrm.cloud.google.com
           spec:
             mode: cluster
-            googleServiceAccount: kcc@$PROJECT_ID.iam.gserviceaccount.com
+            googleServiceAccount: config-connector@$PROJECT_ID.iam.gserviceaccount.com
           EOF
       - pick: {Method: Google's manifests, Cluster: Outside GKE}
         verify: |

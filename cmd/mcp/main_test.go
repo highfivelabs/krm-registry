@@ -240,7 +240,13 @@ func TestGetInstall(t *testing.T) {
 	eq(t, "default install", p["install"].(map[string]any)["name"], any("High Five Labs chart · GKE Standard"))
 	eq(t, "matching credentials", p["credentials"].(map[string]any)["name"], any("GKE Standard"))
 	eq(t, "namespace", p["namespace"], any("configconnector-operator-system"))
-	eqs(t, "placeholders", pluck(p["placeholders"], "name"), []string{"PROJECT_ID", "CLUSTER"})
+	// The package's NAMESPACE (the management cluster's) is asked for too.
+	eqs(t, "placeholders", pluck(p["placeholders"], "name"), []string{"PROJECT_ID", "CLUSTER", "NAMESPACE"})
+	// The credentials as a package: a krm-packages chart that a running Config Connector applies.
+	pkg, _ := p["credentials"].(map[string]any)["package"].(map[string]any)
+	if pkg == nil || pkg["chart"] != "gcp/iam-service-account" || !strings.Contains(pkg["steps"].(string), "helm install config-connector-identity") {
+		t.Errorf("credentials package %v", pkg)
+	}
 	if len(p["how_to_run"].([]any)) == 0 || len(p["verify"].([]any)) == 0 {
 		t.Error("no how_to_run or verify")
 	}

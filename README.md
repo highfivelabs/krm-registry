@@ -104,6 +104,13 @@ build.sh <root> <site>
     steps as step 1: the identity the controller acts as and the roles it
     needs. A credentials entry follows the install choice on the axes its
     `pick` names (Config Connector's follow `Cluster`).
+  - **Credentials as a package.** A credentials entry may carry `package:`
+    (`chart`, a krm-packages chart such as `gcp/iam-service-account`;
+    `release`; `vars`, the placeholders line; `values`; `note`): the same
+    identity as KRM objects, applied by a Config Connector that already
+    manages the project (a management cluster's). gen.py writes its steps;
+    the page offers "A package (KRM)" or "gcloud", the package first, and MCP
+    `get_install` returns it as `credentials.package` (HFL-766).
   - **Every controller.** For a provider with one controller per service
     (ACK), `{controllers}` in steps becomes one `<service> <version>` line per
     controller the lock resolved and `{ncontrollers}` their count, so the

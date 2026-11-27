@@ -20,6 +20,17 @@ type variant struct {
 	Verify string            `json:"verify,omitempty"`
 	Steps  string            `json:"steps"`
 	Source string            `json:"source,omitempty"`
+	// Package: the same credentials as KRM objects (a krm-packages chart), applied by
+	// a Config Connector that already manages the project. Preferred where there is one.
+	Package *identityPackage `json:"package,omitempty"`
+}
+
+type identityPackage struct {
+	Chart   string `json:"chart"`
+	Release string `json:"release"`
+	URL     string `json:"url"`
+	Note    string `json:"note,omitempty"`
+	Steps   string `json:"steps"`
 }
 
 func (v variant) picks() map[string]string {
@@ -67,6 +78,7 @@ var howToRun = []string{
 	"Confirm the target with the user first: the kube context (kubectl config current-context) and, where there are choices, which one fits their cluster; call get_install again with choice if it differs from chosen.",
 	"Ask the user for each placeholder's real value; never keep an example value (my-project, my-cluster).",
 	"Show each command before running it. The credentials steps change cloud IAM (service accounts, role grants, keys): run them only with the user's explicit go-ahead, or hand them to the user to run.",
+	"Where credentials has a package, it is the KRM-native way: the same identity as Config Connector objects. Ask the user whether a cluster whose Config Connector already manages the project exists (a management cluster). If so, run credentials.package.steps with that cluster's kube context, then switch back to the target cluster; if not, run credentials.steps (gcloud).",
 	"Run credentials first, then install, stopping at the first error and reporting it with its output.",
 	"Then run the verify commands and report what they show.",
 }
@@ -194,8 +206,11 @@ func (r *registry) getInstall(id string, choice map[string]string) (any, error) 
 		}
 	}
 	steps := []string{pick.Steps}
-	if plan.Credentials != nil {
-		steps = append([]string{plan.Credentials.Steps}, steps...)
+	if c := plan.Credentials; c != nil {
+		steps = append([]string{c.Steps}, steps...)
+		if c.Package != nil {
+			steps = append(steps, c.Package.Steps)
+		}
 	}
 	plan.Placeholders = placeholders(steps...)
 	if pick.Verify != "" {
