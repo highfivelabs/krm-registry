@@ -998,3 +998,16 @@ vault-config-operator:
   - vault_transit_secret_backend_key
   VaultSecret:
   - vault_kv_secret_v2
+cert-manager:
+  Certificate:
+  - tls_private_key
+  - tls_self_signed_cert
+  - tls_locally_signed_cert
+  CertificateRequest:
+  - tls_cert_request
+eso-generators:
+  Password:
+  - random_password
+  - random_string
+  UUID:
+  - random_uuid

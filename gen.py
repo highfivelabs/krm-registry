@@ -410,6 +410,8 @@ def build():
                 k["manages"] = prov["manages"]
             if CFG["providers"][prov["provider"]].get("category", "cloud") != "cloud":
                 k["service"] = tf_area(prov["provider"], tfs[0]) if tfs else "other"
+            if prov.get("service"):  # an operator whose kinds are one service (utility providers)
+                k["service"] = prov["service"]
             kinds.append(k)
             shards[(prov["id"], group)].append(dict(k, spec=spec_fields, status=status_fields))
             n += 1
