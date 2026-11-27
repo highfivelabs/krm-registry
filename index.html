@@ -78,7 +78,7 @@ a.card{color:inherit;display:block}a.card:hover{border-color:var(--acc);text-dec
 .bar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--line2);margin:10px 0 6px}
 .bar i{display:block}.bar .o{background:var(--off)}.bar .e{background:var(--ext)}
 table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line2);vertical-align:top}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line2);vertical-align:top}
 th{font-size:12px;color:var(--ink3);font-weight:600;background:var(--bg)}
 tr:last-child td{border-bottom:0}
 .hero{padding:26px 0 8px}.hero h1{font-size:32px}
@@ -94,10 +94,10 @@ tr:last-child td{border-bottom:0}
 .fields{background:var(--panel);border:1px solid var(--line);border-top:0;border-radius:0 0 10px 10px}
 .ff{display:flex;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line2)}
 .ff input{flex:1;padding:6px 10px;border:1px solid var(--line);border-radius:6px;font:inherit;background:var(--bg);color:var(--ink)}
-.f{padding:7px 12px 7px calc(28px + var(--d)*18px);border-bottom:1px solid var(--line2);cursor:pointer}
+.f{padding:11px 16px 11px calc(30px + var(--d)*20px);border-bottom:1px solid var(--line2);cursor:pointer}
 .f:hover{background:var(--bg)}
-.f .n{font-family:var(--mono);font-size:12.5px;font-weight:500}.f .t{font-family:var(--mono);font-size:11.5px;color:var(--ink3);margin-left:6px}
-.f .d{color:var(--ink2);font-size:13px;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-line}
+.f .n{font-family:var(--mono);font-size:13px;font-weight:500}.f .t{font-family:var(--mono);font-size:11.5px;color:var(--ink3);margin-left:6px}
+.f .d{color:var(--ink3);font-size:12.5px;margin-top:3px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-line}
 .f.open .d{display:block}
 .f.add{box-shadow:inset 3px 0 0 var(--ext);background:var(--ext-bg)}
 .f.rem{box-shadow:inset 3px 0 0 var(--ink3)}.f.rem .n{text-decoration:line-through;color:var(--ink3)}
@@ -116,7 +116,8 @@ tr:last-child td{border-bottom:0}
 .exhead{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;padding:12px 14px 0;font-size:13px}
 .exhead .tb{margin-left:auto;font:inherit;font-size:12.5px;padding:3px 9px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink2);cursor:pointer}
 pre.ex{margin:0;padding:12px 14px 14px;overflow:auto;max-height:640px}
-.callout{border:1px solid var(--line);border-left:3px solid var(--ext);background:var(--panel);border-radius:8px;padding:12px 14px;margin:14px 0}
+.callout{border:1px solid var(--line);border-left:3px solid var(--ext);background:var(--panel);border-radius:8px;padding:12px 16px;margin:20px 0;display:flex;gap:6px 12px;align-items:center;flex-wrap:wrap}
+.callout .chips{gap:6px}.callout .n{font-size:12px;padding:1px 8px;border-radius:99px;background:var(--line2);color:var(--ink2);font-family:var(--mono)}.callout .tb{margin-left:auto;font:inherit;font-size:12.5px;padding:3px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink2);cursor:pointer}.callout .tb:hover{border-color:var(--clay);color:var(--ink)}
 .callout.o{border-left-color:var(--off)}
 .md{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:4px 20px;margin-top:14px;overflow:auto}
 .md.doc{padding:0 20px}.md.doc summary{cursor:pointer;padding:12px 0;list-style-position:outside}.md.doc[open] summary{border-bottom:1px solid var(--line2);margin-bottom:4px}
@@ -304,12 +305,11 @@ const UTIL=/^hashicorp\/(random|null|time|local|external|template|tls|archive|ht
 function numbers(){const T=C.terraform||{providers:{},top:[]};const byProv={};for(const [s,t] of Object.entries(T.providers)) byProv[t.name.toLowerCase()]=s;
   const rows=Object.entries(T.providers).sort((a,b)=>a[1].rank-b[1].rank), num=n=>n==null?'<span class="muted">—</span>':fmt(n), R='style="text-align:right"';
   return `<h1>Coverage</h1><div class="sub">How much of each Terraform provider has a Kubernetes kind that manages the same resource, and the tier of the operator it comes from.</div>
-  <div class="card" style="margin-top:12px;font-size:13px"><b>Where the numbers come from.</b> Rank, downloads and Terraform tier are the <a href="https://registry.terraform.io">Terraform Registry</a>'s own figures${T.read?`, read ${esc(T.read)}`:''}: downloads are all-time totals of the provider binary, CI runs included, so they measure Terraform use, not this registry's. GitHub stars are the provider's source repository's, the measure the <a href="https://search.opentofu.org">OpenTofu Registry</a> publishes as popularity; the operators' stars are on <a href="#operators">Operators</a>. Resources are those the Terraform provider's latest release documents.</div>
-  <h2>Providers in the registry</h2><table><tr><th>Provider</th><th>Terraform provider</th><th ${R}>Rank on the Terraform Registry</th><th ${R}>Terraform Registry downloads</th><th ${R}>GitHub stars</th><th ${R}>Terraform resources</th><th>Have a kind</th><th ${R}>Official</th><th ${R}>Community</th><th ${R}>High Five Labs</th></tr>
-  ${rows.map(([s,t])=>{const p=Math.round(100*t.covered/t.total),b=t.byTier;return `<tr><td><a href="#provider-${s}"><b>${esc(PROV[s])}</b></a></td><td>${tfeq(t.name)} <span class="muted mono">${esc(t.version)}</span></td><td ${R}>#${t.rank}</td><td ${R}>${num(t.downloads)}</td><td ${R}>${num(t.stars)}</td><td ${R}>${t.total}</td>
-    <td style="min-width:170px"><div class="bar" style="margin:4px 0"><i class="o" style="width:${100*((b.official||0)+(b.community||0))/t.total}%"></i><i class="e" style="width:${100*(b.hfl||0)/t.total}%"></i></div><span class="muted" style="font-size:12px">${t.covered} (${p}%)</span></td>
-    <td ${R}>${b.official||0}</td><td ${R}>${b.community||0}</td><td ${R}>${b.hfl||0}</td></tr>`}).join('')}</table>
-  <div class="muted" style="font-size:12.5px;margin-top:6px">Official, community and High Five Labs count the Terraform resources whose best kind comes from an operator of that tier (official first).</div>
+  <div class="muted" style="margin-top:10px;font-size:13px">Rank, downloads (all time, CI runs included) and tier: the <a href="https://registry.terraform.io">Terraform Registry</a>${T.read?`, read ${esc(T.read)}`:''}. Stars: the provider's GitHub repository, as the <a href="https://search.opentofu.org">OpenTofu Registry</a> shows them.</div>
+  <h2>Providers in the registry</h2><table><tr><th>Provider</th><th>Terraform provider</th><th ${R}>Rank on the Terraform Registry</th><th ${R}>Terraform Registry downloads</th><th ${R}>GitHub stars</th><th>Terraform resources with a kind</th></tr>
+  ${rows.map(([s,t])=>{const p=Math.round(100*t.covered/t.total),b=t.byTier;return `<tr><td><a href="#provider-${s}"><b>${esc(PROV[s])}</b></a></td><td><span title="${esc(t.name)} ${esc(t.version)}">${tfeq(t.name)}</span></td><td ${R}>#${t.rank}</td><td ${R}>${num(t.downloads)}</td><td ${R}>${num(t.stars)}</td>
+    <td style="min-width:220px" title="Official ${b.official||0} · community ${b.community||0} · High Five Labs ${b.hfl||0}"><div class="bar" style="margin:4px 0"><i class="o" style="width:${100*((b.official||0)+(b.community||0))/t.total}%"></i><i class="e" style="width:${100*(b.hfl||0)/t.total}%"></i></div><span class="muted" style="font-size:12px">${t.covered} of ${t.total} · ${p}%</span></td></tr>`}).join('')}</table>
+  <div class="muted" style="font-size:12.5px;margin-top:8px"><span class="dot" style="background:var(--off)"></span>official or community operator &nbsp; <span class="dot" style="background:var(--ext)"></span>High Five Labs operator · hover a bar for the counts</div>
   <h2>The long tail</h2><div class="sub" style="margin-bottom:10px">The Terraform Registry's most-downloaded providers, utility providers (random, null, time, …) left out. The ones in the registry link to it.</div>
   ${fbar('numbers','Filter Terraform providers')}
   <table><tr><th ${R}>Rank on the Terraform Registry</th><th>Terraform provider</th><th ${R}>Terraform Registry downloads</th><th ${R}>GitHub stars</th><th>Terraform Registry tier</th><th>In the registry</th></tr>${T.top.filter(p=>!UTIL.test(p.name)).slice(0,120).map(p=>{const s=byProv[p.name.toLowerCase()];return `<tr data-f="${lc(p.name,p.description)}" data-tags="${s?'in':''}"><td ${R}>#${p.rank}</td><td>${tfeq(p.name)}<div class="muted" style="font-size:12px">${esc(p.description)}</div></td><td ${R}>${num(p.downloads)}</td><td ${R}>${num(p.stars)}</td><td>${esc(p.tier)}</td><td>${s?`<a href="#provider-${s}">${esc(PROV[s])}</a> · ${Math.round(100*T.providers[s].covered/T.providers[s].total)}%`:'<span class="muted">not yet</span>'}</td></tr>`}).join('')}</table>`}
@@ -429,6 +429,9 @@ function fdiff(off,ext){
 }
 const fsig=f=>[f.t,f.r&&'required',f.im&&'immutable',f.e&&'enum: '+f.e.slice(0,4).join('|'),f.df!==undefined&&'default: '+JSON.stringify(f.df)].filter(Boolean).join(', ');
 function diffWords(d){const n=d.n; return n.add||n.rem||n.chg?[n.add&&`<b>${n.add}</b> only in the High Five Labs kind`,n.rem&&`<b>${n.rem}</b> only in the vendor's kind`,n.chg&&`<b>${n.chg}</b> typed differently`].filter(Boolean).join(', '):'identical'}
+const fdesc=f=>f.im?f.d.replace(/^Immutable\.\s*/,''):f.d;
+function diffChips(D){const n={add:D.spec.n.add+D.status.n.add,rem:D.spec.n.rem+D.status.n.rem,chg:D.spec.n.chg+D.status.n.chg};
+  return n.add||n.rem||n.chg?`<span class="chips">${n.add?`<span class="n" title="fields only in the High Five Labs kind">+${n.add}</span>`:''}${n.rem?`<span class="n" title="fields only in the vendor's kind">−${n.rem}</span>`:''}${n.chg?`<span class="n" title="fields typed differently">~${n.chg}</span>`:''}</span>`:'<span class="muted">same fields</span>'}
 function diffSummary(D){return `spec ${diffWords(D.spec)}; status ${diffWords(D.status)}`}
 async function kindPage(k){
   const A=$('#app'); A.innerHTML=`<div class="loading">Loading ${esc(k.kind)}…</div>`;
@@ -444,26 +447,25 @@ async function kindPage(k){
   A.innerHTML=`<div class="crumbs"><a href="#provider-${k.provider}">${PROV[k.provider]}</a> / <a href="#${svcslug(k.provider,k.service)}">${esc(k.service)}</a> / <a href="#operator-${k.operator}">${esc(p.title)}</a></div>
   <div class="layout"><div>
   <h1>${esc(k.kind)}</h1><div class="sub mono">${esc(k.group)}/${esc(k.version)}</div>
-  <div style="margin-top:8px">${provB(k.provider)} ${tierB(k)} ${stabB(k)} ${badge(k.scope,'plain')}${k.readiness==='fake'?' '+badge('proven on a fake API only','alpha'):''}${k.manages==='in-cluster'?' '+badge('in-cluster','plain'):''}${k.cloudcontrol?' '+badge('Cloud Control API','plain'):''}</div>
+  <div style="margin-top:10px">${tierB(k)} ${stabB(k)}${k.readiness==='fake'?' '+badge('proven on a fake API only','alpha'):''}${k.manages==='in-cluster'?' '+badge('in-cluster','plain'):''}${k.cloudcontrol?' '+badge('Cloud Control API','plain'):''}</div>
   ${k.desc&&!/is the Schema for/.test(k.desc)?`<p class="sub">${esc(full.desc)}</p>`:''}
   ${full.gap?`<div class="callout"><b>Gap it fills.</b> ${md(full.gap.gap).replace(/^<p>|<\/p>\s*$/g,'')}${full.gap.upstream?`<div class="muted" style="margin-top:6px;font-size:13px"><b>Upstream:</b> ${md(full.gap.upstream).replace(/^<p>|<\/p>\s*$/g,'')}</div>`:''}</div>`:''}
-  ${twin?`<div class="callout"><b>Overlays ${klink(twin,twin.kind)}</b> <span class="mono muted">${esc(twin.group)}/${esc(twin.version)}</span> from ${esc(OBY[twin.operator].title)}, in this operator's own group. Compared with it: ${diffSummary(D)}.</div>`:''}
-  ${exts.length?`<div class="callout"><b>Extended by</b> ${exts.map(e=>klink(e,e.group+'/'+e.version)).join(', ')}. Compared with ${exts.length>1?'the first':'it'}: ${diffSummary(D)}.</div>`:''}
+  ${twin?`<div class="callout"><span>Overlays ${esc(OBY[twin.operator].title)}'s <a href="#${kslug(twin)}" title="${esc(twin.group)}/${esc(twin.version)}">${esc(twin.kind)}</a></span>${diffChips(D)}${KOVER?'':`<button class="tb" onclick="KOVER=true;kindPage(KBY[location.hash.slice(1)])">Compare fields</button>`}</div>`:''}
+  ${exts.length?`<div class="callout"><span>Extended by ${exts.map(e=>`<a href="#${kslug(e)}" title="${esc(e.group)}/${esc(e.version)}">${esc(OBY[e.operator].title)}</a>`).join(', ')}</span>${diffChips(D)}${KOVER?'':`<button class="tb" onclick="KOVER=true;kindPage(KBY[location.hash.slice(1)])">Compare fields</button>`}</div>`:''}
   ${others.length?`<div class="callout o"><b>Same kind name elsewhere on ${esc(PROV[k.provider])}:</b> ${others.map(o=>`${klink(o,o.group+'/'+o.version)} ${tierB(o)}`).join(', ')}</div>`:''}
   ${full.doc?(()=>{const body=full.doc.md.replace(/^# .*\n+/,'').replace(/^`[^`\n]+\/[^`\n]+`\s*\n+/,''), words=body.split(/\s+/).length;
     return `<details class="md doc"><summary><b>Notes</b> <span class="muted">from the kind's doc · ${Math.max(1,Math.round(words/220))} min read</span></summary>${md(body)}</details>`})():''}
   <div class="tabs">${['spec','status','example'].map(t=>`<button class="${KTAB===t?'on':''}" onclick="KTAB='${t}';kindPage(KBY[location.hash.slice(1)])">${t==='spec'?`Spec <span class="muted">${full.spec.length}</span>`:t==='status'?`Status <span class="muted">${full.status.length}</span>`:`Examples <span class="muted">${exList(k,full).length}</span>`}</button>`).join('')}</div>
   <div class="fields">${KTAB==='example'?'<div id="exp"></div>':`
    <div class="ff"><input placeholder="Filter fields" value="${esc(KFILTER)}" oninput="KFILTER=this.value;renderFields()">
-    <button class="tb" onclick="treeAll(false)">Expand all</button><button class="tb" onclick="treeAll(true)">Collapse all</button>
+    <button class="tb" id="tall" onclick="treeAll(this.dataset.c==='1')">Collapse all</button>
     ${partner?`<label><input type="checkbox" ${KOVER?'checked':''} onchange="KOVER=this.checked;kindPage(KBY[location.hash.slice(1)])"> Compare with ${twin?'the vendor\'s kind':'the High Five Labs kind'}</label>${KOVER?`<label><input type="checkbox" ${KDIFF?'checked':''} onchange="KDIFF=this.checked;renderFields()"> Differences only</label>`:''}`:''}</div>
    ${partner&&KOVER?`<div class="cmp" id="cmp"></div>`:''}<div id="fl"></div>`}</div>
   </div><div class="side">
-   ${apis.length?`<div class="card"><h4>Cloud API resource</h4>${apis.map(a=>`<div class="mono" style="font-size:12px">${esc(a).replace(/\//g,'/<wbr>')}</div>`).join('')}</div>`:''}
-   ${tf.length?`<div class="card"><h4>Terraform equivalent</h4>${tf.map(t=>`<div>${tfeq(t)}</div>`).join('')}</div>`:''}
+   ${apis.length||tf.length?`<div class="card"><h4>Manages</h4>${apis.map(a=>`<div class="mono" style="font-size:12px;margin-bottom:6px">${esc(a).replace(/\//g,'/<wbr>')}</div>`).join('')}${tf.map(t=>`<div>${tfeq(t)}</div>`).join('')}</div>`:''}
    ${k.usedBy?.length?`<div class="card"><h4>Used by packages</h4>${k.usedBy.map(id=>{const c=C.chartById[id];return `<div><a href="#${cslug(c)}">${esc(id)}</a> <span class="muted mono">${esc(c.version)}</span></div>`}).join('')}</div>`:''}
    ${full.refs?.length?`<div class="card"><h4>References</h4>${full.refs.map(r=>`<div style="margin-bottom:4px"><code style="font-size:11.5px">${esc(r.field.replace(/^spec\./,''))}</code> → ${r.kinds.map(n=>{const t=C.kinds.find(o=>o.provider===k.provider&&o.kind===n&&o.tier==='official')||C.kinds.find(o=>o.provider===k.provider&&o.kind===n);return t?klink(t):esc(n)}).join(', ')}</div>`).join('')}</div>`:''}
-   <div class="card"><h4>Details</h4><div class="kv"><div>Operator</div><div><a href="#operator-${p.id}">${esc(p.title)}</a></div>${k.controller?`<div>Controller</div><div class="mono">${esc(k.controller.repo)} ${esc(k.controller.release)}</div>`:''}<div>Versions</div><div class="mono">${k.versions.map(esc).join(', ')}</div><div>Plural</div><div class="mono">${esc(k.plural)}</div>${k.short.length?`<div>Short</div><div class="mono">${k.short.map(esc).join(', ')}</div>`:''}</div></div>
+   <div class="card"><h4>Details</h4><div class="kv"><div>Operator</div><div><a href="#operator-${p.id}">${esc(p.title)}</a></div>${k.controller?`<div>Controller</div><div class="mono">${esc(k.controller.repo)} ${esc(k.controller.release)}</div>`:''}<div>Versions</div><div class="mono">${k.versions.map(esc).join(', ')}</div><div>Scope</div><div>${esc(k.scope)}</div></div><details style="margin-top:8px;font-size:12.5px"><summary class="muted" style="cursor:pointer">Names</summary><div class="kv" style="margin-top:6px"><div>Plural</div><div class="mono" style="overflow-wrap:anywhere">${esc(k.plural)}</div>${k.short.length?`<div>Short</div><div class="mono" style="overflow-wrap:anywhere">${k.short.map(esc).join(', ')}</div>`:''}</div></details></div>
    <div class="card"><h4>Links</h4>
     ${k.docsUrl?`<div><a href="${esc(k.docsUrl)}">${esc(p.title)} reference ↗</a></div>`:k.tier==='official'?`<div class="muted" style="font-size:12.5px">${esc(p.title)} : no reference page linked for ${k.stability} kinds.</div>`:''}
     <div><a href="${esc(k.repoUrl)}">${k.controller?esc(k.controller.repo)+' '+esc(k.controller.release):esc(p.repo.replace('https://github.com/',''))+' @ '+esc(p.version)} ↗</a></div>
@@ -488,6 +490,7 @@ function renderFields(){
   // Default: big trees open at the top level only.
   if(!KCOLL[KTAB]) KCOLL[KTAB]=new Set(rows.length>60?par:[]);
   const coll=KCOLL[KTAB], q=KFILTER.toLowerCase();
+  const tb=$('#tall'); if(tb){const all=par.size&&[...par].every(p=>coll.has(p)); tb.dataset.c=all?'0':'1'; tb.textContent=all?'Expand all':'Collapse all'; tb.hidden=!par.size}
   // Changes inside each parent, shown on it when collapsed.
   const inside={}; for(const p in mark) for(const a of anc(p)) (inside[a]??={add:0,rem:0,chg:0})[mark[p]]++;
   let show;
@@ -502,7 +505,7 @@ function renderFields(){
     ${f.e?`<span class="t">enum: ${esc(f.e.slice(0,8).join(' | '))}${f.e.length>8?' …':''}</span>`:''}${f.df!==undefined?`<span class="t">default: ${esc(JSON.stringify(f.df))}</span>`:''}
     ${ins?`<span class="inside muted">inside:${ins.add?`<i class="i-add">+${ins.add}</i>`:''}${ins.rem?`<i class="i-rem">−${ins.rem}</i>`:''}${ins.chg?`<i class="i-chg">~${ins.chg}</i>`:''}</span>`:''}
     ${m==='chg'?`<div class="was">vendor's: ${esc(fsig(was[f.p]))}<br>High Five Labs: ${esc(fsig(f))}</div>`:''}
-    ${f.d?`<div class="d">${esc(f.d)}</div>`:''}</div>`}).join('')||`<div class="f muted">${KDIFF?'No differences.':'No fields.'}</div>`)+(show.length>lim?`<div class="f muted">${show.length-lim} more; filter to narrow.</div>`:'');
+    ${f.d&&fdesc(f)?`<div class="d">${esc(fdesc(f))}</div>`:''}</div>`}).join('')||`<div class="f muted">${KDIFF?'No differences.':'No fields.'}</div>`)+(show.length>lim?`<div class="f muted">${show.length-lim} more; filter to narrow.</div>`:'');
 }
 // Examples: tested ones first, then upstream test samples, then the generated minimal one.
 const TESTED={live:'tested live','live-failing':'live run failing',fake:'fake API',upstream:'upstream test',minimal:'minimal'};
