@@ -37,6 +37,13 @@ providers:
                notes: "JFrog publishes Crossplane providers (provider-artifactory: 214 kinds; also xray, project and platform) as images in its authenticated registry, with no public source; they are not indexed here. Nothing to extend: they cover nearly all of the Terraform provider."}
   alicloud:   {title: Alibaba Cloud, category: cloud, terraform: aliyun/alicloud,
                notes: "No Kubernetes operator manages Alibaba Cloud resources (ACK's own CRDs run in-cluster software), and the API is RPC-style with request signing, which the REST runtime does not drive. Not covered yet."}
+  # Terraform's utility providers that have a real KRM counterpart: a controller that
+  # keeps the generated value or certificate, which a Helm template cannot (it renders
+  # anew each time). The others (null, time, local, external, http, archive, dns,
+  # template, cloudinit) have no resource to reconcile and are not indexed.
+  tls:        {title: TLS certificates, category: utility, terraform: hashicorp/tls}
+  random:     {title: Random values, category: utility, terraform: hashicorp/random,
+               notes: "A generator makes a value only when an ExternalSecret references it (spec.dataFrom[].sourceRef.generatorRef), which writes it to a Secret. Set the ExternalSecret's refreshPolicy to CreatedOnce to keep it, as Terraform's random resources do."}
 
 # Terraform types each operator's kind stands in for (High Five Labs' generated
 # kinds carry theirs in the CRD's hfl.dev/terraform annotation).
@@ -845,6 +852,47 @@ operators:
     crds: [src/snowflake-krm-extensions/config/crds/*.yaml]
     group_suffix: .snowflake.hfl.dev
 
+
+  # Utility providers' operators (see providers: tls, random).
+  - id: cert-manager
+    title: cert-manager
+    provider: tls
+    publisher: cert-manager (CNCF)
+    tier: community
+    service: certificates
+    repo: https://github.com/cert-manager/cert-manager
+    docs: https://cert-manager.io/docs/
+    release: {tags: '^v[0-9]+[.][0-9]+[.][0-9]+$'}
+    source: {asset: 'https://github.com/cert-manager/cert-manager/releases/download/{tag}/cert-manager.crds.yaml'}
+    crds: [upstream/cert-manager/*.yaml]
+    install:
+      - name: Helm (OCI)
+        steps: |
+          helm install cert-manager oci://quay.io/jetstack/charts/cert-manager \
+            --version {tag} \
+            --namespace cert-manager --create-namespace \
+            --set crds.enabled=true
+
+  - id: eso-generators
+    title: External Secrets Operator generators
+    provider: random
+    publisher: External Secrets (CNCF)
+    tier: community
+    service: generators
+    repo: https://github.com/external-secrets/external-secrets
+    docs: https://external-secrets.io/latest/api/generator/
+    release: {tags: '^v[0-9]+[.][0-9]+[.][0-9]+$'}
+    source: {path: config/crds/bases}
+    crds: [upstream/eso-generators/config/crds/bases/generators.external-secrets.io_passwords.yaml,
+           upstream/eso-generators/config/crds/bases/generators.external-secrets.io_uuids.yaml]
+    install:
+      - name: Helm
+        note: The generators come with External Secrets Operator itself; an ExternalSecret references one to write its value to a Secret.
+        steps: |
+          helm repo add external-secrets https://charts.external-secrets.io
+          helm install external-secrets external-secrets/external-secrets \
+            --version {version} \
+            --namespace external-secrets --create-namespace
 
 packages:
   - id: catalog

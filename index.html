@@ -303,9 +303,15 @@ function operatorsPage(){return `<h1>Operators</h1><div class="sub">An operator 
 function providersPage(){return `<h1>Providers</h1><div class="sub">Each cloud and vendor, with the kinds of all its operators merged by service.</div><h2>Clouds</h2><div class="grid g3">${CLOUDS.map(provCard).join('')}</div><h2>Other providers</h2><div class="grid g3">${VENDORS.map(provCard).join('')}</div>`}
 const UTIL=/^hashicorp\/(random|null|time|local|external|template|tls|archive|http|cloudinit|dns)$/i;
 let SHOWUTIL=false; // the long tail hides utility providers unless asked
+// A request for a provider: a prefilled issue on this registry's repository.
+const reqUrl=p=>'https://github.com/highfivelabs/krm-registry/issues/new?'+new URLSearchParams({title:`Provider request: ${p.name}`,labels:'provider request',
+  body:`Please add Kubernetes operators for the Terraform provider ${p.name} (#${p.rank} on the Terraform Registry by downloads).\n\nThe resources I need most:\n\n- \n\nWhat I use them for:\n`});
 function numbers(){const T=C.terraform||{providers:{},top:[]};const byProv={};for(const [s,t] of Object.entries(T.providers)) byProv[t.name.toLowerCase()]=s;
-  const keep=T.top.filter(p=>!UTIL.test(p.name)).slice(0,120), last=keep.length?keep[keep.length-1].rank:0;
-  const util=T.top.filter(p=>UTIL.test(p.name)&&p.rank<=last), nUtil=util.length, tail=SHOWUTIL?T.top.filter(p=>p.rank<=last):keep;
+  // Utility providers (random, tls, null, …) are hidden unless asked for. Those the registry indexes
+  // an operator for (tls, random) link to it; the rest are not applicable, never "not yet".
+  const hid=p=>UTIL.test(p.name);
+  const keep=T.top.filter(p=>!hid(p)).slice(0,120), last=keep.length?keep[keep.length-1].rank:0;
+  const nUtil=T.top.filter(p=>hid(p)&&p.rank<=last).length, tail=SHOWUTIL?T.top.filter(p=>p.rank<=last):keep;
   const rows=Object.entries(T.providers).sort((a,b)=>a[1].rank-b[1].rank), num=n=>n==null?'<span class="muted">—</span>':fmt(n), R='style="text-align:right"';
   return `<h1>Coverage</h1><div class="sub">How much of each Terraform provider has a Kubernetes kind that manages the same resource, and the tier of the operator it comes from.</div>
   <div class="muted" style="margin-top:10px;font-size:13px">Rank, downloads (all time, CI runs included) and tier: the <a href="https://registry.terraform.io">Terraform Registry</a>${T.read?`, read ${esc(T.read)}`:''}. Stars: the GitHub stars of the Terraform provider's source repository (for example hashicorp/terraform-provider-aws), as the <a href="https://search.opentofu.org">OpenTofu Registry</a> shows them.</div>
@@ -315,8 +321,8 @@ function numbers(){const T=C.terraform||{providers:{},top:[]};const byProv={};fo
   <div class="muted" style="font-size:12.5px;margin-top:8px"><span class="dot" style="background:var(--off)"></span>official or community operator &nbsp; <span class="dot" style="background:var(--ext)"></span>High Five Labs operator · hover a bar for the counts</div>
   <h2>The long tail</h2><div class="sub" style="margin-bottom:10px">The Terraform Registry's most-downloaded providers. The ones in the registry link to it.</div>
   ${fbar('numbers','Filter Terraform providers')}
-  <label class="muted" style="font-size:13px;display:inline-flex;gap:6px;align-items:center;margin:0 0 10px"><input type="checkbox" ${SHOWUTIL?'checked':''} onchange="SHOWUTIL=this.checked;route()"> Show the ${nUtil} utility providers (random, null, time, …)</label>
-  <table class="cov2"><tr><th ${R}>Rank</th><th>Terraform provider</th><th ${R}>Downloads</th><th ${R}><span title="GitHub stars of the Terraform provider's source repository">Stars<span class="src">TF provider repo</span></span></th><th>Tier</th><th>In the registry</th></tr>${tail.map(p=>{const s=byProv[p.name.toLowerCase()],u=UTIL.test(p.name);return `<tr data-f="${lc(p.name,p.description)}" data-tags="${s?'in':''}"${u?' class="muted"':''}><td ${R}>#${p.rank}</td><td>${tfeq(p.name)}${u?' '+badge('utility','plain'):''}<div class="muted" style="font-size:12px">${esc(p.description)}</div></td><td ${R}>${num(p.downloads)}</td><td ${R}>${num(p.stars)}</td><td>${esc(p.tier)}</td><td>${s?`<a href="#provider-${s}">${esc(PROV[s])}</a> · ${Math.round(100*T.providers[s].covered/T.providers[s].total)}%`:'<span class="muted">not yet</span>'}</td></tr>`}).join('')}</table>`}
+  <label class="muted" style="font-size:13px;display:inline-flex;gap:6px;align-items:center;margin:0 0 10px"><input type="checkbox" ${SHOWUTIL?'checked':''} onchange="SHOWUTIL=this.checked;route()"> Show the ${nUtil} utility providers (random, tls, null, time, …)</label>
+  <table class="cov2"><tr><th ${R}>Rank</th><th>Terraform provider</th><th ${R}>Downloads</th><th ${R}><span title="GitHub stars of the Terraform provider's source repository">Stars<span class="src">TF provider repo</span></span></th><th>Tier</th><th>In the registry</th></tr>${tail.map(p=>{const s=byProv[p.name.toLowerCase()],u=hid(p);return `<tr data-f="${lc(p.name,p.description)}" data-tags="${s?'in':''}"${u?' class="muted"':''}><td ${R}>#${p.rank}</td><td>${tfeq(p.name)}${u?' '+badge('utility','plain'):''}<div class="muted" style="font-size:12px">${esc(p.description)}</div></td><td ${R}>${num(p.downloads)}</td><td ${R}>${num(p.stars)}</td><td>${esc(p.tier)}</td><td>${s?`<a href="#provider-${s}">${esc(PROV[s])}</a> · ${Math.round(100*T.providers[s].covered/T.providers[s].total)}%`:u?'<span class="muted" title="Plan-time machinery (triggers, local files, lookups): nothing in a cluster to reconcile">not applicable</span>':`<span class="muted">not yet</span> · <a href="${reqUrl(p)}" target="_blank" rel="noopener" title="Opens a GitHub issue asking for operators for ${esc(p.name)}">Request</a>`}</td></tr>`}).join('')}</table>`}
 
 // ---------------------------------------------------------------- search
 function search(q){
@@ -344,10 +350,10 @@ function providerPage(s){
   const m=servicesOf(s), names=Object.keys(m).sort(), t=provStats(s);
   const ps=C.operators.filter(p=>p.provider===s);
 
-  const note=C.providers[s].notes?`<div class="card" style="margin-top:12px;border-left:3px solid var(--line2)"><b>Not indexed</b><div class="muted" style="margin-top:4px">${esc(C.providers[s].notes)}</div></div>`:'';
+  const note=C.providers[s].notes?`<div class="card" style="margin-top:12px;border-left:3px solid var(--line2)"><b>${t.n?'Note':'Not indexed'}</b><div class="muted" style="margin-top:4px">${esc(C.providers[s].notes)}</div></div>`:'';
   return `<div class="crumbs"><a href="#providers">Providers</a> /</div><h1>${PROV[s]}</h1>
   <div class="sub">${ps.length?ps.map(p=>`<a href="#operator-${p.id}">${esc(p.title)}</a> ${tierBadge(p.tier)}`).join(' &nbsp;+&nbsp; ')+' — ':''}${fmt(t.n)} kinds in ${names.length} services, from every operator, together by service.</div>${note}${C.terraform?.providers?.[s]?(()=>{const t=C.terraform.providers[s];return `<div class="muted" style="margin-top:8px;font-size:13px">${t.covered} of ${t.total} resources of Terraform's ${tfeq(t.name)} have a kind (${Math.round(100*t.covered/t.total)}%) · <a href="#numbers">Coverage</a></div>`})():''}
-  ${fbar('provider-'+s,'Filter services and kinds',[['','All'],['filled','Both'],['new','High Five Labs only'],['official','Vendor &amp; community only']])}
+  ${fbar('provider-'+s,'Filter services and kinds',t.o&&t.e?[['','All'],['filled','Both'],['new','High Five Labs only'],['official','Vendor &amp; community only']]:null)}
   <div class="muted" style="font-size:12.5px;margin:-2px 0 10px"><span class="dot" style="background:var(--off)"></span>vendor &amp; community kinds &nbsp; <span class="dot" style="background:var(--ext)"></span>High Five Labs kinds</div>
   <div class="grid g4">${names.map(n=>{const x=m[n],tot=x.o+x.e;return `<a class="card" href="#${svcslug(s,n)}" style="padding:12px 14px" data-f="${lc(n,x.ks.map(k=>[k.kind,k.group]))}" data-tags="${x.o&&x.e?'filled':x.e?'new':'official'}"><b>${esc(n)}</b><div class="bar" style="height:6px"><i class="o" style="width:${100*x.o/tot}%"></i><i class="e" style="width:${100*x.e/tot}%"></i></div><div class="muted" style="font-size:12px" title="${x.o} vendor &amp; community · ${x.e} High Five Labs">${tot} kind${tot>1?'s':''}</div></a>`}).join('')}</div>`}
 function service(sl){
