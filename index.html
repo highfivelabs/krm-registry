@@ -62,8 +62,8 @@ header{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px
 .logo small{font-family:var(--body);font-weight:500;font-size:12px;color:var(--ink3);margin-left:2px}
 nav a{color:var(--ink2);margin-right:16px;font-weight:500}
 #q{flex:1;max-width:520px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
-main{max-width:1180px;margin:0 auto;padding:28px}
-h1,h2,h3,.stat,.logo{font-family:var(--display)}h1{font-size:28px;margin:0 0 4px;letter-spacing:-.01em;line-height:1.1}h2{font-size:19px;margin:34px 0 12px}h3{font-size:14px;margin:18px 0 6px}
+main{max-width:1180px;margin:0 auto;padding:28px;overflow-wrap:break-word}
+h1,h2,h3,.stat,.logo{font-family:var(--display)}h1{font-size:28px;margin:0 0 4px;letter-spacing:-.01em;line-height:1.1;overflow-wrap:anywhere}h2{font-size:19px;margin:34px 0 12px}h3{font-size:14px;margin:18px 0 6px}
 .sub{color:var(--ink2)}
 .muted{color:var(--ink3)}
 .grid{display:grid;gap:14px}.g3{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}.g4{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
@@ -169,7 +169,7 @@ body.home #q{visibility:hidden}
 .more{display:flex;justify-content:space-between;align-items:baseline;gap:10px}.more a{font-size:14px}
 footer{max-width:1180px;margin:40px auto 0;padding:24px 28px 40px;border-top:1px solid var(--line);color:var(--ink3);font-size:13px;display:flex;gap:18px;flex-wrap:wrap}
 footer a{color:var(--ink2)}
-@media(max-width:700px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.three{grid-template-columns:1fr}.land{padding-top:28px}main{padding:20px 16px}header{padding:10px 16px;gap:10px}header nav{order:3;width:100%;overflow-x:auto;white-space:nowrap;scrollbar-width:none}body.home #q{display:none}}
+@media(max-width:700px){.cov1 tr>:nth-child(2),.cov1 tr>:nth-child(3),.cov1 tr>:nth-child(5),.cov2 tr>:nth-child(1),.cov2 tr>:nth-child(4),.cov2 tr>:nth-child(5){display:none}table{display:block;overflow-x:auto}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.three{grid-template-columns:1fr}.land{padding-top:28px}main{padding:20px 16px}header{padding:10px 16px;gap:10px}header nav{order:3;width:100%;overflow-x:auto;white-space:nowrap;scrollbar-width:none}body.home #q{display:none}}
 .res{padding:10px 14px;border-bottom:1px solid var(--line2);display:block;color:inherit}.res:hover{background:var(--bg);text-decoration:none}
 .res .k{font-weight:600}.res .g{font-family:var(--mono);font-size:12px;color:var(--ink3);margin-left:6px}
 .res .why{font-size:12.5px;color:var(--ink2)}
@@ -306,13 +306,13 @@ function numbers(){const T=C.terraform||{providers:{},top:[]};const byProv={};fo
   const rows=Object.entries(T.providers).sort((a,b)=>a[1].rank-b[1].rank), num=n=>n==null?'<span class="muted">—</span>':fmt(n), R='style="text-align:right"';
   return `<h1>Coverage</h1><div class="sub">How much of each Terraform provider has a Kubernetes kind that manages the same resource, and the tier of the operator it comes from.</div>
   <div class="muted" style="margin-top:10px;font-size:13px">Rank, downloads (all time, CI runs included) and tier: the <a href="https://registry.terraform.io">Terraform Registry</a>${T.read?`, read ${esc(T.read)}`:''}. Stars: the provider's GitHub repository, as the <a href="https://search.opentofu.org">OpenTofu Registry</a> shows them.</div>
-  <h2>Providers in the registry</h2><table><tr><th>Provider</th><th>Terraform provider</th><th ${R}>Rank on the Terraform Registry</th><th ${R}>Terraform Registry downloads</th><th ${R}>GitHub stars</th><th>Terraform resources with a kind</th></tr>
+  <h2>Providers in the registry</h2><table class="cov1"><tr><th>Provider</th><th>Terraform provider</th><th ${R}>Rank on the Terraform Registry</th><th ${R}>Terraform Registry downloads</th><th ${R}>GitHub stars</th><th>Terraform resources with a kind</th></tr>
   ${rows.map(([s,t])=>{const p=Math.round(100*t.covered/t.total),b=t.byTier;return `<tr><td><a href="#provider-${s}"><b>${esc(PROV[s])}</b></a></td><td><span title="${esc(t.name)} ${esc(t.version)}">${tfeq(t.name)}</span></td><td ${R}>#${t.rank}</td><td ${R}>${num(t.downloads)}</td><td ${R}>${num(t.stars)}</td>
     <td style="min-width:220px" title="Official ${b.official||0} · community ${b.community||0} · High Five Labs ${b.hfl||0}"><div class="bar" style="margin:4px 0"><i class="o" style="width:${100*((b.official||0)+(b.community||0))/t.total}%"></i><i class="e" style="width:${100*(b.hfl||0)/t.total}%"></i></div><span class="muted" style="font-size:12px">${t.covered} of ${t.total} · ${p}%</span></td></tr>`}).join('')}</table>
   <div class="muted" style="font-size:12.5px;margin-top:8px"><span class="dot" style="background:var(--off)"></span>official or community operator &nbsp; <span class="dot" style="background:var(--ext)"></span>High Five Labs operator · hover a bar for the counts</div>
   <h2>The long tail</h2><div class="sub" style="margin-bottom:10px">The Terraform Registry's most-downloaded providers, utility providers (random, null, time, …) left out. The ones in the registry link to it.</div>
   ${fbar('numbers','Filter Terraform providers')}
-  <table><tr><th ${R}>Rank on the Terraform Registry</th><th>Terraform provider</th><th ${R}>Terraform Registry downloads</th><th ${R}>GitHub stars</th><th>Terraform Registry tier</th><th>In the registry</th></tr>${T.top.filter(p=>!UTIL.test(p.name)).slice(0,120).map(p=>{const s=byProv[p.name.toLowerCase()];return `<tr data-f="${lc(p.name,p.description)}" data-tags="${s?'in':''}"><td ${R}>#${p.rank}</td><td>${tfeq(p.name)}<div class="muted" style="font-size:12px">${esc(p.description)}</div></td><td ${R}>${num(p.downloads)}</td><td ${R}>${num(p.stars)}</td><td>${esc(p.tier)}</td><td>${s?`<a href="#provider-${s}">${esc(PROV[s])}</a> · ${Math.round(100*T.providers[s].covered/T.providers[s].total)}%`:'<span class="muted">not yet</span>'}</td></tr>`}).join('')}</table>`}
+  <table class="cov2"><tr><th ${R}>Rank on the Terraform Registry</th><th>Terraform provider</th><th ${R}>Terraform Registry downloads</th><th ${R}>GitHub stars</th><th>Terraform Registry tier</th><th>In the registry</th></tr>${T.top.filter(p=>!UTIL.test(p.name)).slice(0,120).map(p=>{const s=byProv[p.name.toLowerCase()];return `<tr data-f="${lc(p.name,p.description)}" data-tags="${s?'in':''}"><td ${R}>#${p.rank}</td><td>${tfeq(p.name)}<div class="muted" style="font-size:12px">${esc(p.description)}</div></td><td ${R}>${num(p.downloads)}</td><td ${R}>${num(p.stars)}</td><td>${esc(p.tier)}</td><td>${s?`<a href="#provider-${s}">${esc(PROV[s])}</a> · ${Math.round(100*T.providers[s].covered/T.providers[s].total)}%`:'<span class="muted">not yet</span>'}</td></tr>`}).join('')}</table>`}
 
 // ---------------------------------------------------------------- search
 function search(q){
@@ -342,9 +342,10 @@ function providerPage(s){
 
   const note=C.providers[s].notes?`<div class="card" style="margin-top:12px;border-left:3px solid var(--line2)"><b>Not indexed</b><div class="muted" style="margin-top:4px">${esc(C.providers[s].notes)}</div></div>`:'';
   return `<div class="crumbs"><a href="#providers">Providers</a> /</div><h1>${PROV[s]}</h1>
-  <div class="sub">${ps.length?ps.map(p=>`<a href="#operator-${p.id}">${esc(p.title)}</a> ${tierBadge(p.tier)}`).join(' &nbsp;+&nbsp; ')+' — ':''}${fmt(t.n)} kinds in ${names.length} services, from every operator, together by service.</div>${note}${C.terraform?.providers?.[s]?`<div class="card" style="margin-top:12px">${tfLine(s).replace('border-top:1px solid var(--line2);padding-top:8px','')} <a href="#numbers">All providers</a></div>`:''}
+  <div class="sub">${ps.length?ps.map(p=>`<a href="#operator-${p.id}">${esc(p.title)}</a> ${tierBadge(p.tier)}`).join(' &nbsp;+&nbsp; ')+' — ':''}${fmt(t.n)} kinds in ${names.length} services, from every operator, together by service.</div>${note}${C.terraform?.providers?.[s]?(()=>{const t=C.terraform.providers[s];return `<div class="muted" style="margin-top:8px;font-size:13px">${t.covered} of ${t.total} resources of Terraform's ${tfeq(t.name)} have a kind (${Math.round(100*t.covered/t.total)}%) · <a href="#numbers">Coverage</a></div>`})():''}
   ${fbar('provider-'+s,'Filter services and kinds',[['','All'],['filled','Both'],['new','High Five Labs only'],['official','Vendor &amp; community only']])}
-  <div class="grid g4">${names.map(n=>{const x=m[n],tot=x.o+x.e;return `<a class="card" href="#${svcslug(s,n)}" style="padding:12px 14px" data-f="${lc(n,x.ks.map(k=>[k.kind,k.group]))}" data-tags="${x.o&&x.e?'filled':x.e?'new':'official'}"><b>${esc(n)}</b><div class="bar" style="height:6px"><i class="o" style="width:${100*x.o/tot}%"></i><i class="e" style="width:${100*x.e/tot}%"></i></div><div class="muted" style="font-size:12px">${x.o} vendor &amp; community · ${x.e} High Five Labs</div></a>`}).join('')}</div>`}
+  <div class="muted" style="font-size:12.5px;margin:-2px 0 10px"><span class="dot" style="background:var(--off)"></span>vendor &amp; community kinds &nbsp; <span class="dot" style="background:var(--ext)"></span>High Five Labs kinds</div>
+  <div class="grid g4">${names.map(n=>{const x=m[n],tot=x.o+x.e;return `<a class="card" href="#${svcslug(s,n)}" style="padding:12px 14px" data-f="${lc(n,x.ks.map(k=>[k.kind,k.group]))}" data-tags="${x.o&&x.e?'filled':x.e?'new':'official'}"><b>${esc(n)}</b><div class="bar" style="height:6px"><i class="o" style="width:${100*x.o/tot}%"></i><i class="e" style="width:${100*x.e/tot}%"></i></div><div class="muted" style="font-size:12px" title="${x.o} vendor &amp; community · ${x.e} High Five Labs">${tot} kind${tot>1?'s':''}</div></a>`}).join('')}</div>`}
 function service(sl){
   const [s,...rest]=sl.split('--'), m=servicesOf(s), name=Object.keys(m).find(n=>n.replace(/[^A-Za-z0-9-]/g,'-')===rest.join('--'));
   if(!name) return $('#app').innerHTML='<h1>Not found</h1>';
@@ -357,7 +358,7 @@ function service(sl){
   <table><tr><th>Kind</th><th>Vendor &amp; community</th><th>High Five Labs</th><th>Terraform equivalent</th></tr>${Object.keys(rows).sort().map(n=>{const r=rows[n];const all=[...r.o,...r.e];
     const tags=[r.o.length&&'official',r.e.length&&'hfl',r.o.length&&r.e.length&&'both',r.e.some(k=>k.overlays)&&'overlay'].filter(Boolean).join(' ');
     return `<tr data-f="${lc(n,all.map(k=>[k.group,tfOf(k)]))}" data-tags="${tags}"><td><b>${esc(n)}</b></td><td>${r.o.map(k=>`${klink(k,k.version)} ${stabB(k)}`).join('<br>')||'<span class="muted">—</span>'}</td>
-    <td>${r.e.map(k=>`${klink(k,k.group.split('.').slice(0,-3).join('.')||k.group)}/${esc(k.version)} ${stabB(k)}${k.overlays?` <span class="muted">+${k.overlays.added} fields</span>`:''}${k.gap?`<div class="muted" style="font-size:12px;max-width:380px">${esc(k.gap.gap.slice(0,110))}…</div>`:''}`).join('<br>')||'<span class="muted">—</span>'}</td>
+    <td>${r.e.map(k=>`${klink(k,k.group.split('.').slice(0,-3).join('.')||k.group)}/${esc(k.version)} ${stabB(k)}${k.overlays?.added?` <span class="muted">+${k.overlays.added} fields</span>`:''}${k.gap?`<div class="muted" style="font-size:12px;max-width:380px">${esc(k.gap.gap.slice(0,110))}…</div>`:''}`).join('<br>')||'<span class="muted">—</span>'}</td>
     <td>${[...new Set(all.flatMap(tf))].map(tfeq).join('<br>')}</td></tr>`}).join('')}</table>`}
 
 // ---------------------------------------------------------------- operator
