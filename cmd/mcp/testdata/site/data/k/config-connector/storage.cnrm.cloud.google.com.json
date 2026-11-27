@@ -1,8 +1,8 @@
 [
  {
   "id": "config-connector/storage.cnrm.cloud.google.com/StorageBucket",
-  "provider": "config-connector",
-  "surface": "gcp",
+  "operator": "config-connector",
+  "provider": "gcp",
   "tier": "official",
   "group": "storage.cnrm.cloud.google.com",
   "kind": "StorageBucket",

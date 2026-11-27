@@ -52,5 +52,5 @@ gcloud "${args[@]}"
 python3 - "$site/registry.lock.json" <<'PY'
 import json, sys
 l = json.load(open(sys.argv[1]))
-print(f"published {len(l['providers'])} providers")
+print(f"published {len(l['operators'])} operators")
 PY

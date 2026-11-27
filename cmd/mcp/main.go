@@ -14,13 +14,18 @@
 //
 // Tools:
 //
-//	list_clouds          every cloud and vendor, with its services and kind counts
-//	search_kinds         kinds by text, cloud, service, provider or tier
+//	list_providers       every provider (gcp, aws, cloudflare, ...): its
+//	                     operators, services and kind counts
+//	search_kinds         kinds by text, provider, service, operator or tier
 //	get_kind             one kind: its fields, Terraform equivalents, tested
 //	                     example, and the examples with the kinds it needs
 //	kinds_for_terraform  Terraform resource types -> the kinds that stand in
-//	list_providers       every provider: its cloud, tier, version, kinds
+//	list_operators       every operator: its provider, tier, version, kinds, stars
+//	get_install          how to install an operator, step by step
 //	get_package          a catalog chart: its module, kinds, values, outputs
+//
+// list_clouds, the old name of list_providers, still answers but is not
+// listed.
 package main
 
 import (
@@ -58,18 +63,18 @@ type tool struct {
 var readOnly = map[string]bool{"readOnlyHint": true, "openWorldHint": false}
 
 var tools = []tool{
-	{"list_clouds", "Every cloud and vendor the registry covers (gcp, aws, azure, cloudflare, datadog, ...): its providers and, per service, how many kinds. Use it to learn the names search_kinds filters on.",
+	{"list_providers", "Every provider the registry covers, as Terraform names them (gcp, aws, azure, cloudflare, datadog, ...): the operators that serve its kinds and, per service, how many kinds. Use it to learn the names search_kinds filters on.",
 		json.RawMessage(`{"type":"object","properties":{}}`), readOnly},
-	{"search_kinds", "Find Kubernetes kinds across every provider in the registry (Config Connector, ACK, ASO, High Five Labs' extensions and REST vendor kinds) by text (kind, group, service, Terraform type, description; all words must match), and optionally cloud (gcp, aws, azure, cloudflare, ...), service, provider id or tier (official, extension).",
-		json.RawMessage(`{"type":"object","properties":{"query":{"type":"string"},"cloud":{"type":"string"},"service":{"type":"string"},"provider":{"type":"string"},"tier":{"type":"string"},"limit":{"type":"integer"}}}`), readOnly},
-	{"get_kind", "One kind in full: description, every spec and status field (type, required, enum, default, immutable), its Terraform equivalents and API paths, the gap it fills, its tested example (live or fake), the samples from the official controller's own tests, and the examples that show it with the kinds it needs. Name it by id (provider/group/Kind), group/Kind or Kind.",
+	{"search_kinds", "Find Kubernetes kinds across every operator in the registry (Config Connector, ACK, ASO, vendors' operators, High Five Labs' operators) by text (kind, group, service, Terraform type, description; all words must match), and optionally by provider (gcp, aws, azure, cloudflare, ...), service, operator id (list_operators) or tier (official: published by the provider's own vendor; community; hfl: published by High Five Labs).",
+		json.RawMessage(`{"type":"object","properties":{"query":{"type":"string"},"provider":{"type":"string","description":"provider id, from list_providers"},"service":{"type":"string"},"operator":{"type":"string","description":"operator id, from list_operators"},"tier":{"type":"string","description":"official, community or hfl"},"limit":{"type":"integer"}}}`), readOnly},
+	{"get_kind", "One kind in full: description, every spec and status field (type, required, enum, default, immutable), its Terraform equivalents and API paths, the gap it fills, its tested example (live or fake), the samples from the official controller's own tests, and the examples that show it with the kinds it needs. Name it by id (operator/group/Kind), group/Kind or Kind.",
 		json.RawMessage(`{"type":"object","properties":{"kind":{"type":"string"},"fields":{"type":"array","items":{"type":"string"},"description":"only fields whose path starts with one of these"}},"required":["kind"]}`), readOnly},
-	{"kinds_for_terraform", "Terraform resource types (e.g. google_storage_bucket, cloudflare_access_rule) -> the kinds that stand in for each, with provider, tier and readiness.",
+	{"kinds_for_terraform", "Terraform resource types (e.g. google_storage_bucket, cloudflare_access_rule) -> the kinds that stand in for each, with operator, provider, tier and readiness.",
 		json.RawMessage(`{"type":"object","properties":{"types":{"type":"array","items":{"type":"string"}}},"required":["types"]}`), readOnly},
-	{"list_providers", "Every provider the registry indexes: cloud, tier (official or extension), publisher, version, number of kinds, and how to install it (credentials, then steps per variant, where the registry has them).",
+	{"list_operators", "Every operator the registry indexes: its provider, tier (official, community or hfl), publisher, version, number of kinds, GitHub stars, and how to install it (credentials, then steps per variant, where the registry has them).",
 		json.RawMessage(`{"type":"object","properties":{}}`), readOnly},
-	{"get_install", "How to install a provider (an operator, or one of High Five Labs' extensions), as steps to run with the user: the credentials to set up first (the cloud identity and roles it acts as), then the install commands, for the variant chosen (e.g. {\"Method\":\"High Five Labs chart\",\"Cluster\":\"GKE Autopilot\"}; choices lists them, the first is the default), the placeholders to ask the user for, how to verify, and how_to_run: the order and the confirmations to follow. A provider installed by another (Config Connector, by its operator) answers with that one (via). Name the provider by id (list_providers).",
-		json.RawMessage(`{"type":"object","properties":{"provider":{"type":"string"},"choice":{"type":"object","additionalProperties":{"type":"string"},"description":"axis -> value, from choices"}},"required":["provider"]}`), readOnly},
+	{"get_install", "How to install an operator, as steps to run with the user: the credentials to set up first (the identity and roles it acts as at the provider), then the install commands, for the variant chosen (e.g. {\"Method\":\"High Five Labs chart\",\"Cluster\":\"GKE Autopilot\"}; choices lists them, the first is the default), the placeholders to ask the user for, how to verify, and how_to_run: the order and the confirmations to follow. An operator installed by another (Config Connector, by its operator) answers with that one (via). Name the operator by id (list_operators).",
+		json.RawMessage(`{"type":"object","properties":{"operator":{"type":"string","description":"operator id, from list_operators"},"choice":{"type":"object","additionalProperties":{"type":"string"},"description":"axis -> value, from choices"}},"required":["operator"]}`), readOnly},
 	{"get_package", "A catalog Helm chart (a Terraform module ported to KRM kinds): its upstream module, the kinds it uses, its values and outputs. Name it by id (aws/acm), package (aws-acm) or name.",
 		json.RawMessage(`{"type":"object","properties":{"package":{"type":"string"}},"required":["package"]}`), readOnly},
 }
@@ -87,8 +92,8 @@ func (r *registry) call(name string, args json.RawMessage) (any, error) {
 		return nil
 	}
 	switch name {
-	case "list_clouds":
-		return r.listClouds()
+	case "list_providers", "list_clouds": // list_clouds: the old name
+		return r.listProviders()
 	case "search_kinds":
 		var a searchArgs
 		if err := decode(&a); err != nil {
@@ -109,16 +114,20 @@ func (r *registry) call(name string, args json.RawMessage) (any, error) {
 		return r.getKind(*a.Kind, a.Fields)
 	case "get_install":
 		var a struct {
-			Provider *string           `json:"provider"`
+			Operator *string           `json:"operator"`
+			Provider *string           `json:"provider"` // the old name of operator
 			Choice   map[string]string `json:"choice"`
 		}
 		if err := decode(&a); err != nil {
 			return nil, err
 		}
-		if a.Provider == nil {
-			return nil, errorf("get_install: provider is required")
+		if a.Operator == nil {
+			a.Operator = a.Provider
 		}
-		return r.getInstall(*a.Provider, a.Choice)
+		if a.Operator == nil {
+			return nil, errorf("get_install: operator is required")
+		}
+		return r.getInstall(*a.Operator, a.Choice)
 	case "kinds_for_terraform":
 		var a struct {
 			Types *[]string `json:"types"`
@@ -130,8 +139,8 @@ func (r *registry) call(name string, args json.RawMessage) (any, error) {
 			return nil, errorf("kinds_for_terraform: types is required")
 		}
 		return r.kindsForTerraform(*a.Types)
-	case "list_providers":
-		return r.listProviders()
+	case "list_operators":
+		return r.listOperators()
 	case "get_package":
 		var a struct {
 			Package *string `json:"package"`
@@ -236,8 +245,8 @@ func (r *registry) handle(msg []byte) (resp *response) {
 		}
 		logEvent("initialize "+p.ClientInfo.Name, map[string]any{"event": "initialize", "client": p.ClientInfo.Name, "clientVersion": p.ClientInfo.Version, "protocolVersion": p.ProtocolVersion})
 		result = initResult{v, map[string]any{"tools": map[string]any{}}, map[string]string{"name": "krm-registry", "version": "1"},
-			"The KRM Registry: Kubernetes kinds for clouds and SaaS vendors, and the Terraform types they stand in for. " +
-				"list_clouds names the clouds, services and providers; search_kinds or kinds_for_terraform finds kinds; get_kind gives every field and the tested examples."}
+			"The KRM Registry: Kubernetes kinds for every provider (as Terraform names them: gcp, aws, cloudflare, ...) and the operators that serve them, and the Terraform types they stand in for. " +
+				"list_providers names the providers, their services and operators; list_operators lists the operators; search_kinds or kinds_for_terraform finds kinds; get_kind gives every field and the tested examples."}
 	case "ping":
 		result = map[string]any{}
 	case "tools/list":

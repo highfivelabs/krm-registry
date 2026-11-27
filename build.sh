@@ -4,8 +4,8 @@
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd) root=$1 site=$2
 mkdir -p "$root/src"
-# Our own repos: krm-packages (the catalog's charts), and every provider whose repo is ours.
-owned=$(python3 -c "import yaml,sys; d=yaml.safe_load(open(sys.argv[1])); print(' '.join(['krm-packages']+[p['repo'].rsplit('/',1)[1] for p in d['providers'] if p.get('repo','').startswith('https://github.com/highfivelabs/')]))" "$here/registry.yaml")
+# Our own repos: krm-packages (the catalog's charts), and every operator whose repo is ours.
+owned=$(python3 -c "import yaml,sys; d=yaml.safe_load(open(sys.argv[1])); print(' '.join(['krm-packages']+[p['repo'].rsplit('/',1)[1] for p in d['operators'] if p.get('repo','').startswith('https://github.com/highfivelabs/')]))" "$here/registry.yaml")
 for r in $owned; do
   [ -d "$root/src/$r/.git" ] || git clone -q --depth 1 "https://github.com/highfivelabs/$r.git" "$root/src/$r" \
     || echo "skipping $r: not cloneable yet" >&2

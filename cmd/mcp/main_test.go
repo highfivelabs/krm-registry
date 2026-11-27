@@ -116,7 +116,7 @@ func TestToolsList(t *testing.T) {
 	ts := s.rpc("tools/list", nil)["result"].(map[string]any)["tools"]
 	names := pluck(ts, "name")
 	sort.Strings(names)
-	eqs(t, "tools", names, []string{"get_install", "get_kind", "get_package", "kinds_for_terraform", "list_clouds", "list_providers", "search_kinds"})
+	eqs(t, "tools", names, []string{"get_install", "get_kind", "get_package", "kinds_for_terraform", "list_operators", "list_providers", "search_kinds"})
 	for _, x := range ts.([]any) {
 		tl := x.(map[string]any)
 		if tl["description"] == "" || tl["inputSchema"].(map[string]any)["type"] != "object" {
@@ -128,16 +128,18 @@ func TestToolsList(t *testing.T) {
 	}
 }
 
-func TestListClouds(t *testing.T) {
+func TestListProviders(t *testing.T) {
 	s := newSession(t)
-	cs := map[string]map[string]any{}
-	for _, c := range sc(s.tool("list_clouds", nil))["clouds"].([]any) {
-		cs[c.(map[string]any)["id"].(string)] = c.(map[string]any)
+	ps := sc(s.tool("list_providers", nil))["providers"]
+	eqs(t, "provider order", pluck(ps, "id"), []string{"gcp", "cloudflare", "gitlab"})
+	byID := map[string]map[string]any{}
+	for _, p := range ps.([]any) {
+		byID[p.(map[string]any)["id"].(string)] = p.(map[string]any)
 	}
-	g := cs["gitlab"]
+	g := byID["gitlab"]
 	eq(t, "gitlab kinds", g["kinds"], any(2.0))
-	if !slices.Contains(strs(g["providers"]), "gitlab-krm-extensions") {
-		t.Errorf("gitlab providers = %v", g["providers"])
+	if !slices.Contains(strs(g["operators"]), "gitlab-krm-extensions") {
+		t.Errorf("gitlab operators = %v", g["operators"])
 	}
 	n := 0.0
 	for _, v := range g["services"].(map[string]any) {
@@ -146,13 +148,28 @@ func TestListClouds(t *testing.T) {
 	eq(t, "gitlab services total", n, 2)
 }
 
+// list_clouds, the old name, still answers (unlisted), with list_providers' answer.
+func TestListCloudsAlias(t *testing.T) {
+	s := newSession(t)
+	old := s.tool("list_clouds", nil)
+	if old["isError"] == true {
+		t.Fatalf("list_clouds: %v", old)
+	}
+	eq(t, "list_clouds = list_providers", fmt.Sprint(sc(old)), fmt.Sprint(sc(s.tool("list_providers", nil))))
+}
+
 func TestSearchKinds(t *testing.T) {
 	s := newSession(t)
 	r := sc(s.tool("search_kinds", map[string]any{"query": "wiki"}))
 	eqs(t, "wiki", pluck(r["kinds"], "kind"), []string{"ProjectWikiPage"})
 	eqs(t, "wiki terraform", strs(r["kinds"].([]any)[0].(map[string]any)["terraform"]), []string{"gitlab_project_wiki_page"})
-	eq(t, "gitlab count", sc(s.tool("search_kinds", map[string]any{"cloud": "gitlab"}))["count"], any(2.0))
+	eq(t, "wiki operator", r["kinds"].([]any)[0].(map[string]any)["operator"], any("gitlab-krm-extensions"))
+	eq(t, "wiki provider", r["kinds"].([]any)[0].(map[string]any)["provider"], any("gitlab"))
+	eq(t, "gitlab count", sc(s.tool("search_kinds", map[string]any{"provider": "gitlab"}))["count"], any(2.0))
+	eq(t, "operator filter", sc(s.tool("search_kinds", map[string]any{"operator": "cloudflare-krm-extensions"}))["count"], any(1.0))
+	eq(t, "operator and other provider", sc(s.tool("search_kinds", map[string]any{"operator": "cloudflare-krm-extensions", "provider": "gcp"}))["count"], any(0.0))
 	eqs(t, "official bucket", pluck(sc(s.tool("search_kinds", map[string]any{"query": "bucket", "tier": "official"}))["kinds"], "kind"), []string{"StorageBucket"})
+	eq(t, "hfl tier", sc(s.tool("search_kinds", map[string]any{"tier": "hfl"}))["count"], any(3.0))
 	eqs(t, "terraform type", pluck(sc(s.tool("search_kinds", map[string]any{"query": "google_storage_bucket"}))["kinds"], "kind"), []string{"StorageBucket"})
 	r = sc(s.tool("search_kinds", map[string]any{"limit": 0}))
 	eq(t, "limit 0 returns one", len(r["kinds"].([]any)), 1)
@@ -164,10 +181,35 @@ func TestSearchKinds(t *testing.T) {
 	}
 }
 
+// The old argument forms still work: cloud for provider, an operator id
+// passed as provider, and tier extension for hfl.
+func TestSearchKindsAliases(t *testing.T) {
+	s := newSession(t)
+	ids := func(args map[string]any) []string {
+		t.Helper()
+		got := pluck(sc(s.tool("search_kinds", args))["kinds"], "id")
+		sort.Strings(got)
+		return got
+	}
+	gitlab := ids(map[string]any{"provider": "gitlab"})
+	eq(t, "gitlab kinds", len(gitlab), 2)
+	eqs(t, "cloud alias", ids(map[string]any{"cloud": "gitlab"}), gitlab)
+	eqs(t, "provider wins over cloud", ids(map[string]any{"provider": "gitlab", "cloud": "gcp"}), gitlab)
+	eqs(t, "operator id as provider", ids(map[string]any{"provider": "gitlab-krm-extensions"}), ids(map[string]any{"operator": "gitlab-krm-extensions"}))
+	eqs(t, "operator id as cloud", ids(map[string]any{"cloud": "config-connector"}), []string{"config-connector/storage.cnrm.cloud.google.com/StorageBucket"})
+	hfl := ids(map[string]any{"tier": "hfl"})
+	eq(t, "hfl kinds", len(hfl), 3)
+	eqs(t, "extension alias", ids(map[string]any{"tier": "extension"}), hfl)
+	eq(t, "unknown provider", sc(s.tool("search_kinds", map[string]any{"provider": "mars"}))["count"], any(0.0))
+}
+
 func TestGetKind(t *testing.T) {
 	s := newSession(t)
 	k := sc(s.tool("get_kind", map[string]any{"kind": "ProjectWikiPage"}))
 	eq(t, "apiVersion", k["apiVersion"], any("project.gitlab.hfl.dev/v1alpha1"))
+	eq(t, "operator", k["operator"], any("gitlab-krm-extensions"))
+	eq(t, "provider", k["provider"], any("gitlab"))
+	eq(t, "tier", k["tier"], any("hfl"))
 	ex := k["example"].(map[string]any)
 	eq(t, "tested", ex["tested"], any("live"))
 	if !strings.Contains(ex["manifest"].(string), "kind: ProjectWikiPage") {
@@ -210,15 +252,30 @@ func TestKindsForTerraform(t *testing.T) {
 	s := newSession(t)
 	r := sc(s.tool("kinds_for_terraform", map[string]any{"types": []string{"cloudflare_access_rule", "google_storage_bucket", "nope_thing"}}))["kinds"].(map[string]any)
 	eqs(t, "cloudflare_access_rule", pluck(r["cloudflare_access_rule"], "kind"), []string{"AccessRule"})
-	eqs(t, "google_storage_bucket", pluck(r["google_storage_bucket"], "provider"), []string{"config-connector"})
+	eqs(t, "google_storage_bucket operator", pluck(r["google_storage_bucket"], "operator"), []string{"config-connector"})
+	eqs(t, "google_storage_bucket provider", pluck(r["google_storage_bucket"], "provider"), []string{"gcp"})
 	eq(t, "nope_thing", len(r["nope_thing"].([]any)), 0)
 }
 
-func TestListProvidersAndPackage(t *testing.T) {
+func TestListOperatorsAndPackage(t *testing.T) {
 	s := newSession(t)
-	ids := pluck(sc(s.tool("list_providers", nil))["providers"], "id")
+	ops := sc(s.tool("list_operators", nil))["operators"]
+	ids := pluck(ops, "id")
 	sort.Strings(ids)
-	eqs(t, "providers", ids, []string{"cloudflare-krm-extensions", "config-connector", "config-connector-operator", "gitlab-krm-extensions"})
+	eqs(t, "operators", ids, []string{"cloudflare-krm-extensions", "config-connector", "config-connector-operator", "gitlab-krm-extensions"})
+	for _, x := range ops.([]any) {
+		o := x.(map[string]any)
+		switch o["id"] {
+		case "config-connector":
+			eq(t, "kcc provider", o["provider"], any("gcp"))
+			eq(t, "kcc stars", o["stars"], any(1050.0))
+		case "gitlab-krm-extensions":
+			eq(t, "gitlab tier", o["tier"], any("hfl"))
+			if v, ok := o["stars"]; !ok || v != nil {
+				t.Errorf("gitlab stars = %v, %v; want null", v, ok)
+			}
+		}
+	}
 	for _, name := range []string{"aws/acm", "aws-acm", "acm"} {
 		pkg := sc(s.tool("get_package", map[string]any{"package": name}))
 		eq(t, name, pkg["id"], any("aws/acm"))
@@ -234,7 +291,8 @@ func TestListProvidersAndPackage(t *testing.T) {
 func TestGetInstall(t *testing.T) {
 	s := newSession(t)
 	// Config Connector is installed by its operator; the default is the first variant.
-	p := sc(s.tool("get_install", map[string]any{"provider": "config-connector"}))
+	p := sc(s.tool("get_install", map[string]any{"operator": "config-connector"}))
+	eq(t, "operator", p["operator"], any("config-connector"))
 	eq(t, "via", p["via"], any("config-connector-operator"))
 	eq(t, "published", p["published"], any(true))
 	eq(t, "default install", p["install"].(map[string]any)["name"], any("High Five Labs chart · GKE Standard"))
@@ -251,17 +309,21 @@ func TestGetInstall(t *testing.T) {
 		t.Error("no how_to_run or verify")
 	}
 	// A choice on one axis picks the credentials that follow it.
-	p = sc(s.tool("get_install", map[string]any{"provider": "config-connector-operator", "choice": map[string]string{"Cluster": "Outside GKE"}}))
+	p = sc(s.tool("get_install", map[string]any{"operator": "config-connector-operator", "choice": map[string]string{"Cluster": "Outside GKE"}}))
 	eq(t, "outside GKE install", p["install"].(map[string]any)["name"], any("High Five Labs chart · Outside GKE"))
 	eq(t, "outside GKE credentials", p["credentials"].(map[string]any)["name"], any("Outside GKE"))
 	// Not published yet: says where, no steps.
-	p = sc(s.tool("get_install", map[string]any{"provider": "gitlab-krm-extensions"}))
+	p = sc(s.tool("get_install", map[string]any{"operator": "gitlab-krm-extensions"}))
 	eq(t, "pending published", p["published"], any(false))
 	eqs(t, "pending", toStrings(p["pending"]), []string{"charts/gitlab-krm-extensions"})
+	// provider, the old name of operator, still works.
+	old := sc(s.tool("get_install", map[string]any{"provider": "config-connector"}))
+	eq(t, "provider alias", old["via"], any("config-connector-operator"))
 	for _, bad := range []map[string]any{
-		{"provider": "nope"},
-		{"provider": "config-connector-operator", "choice": map[string]string{"Cluster": "Mars"}},
-		{"provider": "config-connector-operator", "choice": map[string]string{"Method": "Google's manifests", "Cluster": "Outside GKE"}},
+		{"operator": "nope"},
+		{"operator": "gcp"},
+		{"operator": "config-connector-operator", "choice": map[string]string{"Cluster": "Mars"}},
+		{"operator": "config-connector-operator", "choice": map[string]string{"Method": "Google's manifests", "Cluster": "Outside GKE"}},
 		{},
 	} {
 		if s.tool("get_install", bad)["isError"] != true {
@@ -311,7 +373,7 @@ func TestSourceFailure(t *testing.T) {
 	up := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { http.Error(w, "down", 503) }))
 	defer up.Close()
 	reg := &registry{newSource("", up.URL, 0)}
-	resp := reg.handle([]byte(`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"list_clouds"}}`))
+	resp := reg.handle([]byte(`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"list_providers"}}`))
 	if resp.Error == nil || resp.Error.Code != -32603 {
 		t.Errorf("response = %+v", resp)
 	}
@@ -452,7 +514,7 @@ func TestEvents(t *testing.T) {
 
 	buf.Reset()
 	events = nil
-	s.tool("list_providers", nil)
+	s.tool("list_operators", nil)
 	if buf.Len() != 0 {
 		t.Errorf("logged with events nil: %s", buf.String())
 	}

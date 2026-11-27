@@ -104,54 +104,68 @@ func (s *source) fetch(rel string) ([]byte, error) {
 // marshals as null.
 type raw = json.RawMessage
 
+// catalog is data/catalog.json. A provider is what Terraform calls one: a
+// vendor with an API (gcp, aws, cloudflare, ...). An operator is what
+// runs in the cluster and serves a provider's kinds (Config Connector, ACK,
+// ASO, a vendor's operator, High Five Labs' operators).
 type catalog struct {
-	Surfaces  surfaces   `json:"surfaces"`
-	Providers []provider `json:"providers"`
+	Providers providers  `json:"providers"`
+	Operators []operator `json:"operators"`
 	Kinds     []kind     `json:"kinds"`
 	Charts    []chart    `json:"charts"`
 }
 
-type surface struct {
+type providerInfo struct {
 	Title    raw `json:"title"`
 	Category raw `json:"category"`
 }
 
-// surfaces keeps catalog.json's order, which list_clouds answers in.
-type surfaces []struct {
+// providers keeps catalog.json's order, which list_providers answers in.
+type providers []struct {
 	ID string
-	surface
+	providerInfo
 }
 
-func (ss *surfaces) UnmarshalJSON(b []byte) error {
+func (ps *providers) UnmarshalJSON(b []byte) error {
 	d := json.NewDecoder(bytes.NewReader(b))
 	if t, err := d.Token(); err != nil || t != json.Delim('{') {
-		return fmt.Errorf("surfaces: want an object")
+		return fmt.Errorf("providers: want an object")
 	}
 	for d.More() {
 		t, err := d.Token()
 		if err != nil {
 			return err
 		}
-		var s surface
-		if err := d.Decode(&s); err != nil {
+		var p providerInfo
+		if err := d.Decode(&p); err != nil {
 			return err
 		}
-		*ss = append(*ss, struct {
+		*ps = append(*ps, struct {
 			ID string
-			surface
-		}{t.(string), s})
+			providerInfo
+		}{t.(string), p})
 	}
 	return nil
 }
 
-type provider struct {
+func (ps providers) has(id string) bool {
+	for _, p := range ps {
+		if p.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
+type operator struct {
 	ID        string   `json:"id"`
 	Title     raw      `json:"title"`
-	Surface   *string  `json:"surface"`
+	Provider  *string  `json:"provider"`
 	Tier      raw      `json:"tier"`
 	Publisher raw      `json:"publisher"`
 	Version   raw      `json:"version"`
 	NKinds    raw      `json:"nkinds"`
+	Stars     raw      `json:"stars"`
 	Repo      raw      `json:"repo"`
 	Install   raw      `json:"install"`
 	Creds     raw      `json:"credentials"`
@@ -169,8 +183,8 @@ type kind struct {
 	Kind      string  `json:"kind"`
 	Group     string  `json:"group"`
 	Version   string  `json:"version"`
-	Provider  string  `json:"provider"`
-	Surface   *string `json:"surface"`
+	Operator  string  `json:"operator"`
+	Provider  *string `json:"provider"`
 	Service   *string `json:"service"`
 	Tier      *string `json:"tier"`
 	Stability *string `json:"stability"`
@@ -313,8 +327,8 @@ func (r *registry) cat() (*catalog, error) {
 	return v.(*catalog), nil
 }
 
-func (r *registry) shard(provider, group string) ([]kind, error) {
-	v, err := r.src.get("data/k/"+provider+"/"+group+".json", func(b []byte) (any, error) {
+func (r *registry) shard(operator, group string) ([]kind, error) {
+	v, err := r.src.get("data/k/"+operator+"/"+group+".json", func(b []byte) (any, error) {
 		var ks []kind
 		err := json.Unmarshal(b, &ks)
 		return ks, err
@@ -329,8 +343,8 @@ type summary struct {
 	ID          string   `json:"id"`
 	Kind        string   `json:"kind"`
 	APIVersion  string   `json:"apiVersion"`
-	Provider    string   `json:"provider"`
-	Cloud       *string  `json:"cloud"`
+	Operator    string   `json:"operator"`
+	Provider    *string  `json:"provider"`
 	Service     *string  `json:"service"`
 	Tier        *string  `json:"tier"`
 	Stability   *string  `json:"stability"`
@@ -344,29 +358,31 @@ func summarize(k *kind, tf []string) summary {
 	if len(desc) > 240 {
 		desc = desc[:240]
 	}
-	return summary{k.ID, k.Kind, k.Group + "/" + k.Version, k.Provider, k.Surface, k.Service, k.Tier, k.Stability,
+	return summary{k.ID, k.Kind, k.Group + "/" + k.Version, k.Operator, k.Provider, k.Service, k.Tier, k.Stability,
 		str(k.Readiness), tf, string(desc)}
 }
 
 // ---------------------------------------------------------------- tools
 
-type cloud struct {
+type providerOut struct {
 	ID        string         `json:"id"`
 	Title     raw            `json:"title"`
 	Category  raw            `json:"category"`
-	Providers []string       `json:"providers"`
+	Operators []string       `json:"operators"`
 	Kinds     int            `json:"kinds"`
 	Services  map[string]int `json:"services"` // marshals sorted by name
 }
 
-func (r *registry) listClouds() (any, error) {
+// listProviders answers list_providers: every provider, its operators and
+// its kinds per service.
+func (r *registry) listProviders() (any, error) {
 	c, err := r.cat()
 	if err != nil {
 		return nil, err
 	}
 	services := map[string]map[string]int{}
 	for _, k := range c.Kinds {
-		sid := str(k.Surface)
+		sid := str(k.Provider)
 		if services[sid] == nil {
 			services[sid] = map[string]int{}
 		}
@@ -376,12 +392,12 @@ func (r *registry) listClouds() (any, error) {
 		}
 		services[sid][svc]++
 	}
-	provs := map[string][]string{}
-	for _, p := range c.Providers {
-		provs[str(p.Surface)] = append(provs[str(p.Surface)], p.ID)
+	ops := map[string][]string{}
+	for _, o := range c.Operators {
+		ops[str(o.Provider)] = append(ops[str(o.Provider)], o.ID)
 	}
-	out := []cloud{}
-	for _, s := range c.Surfaces {
+	out := []providerOut{}
+	for _, s := range c.Providers {
 		sv := services[s.ID]
 		if sv == nil {
 			sv = map[string]int{}
@@ -390,18 +406,44 @@ func (r *registry) listClouds() (any, error) {
 		for _, v := range sv {
 			n += v
 		}
-		ps := provs[s.ID]
-		if ps == nil {
-			ps = []string{}
+		ids := ops[s.ID]
+		if ids == nil {
+			ids = []string{}
 		}
-		out = append(out, cloud{s.ID, s.Title, s.Category, ps, n, sv})
+		out = append(out, providerOut{s.ID, s.Title, s.Category, ids, n, sv})
 	}
-	return map[string]any{"clouds": out}, nil
+	return map[string]any{"providers": out}, nil
 }
 
+// searchArgs are search_kinds' arguments. Cloud is the old name of
+// Provider, and Provider once named an operator: both still work.
 type searchArgs struct {
-	Query, Cloud, Service, Provider, Tier string
-	Limit                                 *float64
+	Query, Provider, Cloud, Service, Operator, Tier string
+	Limit                                           *float64
+}
+
+// normalize maps the deprecated forms onto the current ones: cloud to
+// provider, an operator id given as provider to operator (the two id sets
+// are disjoint), and tier extension to hfl.
+func (a *searchArgs) normalize(c *catalog) {
+	if a.Provider == "" {
+		a.Provider = a.Cloud
+	}
+	a.Cloud = ""
+	if a.Provider != "" && !c.Providers.has(a.Provider) {
+		for _, o := range c.Operators {
+			if o.ID == a.Provider {
+				if a.Operator == "" {
+					a.Operator = a.Provider
+				}
+				a.Provider = ""
+				break
+			}
+		}
+	}
+	if a.Tier == "extension" {
+		a.Tier = "hfl"
+	}
 }
 
 func (r *registry) searchKinds(a searchArgs) (any, error) {
@@ -409,6 +451,7 @@ func (r *registry) searchKinds(a searchArgs) (any, error) {
 	if err != nil {
 		return nil, err
 	}
+	a.normalize(c)
 	words := strings.Fields(strings.ToLower(a.Query))
 	q, exact := strings.Join(words, ""), strings.ToLower(strings.TrimSpace(a.Query))
 	type hit struct {
@@ -419,8 +462,8 @@ func (r *registry) searchKinds(a searchArgs) (any, error) {
 	var hits []hit
 	for i := range c.Kinds {
 		k := &c.Kinds[i]
-		if (a.Cloud != "" && str(k.Surface) != a.Cloud) || (a.Service != "" && str(k.Service) != a.Service) ||
-			(a.Provider != "" && k.Provider != a.Provider) || (a.Tier != "" && str(k.Tier) != a.Tier) {
+		if (a.Provider != "" && str(k.Provider) != a.Provider) || (a.Service != "" && str(k.Service) != a.Service) ||
+			(a.Operator != "" && k.Operator != a.Operator) || (a.Tier != "" && str(k.Tier) != a.Tier) {
 			continue
 		}
 		tf := k.terraform()
@@ -490,7 +533,7 @@ func (r *registry) searchKinds(a searchArgs) (any, error) {
 	return map[string]any{"count": len(hits), "kinds": out}, nil
 }
 
-// find names a kind by id (provider/group/Kind), group/Kind or Kind.
+// find names a kind by id (operator/group/Kind), group/Kind or Kind.
 func (r *registry) find(name string) (*kind, error) {
 	c, err := r.cat()
 	if err != nil {
@@ -522,7 +565,7 @@ func (r *registry) find(name string) (*kind, error) {
 	for _, k := range hit[:min(20, len(hit))] {
 		ids = append(ids, k.ID)
 	}
-	return nil, errorf("%q is in more than one provider or group; name one of: %s", name, strings.Join(ids, ", "))
+	return nil, errorf("%q is in more than one operator or group; name one of: %s", name, strings.Join(ids, ", "))
 }
 
 type fieldOut struct {
@@ -592,7 +635,7 @@ func (r *registry) getKind(name string, fields []string) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	shard, err := r.shard(k.Provider, k.Group)
+	shard, err := r.shard(k.Operator, k.Group)
 	if err != nil {
 		return nil, err
 	}
@@ -672,7 +715,8 @@ type tfKind struct {
 	ID         string  `json:"id"`
 	Kind       string  `json:"kind"`
 	APIVersion string  `json:"apiVersion"`
-	Provider   string  `json:"provider"`
+	Operator   string  `json:"operator"`
+	Provider   *string `json:"provider"`
 	Tier       *string `json:"tier"`
 	Stability  *string `json:"stability"`
 	Readiness  *string `json:"readiness"`
@@ -692,7 +736,7 @@ func (r *registry) kindsForTerraform(types []string) (any, error) {
 		for _, a := range k.API {
 			for _, t := range a.TF {
 				if _, ok := out[t]; ok {
-					out[t] = append(out[t], tfKind{k.ID, k.Kind, k.Group + "/" + k.Version, k.Provider, k.Tier, k.Stability, k.Readiness})
+					out[t] = append(out[t], tfKind{k.ID, k.Kind, k.Group + "/" + k.Version, k.Operator, k.Provider, k.Tier, k.Stability, k.Readiness})
 				}
 			}
 		}
@@ -700,29 +744,30 @@ func (r *registry) kindsForTerraform(types []string) (any, error) {
 	return map[string]any{"kinds": out}, nil
 }
 
-type providerOut struct {
+type operatorOut struct {
 	ID        string  `json:"id"`
 	Title     raw     `json:"title"`
-	Cloud     *string `json:"cloud"`
+	Provider  *string `json:"provider"`
 	Tier      raw     `json:"tier"`
 	Publisher raw     `json:"publisher"`
 	Version   raw     `json:"version"`
 	Kinds     raw     `json:"kinds"`
+	Stars     raw     `json:"stars"`
 	Repo      raw     `json:"repo"`
 	Install   raw     `json:"install,omitempty"`     // [{name, pick, when, note, tested, steps, source}]
 	Creds     raw     `json:"credentials,omitempty"` // same shape: the identity to set up first
 }
 
-func (r *registry) listProviders() (any, error) {
+func (r *registry) listOperators() (any, error) {
 	c, err := r.cat()
 	if err != nil {
 		return nil, err
 	}
-	out := []providerOut{}
-	for _, p := range c.Providers {
-		out = append(out, providerOut{p.ID, p.Title, p.Surface, p.Tier, p.Publisher, p.Version, p.NKinds, p.Repo, nullless(p.Install), nullless(p.Creds)})
+	out := []operatorOut{}
+	for _, o := range c.Operators {
+		out = append(out, operatorOut{o.ID, o.Title, o.Provider, o.Tier, o.Publisher, o.Version, o.NKinds, o.Stars, o.Repo, nullless(o.Install), nullless(o.Creds)})
 	}
-	return map[string]any{"providers": out}, nil
+	return map[string]any{"operators": out}, nil
 }
 
 // nullless drops a JSON null, so omitempty leaves the field out.

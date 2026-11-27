@@ -1,15 +1,15 @@
-# The registry's sources: which providers and package catalogs it indexes,
+# The registry's sources: which providers, operators and package catalogs it indexes,
 # where their CRDs and docs are, and how they relate. Each repository of ours
 # may also describe itself in a `krm-registry.yaml` at its root (like
 # terraform-registry-manifest.json); today that carries `install:`, read by
-# config.py. A provider's `install:` here overrides its repository's: that is
-# the registry's account of providers we do not control (README, "Install variants").
+# config.py. An operator's `install:` here overrides its repository's: that is
+# the registry's account of operators we do not control (README, "Install variants").
 schema: 1
 
-# A surface is a cloud or a vendor. `terraform` names its Terraform provider:
+# A provider is a cloud or a vendor, as Terraform uses the word. `terraform` names its Terraform provider:
 # resolve.py reads its rank, downloads and resource list from the Terraform
 # Registry API, and the registry shows how much of it the kinds cover.
-surfaces:
+providers:
   gcp:        {title: Google Cloud, category: cloud, terraform: hashicorp/google}
   aws:        {title: Amazon Web Services, category: cloud, terraform: hashicorp/aws}
   azure:      {title: Microsoft Azure, category: cloud, terraform: hashicorp/azurerm}
@@ -22,7 +22,7 @@ surfaces:
   confluent:  {title: Confluent Cloud, category: data streaming, terraform: confluentinc/confluent,
                notes: "Confluent for Kubernetes (CFK) manages topics, schemas, connectors, role bindings, cluster links and schema exporters, some of them on Confluent Cloud; it is not indexed here because its CRDs ship only in Confluent's Helm chart, not in a public repository."}
   databricks: {title: Databricks, category: data platform, terraform: databricks/databricks,
-               notes: "Databricks publishes no OpenAPI spec, so there is no generated extension yet; the community databricks-kube-operator covers jobs, repos, secrets and git credentials."}
+               notes: "Databricks publishes no OpenAPI spec, so there is no generated operator yet; the community databricks-kube-operator covers jobs, repos, secrets and git credentials."}
   pagerduty:  {title: PagerDuty, category: incident response, terraform: PagerDuty/pagerduty}
   sentry:     {title: Sentry, category: observability, terraform: jianyuan/sentry,
                notes: "Sentry publishes no Kubernetes operator. Two community projects exist (jace-ys/sentry-operator, last updated 2021; sr/kube-sentry-controller, 2023) and cover only teams, projects and client keys; neither is indexed here."}
@@ -38,14 +38,14 @@ surfaces:
   alicloud:   {title: Alibaba Cloud, category: cloud, terraform: aliyun/alicloud,
                notes: "No Kubernetes operator manages Alibaba Cloud resources (ACK's own CRDs run in-cluster software), and the API is RPC-style with request signing, which the REST runtime does not drive. Not covered yet."}
 
-# Terraform types each operator kind stands in for (generated extension
+# Terraform types each operator's kind stands in for (High Five Labs' generated
 # kinds carry theirs in the CRD's hfl.dev/terraform annotation).
 terraform_map: terraform-map.yaml
 
-providers:
+operators:
   - id: config-connector
     title: Config Connector
-    surface: gcp
+    provider: gcp
     publisher: Google
     tier: official
     repo: https://github.com/GoogleCloudPlatform/k8s-config-connector
@@ -58,7 +58,7 @@ providers:
   # public Cloud Storage bucket, one folder per version, not as a GitHub release.
   - id: config-connector-operator
     title: Config Connector operator
-    surface: gcp
+    provider: gcp
     publisher: Google
     tier: official
     manages: in-cluster
@@ -287,7 +287,7 @@ providers:
 
   - id: ack
     title: AWS Controllers for Kubernetes
-    surface: aws
+    provider: aws
     publisher: Amazon Web Services
     tier: official
     repo: https://github.com/aws-controllers-k8s
@@ -334,7 +334,7 @@ providers:
 
   - id: aso
     title: Azure Service Operator v2
-    surface: azure
+    provider: azure
     publisher: Microsoft
     tier: official
     repo: https://github.com/Azure/azure-service-operator
@@ -366,9 +366,9 @@ providers:
 
   - id: config-connector-extensions
     title: config-connector-extensions
-    surface: gcp
+    provider: gcp
     publisher: High Five Labs
-    tier: extension
+    tier: hfl
     extends: config-connector
     repo: https://github.com/highfivelabs/config-connector-extensions
     version: main
@@ -381,9 +381,9 @@ providers:
 
   - id: ack-extensions
     title: ack-extensions
-    surface: aws
+    provider: aws
     publisher: High Five Labs
-    tier: extension
+    tier: hfl
     extends: ack
     repo: https://github.com/highfivelabs/ack-extensions
     version: main
@@ -395,9 +395,9 @@ providers:
 
   - id: aso-extensions
     title: aso-extensions
-    surface: azure
+    provider: azure
     publisher: High Five Labs
-    tier: extension
+    tier: hfl
     extends: aso
     repo: https://github.com/highfivelabs/aso-extensions
     version: main
@@ -413,7 +413,7 @@ providers:
   # (installs and runs software in the cluster).
   - id: grafana-operator
     title: Grafana Operator
-    surface: grafana
+    provider: grafana
     publisher: Grafana Labs
     tier: official
     manages: external-api
@@ -433,7 +433,7 @@ providers:
 
   - id: datadog-operator
     title: Datadog Operator
-    surface: datadog
+    provider: datadog
     publisher: Datadog
     tier: official
     manages: external-api
@@ -463,7 +463,7 @@ providers:
 
   - id: stringke-cloudflare-operator
     title: cloudflare-operator (StringKe)
-    surface: cloudflare
+    provider: cloudflare
     publisher: StringKe (community)
     tier: community
     manages: external-api
@@ -483,7 +483,7 @@ providers:
 
   - id: adyanth-cloudflare-operator
     title: cloudflare-operator (adyanth)
-    surface: cloudflare
+    provider: cloudflare
     publisher: adyanth (community)
     tier: community
     manages: external-api
@@ -501,7 +501,7 @@ providers:
 
   - id: git-hubby
     title: git-hubby
-    surface: github
+    provider: github
     publisher: Interhyp (community)
     tier: community
     manages: external-api
@@ -524,7 +524,7 @@ providers:
 
   - id: actions-runner-controller
     title: Actions Runner Controller
-    surface: github
+    provider: github
     publisher: GitHub
     tier: official
     manages: in-cluster
@@ -547,7 +547,7 @@ providers:
 
   - id: gitlab-operator
     title: GitLab Operator
-    surface: gitlab
+    provider: gitlab
     publisher: GitLab
     tier: official
     manages: in-cluster
@@ -567,7 +567,7 @@ providers:
 
   - id: gitlab-runner-operator
     title: GitLab Runner Operator
-    surface: gitlab
+    provider: gitlab
     publisher: GitLab
     tier: official
     manages: in-cluster
@@ -590,7 +590,7 @@ providers:
 
   - id: oci-service-operator
     title: OCI Service Operator
-    surface: oci
+    provider: oci
     publisher: Oracle
     tier: official
     manages: external-api
@@ -616,7 +616,7 @@ providers:
 
   - id: atlas-kubernetes-operator
     title: Atlas Kubernetes Operator
-    surface: mongodbatlas
+    provider: mongodbatlas
     publisher: MongoDB
     tier: official
     manages: external-api
@@ -642,7 +642,7 @@ providers:
 
   - id: vault-config-operator
     title: vault-config-operator
-    surface: vault
+    provider: vault
     publisher: Red Hat Community of Practice (community)
     tier: community
     manages: external-api
@@ -666,7 +666,7 @@ providers:
 
   - id: vault-secrets-operator
     title: Vault Secrets Operator
-    surface: vault
+    provider: vault
     publisher: HashiCorp
     tier: official
     manages: in-cluster
@@ -686,7 +686,7 @@ providers:
 
   - id: databricks-kube-operator
     title: databricks-kube-operator
-    surface: databricks
+    provider: databricks
     publisher: mach-kernel (community)
     tier: community
     manages: external-api
@@ -708,12 +708,12 @@ providers:
             --from-literal access_token=$DATABRICKS_TOKEN \
             --from-literal databricks_url=https://my-tenant.cloud.databricks.com/api
 
-  # High Five Labs' REST extensions (krm-rest-runtime), at main.
+  # High Five Labs' REST operators (krm-rest-runtime), at main.
   - id: datadog-krm-extensions
     title: datadog-krm-extensions
-    surface: datadog
+    provider: datadog
     publisher: High Five Labs
-    tier: extension
+    tier: hfl
     manages: external-api
     extends: datadog-operator
     repo: https://github.com/highfivelabs/datadog-krm-extensions
@@ -723,9 +723,9 @@ providers:
 
   - id: github-krm-extensions
     title: github-krm-extensions
-    surface: github
+    provider: github
     publisher: High Five Labs
-    tier: extension
+    tier: hfl
     manages: external-api
     repo: https://github.com/highfivelabs/github-krm-extensions
     version: main
@@ -734,9 +734,9 @@ providers:
 
   - id: cloudflare-krm-extensions
     title: cloudflare-krm-extensions
-    surface: cloudflare
+    provider: cloudflare
     publisher: High Five Labs
-    tier: extension
+    tier: hfl
     manages: external-api
     repo: https://github.com/highfivelabs/cloudflare-krm-extensions
     version: main
@@ -745,9 +745,9 @@ providers:
 
   - id: grafana-krm-extensions
     title: grafana-krm-extensions
-    surface: grafana
+    provider: grafana
     publisher: High Five Labs
-    tier: extension
+    tier: hfl
     manages: external-api
     extends: grafana-operator
     repo: https://github.com/highfivelabs/grafana-krm-extensions
@@ -757,9 +757,9 @@ providers:
 
   - id: gitlab-krm-extensions
     title: gitlab-krm-extensions
-    surface: gitlab
+    provider: gitlab
     publisher: High Five Labs
-    tier: extension
+    tier: hfl
     manages: external-api
     repo: https://github.com/highfivelabs/gitlab-krm-extensions
     version: main
@@ -768,9 +768,9 @@ providers:
 
   - id: pagerduty-krm-extensions
     title: pagerduty-krm-extensions
-    surface: pagerduty
+    provider: pagerduty
     publisher: High Five Labs
-    tier: extension
+    tier: hfl
     manages: external-api
     repo: https://github.com/highfivelabs/pagerduty-krm-extensions
     version: main
@@ -779,9 +779,9 @@ providers:
 
   - id: sentry-krm-extensions
     title: sentry-krm-extensions
-    surface: sentry
+    provider: sentry
     publisher: High Five Labs
-    tier: extension
+    tier: hfl
     manages: external-api
     repo: https://github.com/highfivelabs/sentry-krm-extensions
     version: main
@@ -790,9 +790,9 @@ providers:
 
   - id: okta-krm-extensions
     title: okta-krm-extensions
-    surface: okta
+    provider: okta
     publisher: High Five Labs
-    tier: extension
+    tier: hfl
     manages: external-api
     repo: https://github.com/highfivelabs/okta-krm-extensions
     version: main
@@ -801,9 +801,9 @@ providers:
 
   - id: mongodbatlas-krm-extensions
     title: mongodbatlas-krm-extensions
-    surface: mongodbatlas
+    provider: mongodbatlas
     publisher: High Five Labs
-    tier: extension
+    tier: hfl
     manages: external-api
     extends: atlas-kubernetes-operator
     repo: https://github.com/highfivelabs/mongodbatlas-krm-extensions
@@ -813,9 +813,9 @@ providers:
 
   - id: confluent-krm-extensions
     title: confluent-krm-extensions
-    surface: confluent
+    provider: confluent
     publisher: High Five Labs
-    tier: extension
+    tier: hfl
     manages: external-api
     repo: https://github.com/highfivelabs/confluent-krm-extensions
     version: main
@@ -824,9 +824,9 @@ providers:
 
   - id: vault-krm-extensions
     title: vault-krm-extensions
-    surface: vault
+    provider: vault
     publisher: High Five Labs
-    tier: extension
+    tier: hfl
     manages: external-api
     extends: vault-config-operator
     repo: https://github.com/highfivelabs/vault-krm-extensions
@@ -836,9 +836,9 @@ providers:
 
   - id: snowflake-krm-extensions
     title: snowflake-krm-extensions
-    surface: snowflake
+    provider: snowflake
     publisher: High Five Labs
-    tier: extension
+    tier: hfl
     manages: external-api
     repo: https://github.com/highfivelabs/snowflake-krm-extensions
     version: main
