@@ -1,4 +1,4 @@
-"""config.load: a provider repo's krm-registry.yaml, and registry.yaml's override.
+"""config.load: an operator repo's krm-registry.yaml, and registry.yaml's override.
 python3 -m unittest test_config"""
 import os, tempfile, textwrap, unittest
 
@@ -15,7 +15,7 @@ class Load(unittest.TestCase):
         self.src = tempfile.mkdtemp()
 
     def by_id(self):
-        return {p["id"]: p for p in config.load(self.src)["providers"]}
+        return {p["id"]: p for p in config.load(self.src)["operators"]}
 
     def test_repo_file_supplies_install(self):
         write(f"{self.src}/github-krm-extensions/krm-registry.yaml", """

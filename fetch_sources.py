@@ -24,9 +24,9 @@ def run(*a):
     subprocess.run(a, check=True, capture_output=True)
 
 
-for p in cfg["providers"]:
+for p in cfg["operators"]:
     src = p.get("source")
-    rel = lock["providers"].get(p["id"])
+    rel = lock["operators"].get(p["id"])
     if not src or not rel:
         continue
     dest = os.path.join(ROOT, "upstream", p["id"])

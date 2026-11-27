@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """Build the KRM registry's index from registry.yaml.
 
-Reads every provider's CRDs, the extension repos' kind docs and coverage
+Reads every operator's CRDs, our operator repos' kind docs and coverage
 tables, and the catalog's charts, and writes:
 
-  out/data/catalog.json            providers, surfaces, services, kind and chart summaries (search index)
-  out/data/k/<provider>/<group>.json   every kind of one API group, with its fields
+  out/data/catalog.json            providers, operators, services, kind and chart summaries (search index)
+  out/data/k/<operator>/<group>.json   every kind of one API group, with its fields
   out/data/charts/<cloud>-<chart>.json one chart: metadata, values, README, kinds it renders
-  out/md/...                       the same pages as Markdown, for agents
-  out/llms.txt                     the entry point for agents
+  out/llms.txt, out/<provider>/... the same pages as Markdown, for agents (agent.py)
 
 Usage: gen.py <root> <out>   (root holds upstream/ and src/ as registry.yaml names them)
 """
@@ -26,21 +25,22 @@ ROOT, OUT, LOCKF = sys.argv[1], sys.argv[2], sys.argv[3]
 LOCK = json.load(open(LOCKF))
 HERE = os.path.dirname(os.path.abspath(__file__))
 CFG = config.load(os.path.join(ROOT, "src"), loader=L)  # registry.yaml + our repos' krm-registry.yaml
-for _p in CFG["providers"]:  # providers document the release the lock resolved
-    _l = LOCK["providers"].get(_p["id"])
+for _p in CFG["operators"]:  # operators document the release the lock resolved
+    _l = LOCK["operators"].get(_p["id"])
     if _l and _p["id"] != "ack":
         _p["version"], _p["commit"] = _l["tag"], _l.get("commit")
 TFMAP = yaml.load(open(os.path.join(HERE, CFG.get("terraform_map", "terraform-map.yaml"))), Loader=L) or {}
-TFLOCK = (LOCK.get("terraform") or {}).get("surfaces") or {}
+TFLOCK = (LOCK.get("terraform") or {}).get("providers") or {}
+STARS = LOCK.get("stars") or {}
 
 
-def tf_prefix(surface):
-    t = CFG["surfaces"][surface].get("terraform") or ""
+def tf_prefix(provider):
+    t = CFG["providers"][provider].get("terraform") or ""
     return t.split("/")[-1].lower().replace("azurerm", "azurerm")
 
 
-def tf_area(surface, t):
-    rest = t[len(tf_prefix(surface)) + 1:]
+def tf_area(provider, t):
+    rest = t[len(tf_prefix(provider)) + 1:]
     w = rest.split("_")
     return "zero_trust" if w[:2] == ["zero", "trust"] else w[0]
 FAMILIES = [(r"github\.com/GoogleCloudPlatform/cloud-foundation-fabric", "Cloud Foundation Fabric"),
@@ -71,7 +71,7 @@ def pick_version(prov, versions):
     """The version a page shows: the newest served, stable before preview."""
     served = [v for v in versions if v.get("served", True)]
     names = [v["name"] for v in served]
-    if prov["surface"] == "azure" and prov["tier"] == "official" or any(ASO_VER.match(n) for n in names):
+    if prov["provider"] == "azure" and prov["tier"] == "official" or any(ASO_VER.match(n) for n in names):
         def key(n):
             m = ASO_VER.match(n)
             if m:
@@ -173,7 +173,7 @@ ACK_COMMON = {"adoptedresources", "fieldexports", "iamroleselectors"}
 
 
 def docs_url(prov, k):
-    """The provider's own reference page for the kind, where it publishes one."""
+    """The operator's own reference page for the kind, where it publishes one."""
     short, v, low = k["group"].split(".")[0], k["version"], k["kind"].lower()
     if prov["id"] == "config-connector" and k["stability"] != "alpha":
         return f"https://docs.cloud.google.com/config-connector/docs/reference/resource-docs/{short}/{low}"
@@ -190,7 +190,7 @@ def install_of(prov, key="install"):
     [{name, pick, when, note, tested, steps, source, ours}]. A variant's pick ({axis:
     value}, e.g. {Method: High Five Labs chart, Cluster: GKE Autopilot}) places it on the
     page's radio buttons; credentials are matched to the install variant on the axes they
-    share. In an ACK-style provider (one controller per service), {controllers} becomes
+    share. In an ACK-style operator (one controller per service), {controllers} becomes
     one "<service> <version>" line per controller the lock resolved, {ncontrollers} their
     count. A variant naming one of our OCI charts (oci:) is left out unless resolve.py
     found it published, and takes the version it found there, so the site never points
@@ -309,7 +309,7 @@ def readme_gaps(prov):
 
 
 def coverage_index(prov, tf):
-    """kind → [{api resource, terraform types}] from the extension repo's coverage tables."""
+    """kind → [{api resource, terraform types}] from our operator repo's coverage tables."""
     out = defaultdict(list)
     f = prov.get("coverage")
     if not f or not os.path.exists(P(f)):
@@ -317,7 +317,7 @@ def coverage_index(prov, tf):
     for row in csv.DictReader(open(P(f))):
         res = row["resource"]
         tft = tf.get((row["service"], res), [])
-        for col, origin in (("official_kinds", "official"), ("ours_kinds", "extension")):
+        for col, origin in (("official_kinds", "official"), ("ours_kinds", "hfl")):
             for k in filter(None, (row.get(col) or "").split(";")):
                 k = k.strip()
                 cc = "(Cloud Control)" in k
@@ -325,7 +325,7 @@ def coverage_index(prov, tf):
                 group = None
                 if "/" in k:
                     group, k = k.split("/", 1)
-                key = (origin, row["service"] if prov["surface"] == "aws" else None, group, k, cc)
+                key = (origin, row["service"] if prov["provider"] == "aws" else None, group, k, cc)
                 entry = {"api": res, "tf": tft}
                 if entry not in out[key]:
                     out[key].append(entry)
@@ -344,14 +344,14 @@ def tf_index(prov):
 # ---------------------------------------------------------------- build
 
 def build():
-    providers = {p["id"]: p for p in CFG["providers"]}
+    providers = {p["id"]: p for p in CFG["operators"]}
     ack_rel = {}
-    for c in LOCK["providers"]["ack"]["controllers"]:
+    for c in LOCK["operators"]["ack"]["controllers"]:
         ack_rel[c["repo"]] = (c["tag"], c["commit"])
 
     kinds = []            # summaries
     shards = defaultdict(list)
-    for prov in CFG["providers"]:
+    for prov in CFG["operators"]:
         n = 0
         for path, crd in load_crds(prov["crds"]):
             spec = crd["spec"]
@@ -379,7 +379,7 @@ def build():
             rel = ack_rel.get(ctrl, (None, None)) if ctrl else (None, None)
             k = {
                 "id": f"{prov['id']}/{group}/{kind}",
-                "provider": prov["id"], "surface": prov["surface"], "tier": prov["tier"],
+                "operator": prov["id"], "provider": prov["provider"], "tier": prov["tier"],
                 "group": group, "kind": kind, "plural": plural, "service": svc,
                 "scope": spec.get("scope", "Namespaced"),
                 "version": ver,
@@ -408,8 +408,8 @@ def build():
                 k["readiness"] = ann["hfl.dev/readiness"]
             if prov.get("manages"):
                 k["manages"] = prov["manages"]
-            if CFG["surfaces"][prov["surface"]].get("category", "cloud") != "cloud":
-                k["service"] = tf_area(prov["surface"], tfs[0]) if tfs else "other"
+            if CFG["providers"][prov["provider"]].get("category", "cloud") != "cloud":
+                k["service"] = tf_area(prov["provider"], tfs[0]) if tfs else "other"
             kinds.append(k)
             shards[(prov["id"], group)].append(dict(k, spec=spec_fields, status=status_fields))
             n += 1
@@ -417,12 +417,12 @@ def build():
 
     by_name = defaultdict(list)
     for k in kinds:
-        by_name[(k["surface"], k["kind"])].append(k)
+        by_name[(k["provider"], k["kind"])].append(k)
 
     # References: *Ref / *Reference / owner fields → kinds named in the description.
     kind_names = defaultdict(set)
     for k in kinds:
-        kind_names[k["surface"]].add(k["kind"])
+        kind_names[k["provider"]].add(k["kind"])
     for (pid, group), ks in shards.items():
         for k in ks:
             refs = []
@@ -436,7 +436,7 @@ def build():
                 tg = []
                 for t in targets:
                     name = t.split("/")[-1]
-                    if name in kind_names[k["surface"]] and name != k["kind"]:
+                    if name in kind_names[k["provider"]] and name != k["kind"]:
                         tg.append(name)
                 if tg:
                     refs.append({"field": f["p"], "kinds": sorted(set(tg))})
@@ -454,7 +454,7 @@ def build():
     ack_s = {}
     for d in sorted(glob.glob(P("upstream/ack/*"))):
         ctrl = os.path.basename(d)
-        tag = (next((c for c in LOCK["providers"]["ack"]["controllers"] if c["repo"] == ctrl), None) or {}).get("tag")
+        tag = (next((c for c in LOCK["operators"]["ack"]["controllers"] if c["repo"] == ctrl), None) or {}).get("tag")
         if tag:
             ack_s.update(samples.ack(d, f"https://github.com/aws-controllers-k8s/{ctrl}", tag))
     official["ack"] = ack_s
@@ -467,9 +467,9 @@ def build():
                 n_samples += 1
     print(f"upstream test samples: {n_samples} kinds", file=sys.stderr)
 
-    # Extension metadata, coverage and Terraform mapping.
-    for prov in CFG["providers"]:
-        if prov["tier"] != "extension":
+    # Our operators' metadata, coverage and Terraform mapping.
+    for prov in CFG["operators"]:
+        if prov["tier"] != "hfl":
             continue
         docs, gaps = kind_docs(prov), readme_gaps(prov)
         repo_dir = P("src/" + prov["repo"].rstrip("/").rsplit("/", 1)[1]) if prov.get("repo") else None
@@ -480,13 +480,13 @@ def build():
         base = prov.get("extends")
         for (pid, group), ks in shards.items():
             for k in ks:
-                if k["surface"] != prov["surface"]:
+                if k["provider"] != prov["provider"]:
                     continue
-                origin = "extension" if pid == prov["id"] else ("official" if pid == base else None)
+                origin = "hfl" if pid == prov["id"] else ("official" if pid == base else None)
                 if origin is None:
                     continue
-                svc_key = k["service"] if prov["surface"] == "aws" else None
-                hits = (cov.get((origin, svc_key, k["group"] if prov["surface"] == "azure" else None, k["kind"], k["cloudcontrol"]))
+                svc_key = k["service"] if prov["provider"] == "aws" else None
+                hits = (cov.get((origin, svc_key, k["group"] if prov["provider"] == "azure" else None, k["kind"], k["cloudcontrol"]))
                         or cov.get((origin, svc_key, None, k["kind"], k["cloudcontrol"])) or [])
                 if hits:
                     k["api"] = [dict(h) for h in hits]
@@ -508,23 +508,23 @@ def build():
                 if (group, k["kind"]) in gaps:
                     k["gap"] = gaps[(group, k["kind"])]
                 elif k.get("readiness") == "fake" and k.get("api"):
-                    title = CFG["surfaces"][prov["surface"]]["title"]
+                    title = CFG["providers"][prov["provider"]]["title"]
                     tfl = ", ".join(f"`{t}`" for t in k["api"][0]["tf"])
-                    k["gap"] = {"gap": f"Stands in for {tfl}, which {title}'s own operators do not cover. Generated from {title}'s OpenAPI spec "
+                    k["gap"] = {"gap": f"Stands in for {tfl}, which no other operator for {title} covers. Generated from {title}'s OpenAPI spec "
                                        f"(`{k['api'][0]['api']}`); proven against a fake API only, not yet run against {title}'s.", "upstream": ""}
-                # Overlay: the official kind this one complements (same name, same surface).
-                twins = [o for o in by_name[(k["surface"], k["kind"])] if o["provider"] == base
-                         and (o["service"] == k["service"] or prov["surface"] != "aws")]
+                # Overlay: the vendor's kind this one complements (same name, same provider).
+                twins = [o for o in by_name[(k["provider"], k["kind"])] if o["operator"] == base
+                         and (o["service"] == k["service"] or prov["provider"] != "aws")]
                 twins = [o for o in twins if o["service"] == k["service"]] or twins
                 if twins:
                     o = twins[0]
-                    ospec = {f["p"] for f in next(x for x in shards[(o["provider"], o["group"])] if x["kind"] == o["kind"])["spec"]}
+                    ospec = {f["p"] for f in next(x for x in shards[(o["operator"], o["group"])] if x["kind"] == o["kind"])["spec"]}
                     mine = {f["p"] for f in k["spec"]}
                     k["overlays"] = {"id": o["id"], "added": sorted(mine - ospec), "removed": sorted(ospec - mine)}
 
     ex_count = defaultdict(int)
     for (pid, group), ks in shards.items():
-        if providers[pid]["tier"] == "extension":
+        if providers[pid]["tier"] == "hfl":
             for k in ks:
                 ex_count[(k.get("example") or {}).get("tested", "none")] += 1
     print("examples: " + ", ".join(f"{n} {t}" for t, n in sorted(ex_count.items(), key=lambda x: -x[1])), file=sys.stderr)
@@ -537,8 +537,8 @@ def build():
         bys = defaultdict(list)
         for ks in shards.values():
             for k in ks:
-                bys[(k["surface"], k["service"], k["kind"])].append(k)
-                bys[(k["surface"], None, k["kind"])].append(k)
+                bys[(k["provider"], k["service"], k["kind"])].append(k)
+                bys[(k["provider"], None, k["kind"])].append(k)
         for row in csv.DictReader(open(rt)):
             kd, tft = (row.get("kind") or "").strip(), row["resource_type"]
             if not kd or ":" in tft:
@@ -630,23 +630,27 @@ def build():
         if k.get("api"):
             k["api"] = [{"api": a["api"], "tf": a["tf"]} for a in k["api"]]
     provs = []
-    for p in CFG["providers"]:
-        mine = [k for k in kinds if k["provider"] == p["id"]]
-        provs.append({x: p.get(x) for x in ("id", "title", "surface", "publisher", "tier", "extends", "repo", "docs", "version", "commit", "manages", "installs")} |
+    for p in CFG["operators"]:
+        mine = [k for k in kinds if k["operator"] == p["id"]]
+        provs.append({x: p.get(x) for x in ("id", "title", "provider", "publisher", "tier", "extends", "repo", "docs", "version", "commit", "manages", "installs")} |
                      {"install": install_of(p), "credentials": install_of(p, "credentials"),
                       "pending": [v["oci"] for v in p.get("install") or [] if v.get("oci")
                                   and not ((LOCK.get("oci") or {}).get(p["id"]) or {}).get(v["oci"])] or None} |
                      {"nkinds": len(mine), "ngroups": len({k["group"] for k in mine}), "nservices": len({k["service"] for k in mine}),
-                      "controllers": len({k["controller"]["repo"] for k in mine if k.get("controller")}) or None})
-    # Terraform, by the numbers: how much of each surface's provider the kinds cover.
-    terraform = {"surfaces": {}, "top": (LOCK.get("terraform") or {}).get("top", [])}
+                      "controllers": len({k["controller"]["repo"] for k in mine if k.get("controller")}) or None,
+                      "stars": STARS.get(p.get("repo"))})
+    # Terraform, by the numbers: how much of each provider's Terraform provider the kinds cover.
+    # downloads, rank and tier are the Terraform Registry's; stars are the source repo's.
+    tfl = LOCK.get("terraform") or {}
+    terraform = {"providers": {}, "read": tfl.get("read"),
+                 "top": [t | {"stars": STARS.get(t.get("source"))} for t in tfl.get("top", [])]}
     for sid, tfp in TFLOCK.items():
         if not tfp:
             continue
         res = set(tfp["resources"])
         cov = {}
         for k in kinds:
-            if k["surface"] != sid:
+            if k["provider"] != sid:
                 continue
             for a in k.get("api") or []:
                 for t in a["tf"]:
@@ -654,12 +658,12 @@ def build():
                         cov.setdefault(t, set()).add(k["tier"])
         tiers = {}
         for t, ts in cov.items():
-            best = "official" if "official" in ts else ("community" if "community" in ts else "extension")
+            best = "official" if "official" in ts else ("community" if "community" in ts else "hfl")
             tiers[best] = tiers.get(best, 0) + 1
-        terraform["surfaces"][sid] = {k: tfp[k] for k in ("name", "rank", "downloads", "version", "tier")} | {
-            "total": len(res), "covered": len(cov), "byTier": tiers,
+        terraform["providers"][sid] = {k: tfp.get(k) for k in ("name", "rank", "downloads", "version", "tier", "source")} | {
+            "stars": STARS.get(tfp.get("source")), "total": len(res), "covered": len(cov), "byTier": tiers,
             "uncovered": sorted(res - set(cov))}
-    cat = {"terraform": terraform, "generated": os.environ.get("GEN_DATE", ""), "lock": {"aso": LOCK["providers"]["aso"]["tag"], "config-connector": LOCK["providers"]["config-connector"]["tag"]}, "surfaces": CFG["surfaces"], "providers": provs,
+    cat = {"terraform": terraform, "generated": os.environ.get("GEN_DATE", ""), "lock": {"aso": LOCK["operators"]["aso"]["tag"], "config-connector": LOCK["operators"]["config-connector"]["tag"]}, "providers": CFG["providers"], "operators": provs,
            "kinds": kinds, "charts": charts}
     write_json("data/catalog.json", cat)
     for cf in charts_full:
@@ -675,46 +679,6 @@ def write_json(rel, obj):
     os.makedirs(os.path.dirname(p), exist_ok=True)
     with open(p, "w") as f:
         json.dump(obj, f, separators=(",", ":"), ensure_ascii=False, default=str)
-
-
-def write_md(k):
-    lines = [f"# {k['kind']}", "", f"`{k['group']}/{k['version']}` · provider `{k['provider']}` · {k['stability']} · {k['scope']}", ""]
-    if k.get("desc"):
-        lines += [k["desc"], ""]
-    if k.get("gap"):
-        lines += ["**Gap it fills.** " + k["gap"]["gap"], ""]
-    if k.get("overlays"):
-        o = k["overlays"]
-        lines += [f"**Overlays** `{o['id']}`: adds {len(o['added'])} fields, drops {len(o['removed'])}.", ""]
-    for a in k.get("api", []):
-        lines.append(f"- Cloud API resource `{a['api']}`" + (f"; Terraform {', '.join('`'+t+'`' for t in a['tf'])}" if a["tf"] else ""))
-    if k.get("doc"):
-        lines += ["", k["doc"]["md"], ""]
-    for sec in ("spec", "status"):
-        if k[sec]:
-            lines += ["", f"## {sec}", "", "| Field | Type | Description |", "| --- | --- | --- |"]
-            for f in k[sec]:
-                d = (f.get("d", "") or "").replace("\n", " ").replace("|", "\\|")
-                lines.append(f"| `{f['p']}`{' (required)' if f.get('r') else ''} | {f['t']} | {d} |")
-    p = os.path.join(OUT, "md", k["provider"], k["group"], k["kind"] + ".md")
-    os.makedirs(os.path.dirname(p), exist_ok=True)
-    open(p, "w").write("\n".join(lines) + "\n")
-
-
-def write_llms(cat):
-    L_ = ["# KRM Registry", "",
-          "> Documentation for Kubernetes Resource Model providers (Config Connector, ACK, Azure Service Operator, "
-          "and the High Five Labs extensions that fill their gaps) and the Helm chart packages built on them.", "",
-          "data/catalog.json lists every provider, kind (with its Cloud API resource and Terraform equivalents) and chart, without fields. "
-          "data/k/<provider>/<group>.json has every kind of one API group with all its spec and status fields "
-          "(p path, t type, r required, d description, e enum, df default, im immutable). "
-          "data/charts/<cloud>-<chart>.json has one chart: values, README, the kinds it renders and the Terraform variables it refuses.", "", "## Providers", ""]
-    for p in cat["providers"]:
-        L_.append(f"- {p['title']} (`{p['id']}`, {p['surface']}, {p['tier']}{', extends ' + p['extends'] if p.get('extends') else ''}): {p['nkinds']} kinds")
-    L_ += ["", "## Packages", ""]
-    for c in cat["charts"]:
-        L_.append(f"- [{c['id']}](data/charts/{c['cloud']}-{c['name']}.json): {c['desc'][:160]}")
-    open(os.path.join(OUT, "llms.txt"), "w").write("\n".join(L_) + "\n")
 
 
 if __name__ == "__main__":

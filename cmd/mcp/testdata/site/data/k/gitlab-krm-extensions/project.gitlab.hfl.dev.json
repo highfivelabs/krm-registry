@@ -1,9 +1,9 @@
 [
  {
   "id": "gitlab-krm-extensions/project.gitlab.hfl.dev/Project",
-  "provider": "gitlab-krm-extensions",
-  "surface": "gitlab",
-  "tier": "extension",
+  "operator": "gitlab-krm-extensions",
+  "provider": "gitlab",
+  "tier": "hfl",
   "group": "project.gitlab.hfl.dev",
   "kind": "Project",
   "plural": "projects",
@@ -1203,9 +1203,9 @@
  },
  {
   "id": "gitlab-krm-extensions/project.gitlab.hfl.dev/ProjectWikiPage",
-  "provider": "gitlab-krm-extensions",
-  "surface": "gitlab",
-  "tier": "extension",
+  "operator": "gitlab-krm-extensions",
+  "provider": "gitlab",
+  "tier": "hfl",
   "group": "project.gitlab.hfl.dev",
   "kind": "ProjectWikiPage",
   "plural": "projectwikipages",

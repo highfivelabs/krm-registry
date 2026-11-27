@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-// variant is one install or credentials entry of a provider (gen.py's install_of).
+// variant is one install or credentials entry of an operator (gen.py's install_of).
 type variant struct {
 	Name   string            `json:"name"`
 	Pick   map[string]string `json:"pick,omitempty"`
@@ -56,9 +56,9 @@ type placeholder struct {
 }
 
 type installPlan struct {
-	Provider     string              `json:"provider"`
+	Operator     string              `json:"operator"`
 	Title        raw                 `json:"title"`
-	Via          string              `json:"via,omitempty"` // the provider asked for is installed by this one
+	Via          string              `json:"via,omitempty"` // the operator asked for is installed by this one
 	Published    bool                `json:"published"`
 	Pending      []string            `json:"pending,omitempty"`
 	Choices      map[string][]string `json:"choices,omitempty"` // every axis and its values
@@ -77,7 +77,7 @@ type installPlan struct {
 var howToRun = []string{
 	"Confirm the target with the user first: the kube context (kubectl config current-context) and, where there are choices, which one fits their cluster; call get_install again with choice if it differs from chosen.",
 	"Ask the user for each placeholder's real value; never keep an example value (my-project, my-cluster).",
-	"Show each command before running it. The credentials steps change cloud IAM (service accounts, role grants, keys): run them only with the user's explicit go-ahead, or hand them to the user to run.",
+	"Show each command before running it. The credentials steps change the provider's IAM (service accounts, role grants, keys): run them only with the user's explicit go-ahead, or hand them to the user to run.",
 	"Where credentials has a package, it is the KRM-native way: the same identity as Config Connector objects. Ask the user whether a cluster whose Config Connector already manages the project exists (a management cluster). If so, run credentials.package.steps with that cluster's kube context, then switch back to the target cluster; if not, run credentials.steps (gcloud).",
 	"Run credentials first, then install, stopping at the first error and reporting it with its output.",
 	"Then run the verify commands and report what they show.",
@@ -129,27 +129,27 @@ func (r *registry) getInstall(id string, choice map[string]string) (any, error) 
 	if err != nil {
 		return nil, err
 	}
-	var p *provider
-	for i := range c.Providers {
-		if c.Providers[i].ID == id {
-			p = &c.Providers[i]
+	var p *operator
+	for i := range c.Operators {
+		if c.Operators[i].ID == id {
+			p = &c.Operators[i]
 		}
 	}
 	if p == nil {
-		return nil, errorf("get_install: no provider %q (list_providers lists them)", id)
+		return nil, errorf("get_install: no operator %q (list_operators lists them)", id)
 	}
-	plan := installPlan{Provider: p.ID, Title: p.Title}
-	// A provider installed by another (Config Connector, by its operator).
+	plan := installPlan{Operator: p.ID, Title: p.Title}
+	// An operator installed by another (Config Connector, by its operator).
 	if !hasSteps(p) && len(p.Pending) == 0 {
-		for i := range c.Providers {
-			if q := &c.Providers[i]; q.Installs != nil && *q.Installs == id && hasSteps(q) {
+		for i := range c.Operators {
+			if q := &c.Operators[i]; q.Installs != nil && *q.Installs == id && hasSteps(q) {
 				plan.Via, p = q.ID, q
 				break
 			}
 		}
 	}
-	plan.Page = "https://registry.highfivelabs.dev/#pr-" + p.ID
-	plan.Markdown = "https://registry.highfivelabs.dev/providers/" + p.ID + ".md"
+	plan.Page = "https://registry.highfivelabs.dev/#operator-" + p.ID
+	plan.Markdown = "https://registry.highfivelabs.dev/operators/" + p.ID + ".md"
 	plan.HowToRun = howToRun
 	var ins, creds []variant
 	if err := decodeRaw(p.Install, &ins); err != nil {
@@ -226,7 +226,7 @@ func (r *registry) getInstall(id string, choice map[string]string) (any, error) 
 	return plan, nil
 }
 
-func hasSteps(p *provider) bool { return len(nullless(p.Install)) > 0 }
+func hasSteps(p *operator) bool { return len(nullless(p.Install)) > 0 }
 
 func decodeRaw(r raw, v any) error {
 	if len(nullless(r)) == 0 {

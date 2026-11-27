@@ -1,9 +1,9 @@
 [
  {
   "id": "cloudflare-krm-extensions/access.cloudflare.hfl.dev/AccessRule",
-  "provider": "cloudflare-krm-extensions",
-  "surface": "cloudflare",
-  "tier": "extension",
+  "operator": "cloudflare-krm-extensions",
+  "provider": "cloudflare",
+  "tier": "hfl",
   "group": "access.cloudflare.hfl.dev",
   "kind": "AccessRule",
   "plural": "accessrules",

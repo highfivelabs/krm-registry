@@ -7,8 +7,13 @@
 Writes a lock file naming exactly what to fetch and what each chart's
 upstream module has released since its pin:
 
-  providers   latest release of Config Connector and ASO; every ACK controller
+  operators   latest release of Config Connector and ASO; every ACK controller
               with a release, at its latest release
+  stars       GitHub stars of each operator's repository and each Terraform
+              provider's source repository (the measure the OpenTofu Registry
+              publishes as popularity); null without a token or off GitHub
+  terraform   each provider's Terraform provider and the top 200 by downloads,
+              with the date they were read
   modules     for each chart: its pin, and the newest release upstream
               (Terraform Registry API when the module is published there,
               GitHub releases otherwise)
@@ -18,7 +23,7 @@ Terraform Registry's public API. Without a token it falls back to reading tags
 over git (`git ls-remote`), which needs no API at all, and to the ACK
 controller list that ack-extensions pins.
 """
-import glob, json, os, re, subprocess, sys, urllib.error, urllib.parse, urllib.request
+import glob, json, os, re, subprocess, sys, time, urllib.error, urllib.parse, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
 import yaml
@@ -176,7 +181,8 @@ def latest_gcs(bucket, pattern=r"^[0-9]+\.[0-9]+\.[0-9]+$"):
 
 
 def terraform_provider(name, top):
-    """Rank, downloads, latest version and resource list of a Terraform provider (Registry API)."""
+    """Rank, downloads, tier, source repository, latest version and resource list of a
+    Terraform provider, as the Terraform Registry's API reports them."""
     p = next((x for x in top if x["name"].lower() == name.lower()), None)
     if p is None:
         return None
@@ -191,7 +197,7 @@ def terraform_provider(name, top):
             break
         page += 1
     prefix = name.split("/")[1].lower()
-    return {"name": p["name"], "rank": p["rank"], "downloads": p["downloads"], "tier": p["tier"],
+    return {"name": p["name"], "rank": p["rank"], "downloads": p["downloads"], "tier": p["tier"], "source": p["source"],
             "version": v["attributes"]["version"], "resources": sorted({s if s.startswith(prefix + "_") else f"{prefix}_{s}" for s in res})}
 
 
@@ -201,9 +207,28 @@ def terraform_top(n=200):
         d = get(f"https://registry.terraform.io/v2/providers?page%5Bsize%5D=100&page%5Bnumber%5D={page}&sort=-downloads")
         for p in d["data"]:
             a = p["attributes"]
-            out.append({"id": p["id"], "name": a["full-name"], "downloads": a["downloads"], "tier": a["tier"],
+            out.append({"id": p["id"], "name": a["full-name"], "downloads": a["downloads"], "tier": a["tier"], "source": a.get("source") or None,
                         "rank": len(out) + 1, "description": (a.get("description") or "")[:160]})
     return out
+
+
+GH_REPO = re.compile(r"^https://github\.com/([^/]+/[^/#?]+?)(?:\.git)?/?$")
+
+
+def stars(urls):
+    """{url: GitHub stars} for each GitHub repository URL; None where it is not on
+    GitHub, there is no token, or the API refuses."""
+    def one(u):
+        m = GH_REPO.match(u or "")
+        if not m or not TOKEN:
+            return u, None
+        try:
+            return u, gh(f"repos/{m.group(1)}")["stargazers_count"]
+        except Exception as e:
+            warn(f"stars {m.group(1)}", e)
+            return u, None
+    with ThreadPoolExecutor(16) as ex:
+        return dict(ex.map(one, sorted(set(filter(None, urls)))))
 
 
 def newest(tags, prefix=None):
@@ -260,16 +285,16 @@ def module_latest(up):
 
 
 def main():
-    lock = {"providers": {}, "modules": {}}
+    lock = {"operators": {}, "modules": {}}
     kcc = latest_release("https://github.com/GoogleCloudPlatform/k8s-config-connector")
     aso = latest_release("https://github.com/Azure/azure-service-operator", prefix="v2.")
     aso["crds_asset"] = f"azureserviceoperator_customresourcedefinitions_{aso['tag']}.yaml"
-    lock["providers"]["config-connector"] = kcc
-    lock["providers"]["aso"] = aso
+    lock["operators"]["config-connector"] = kcc
+    lock["operators"]["aso"] = aso
     names, via = ack_controllers()
     with ThreadPoolExecutor(16) as ex:
         rels = list(ex.map(lambda n: (n, latest_release(f"https://github.com/aws-controllers-k8s/{n}")), names))
-    lock["providers"]["ack"] = {"listed_via": via, "controllers": [dict(repo=n, **r) for n, r in rels if r]}
+    lock["operators"]["ack"] = {"listed_via": via, "controllers": [dict(repo=n, **r) for n, r in rels if r]}
 
     ups = {}
     for f in sorted(glob.glob(f"{SRC}/krm-packages/charts/*/*/upstream.yaml")):
@@ -287,9 +312,9 @@ def main():
                       and tuple(map(int, SEMVER.match(lt["version"]).groups())) > tuple(map(int, SEMVER.match(pin).groups())))
         lock["modules"][cid] = {"pinned": pin, "latest": lt.get("version"), "published": lt.get("published"),
                                 "via": lt.get("via"), "behind": behind}
-    # Operators and other providers that name a release pattern.
+    # Operators that name a release pattern.
     cfg = config.load(SRC)  # registry.yaml + each of our repos' krm-registry.yaml
-    for p in cfg["providers"]:
+    for p in cfg["operators"]:
         if p.get("release"):
             r = p["release"]
             if "gcs" in r:
@@ -301,15 +326,15 @@ def main():
             else:
                 rel = latest_tag(p["repo"], r["tags"])
             if rel:
-                lock["providers"][p["id"]] = rel
+                lock["operators"][p["id"]] = rel
             else:
                 print(f"{p['id']}: no release matching {p['release']}", file=sys.stderr)
     # OCI installs: which of our charts cr.highfivelabs.dev serves, and at which version
-    # (lock "oci": {provider: {repo: {version, digest} | null}}). gen.py shows an install
+    # (lock "oci": {operator: {repo: {version, digest} | null}}). gen.py shows an install
     # variant naming one (oci:) only when it is published.
     lock["oci"] = {}
-    for p in cfg["providers"]:
-        tag = (lock["providers"].get(p["id"]) or {}).get("tag")
+    for p in cfg["operators"]:
+        tag = (lock["operators"].get(p["id"]) or {}).get("tag")
         for v in p.get("install") or []:
             if not v.get("oci"):
                 continue
@@ -319,15 +344,17 @@ def main():
             if not d:
                 print(f"{p['id']}: {CR}/{v['oci']}:{ver or '(no release)'} not published; its install variant is hidden", file=sys.stderr)
 
-    # Terraform, by the numbers: every surface's provider, and the top providers overall.
+    # Terraform, by the numbers: every provider's Terraform provider, and the top 200 overall,
+    # as the Terraform Registry reports them on the day read.
     top = terraform_top()
-    lock["terraform"] = {"top": top, "surfaces": {}}
-    for sid, s in cfg["surfaces"].items():
+    lock["terraform"] = {"read": time.strftime("%Y-%m-%d", time.gmtime()), "top": top, "providers": {}}
+    for pid, s in cfg["providers"].items():
         if s.get("terraform"):
-            lock["terraform"]["surfaces"][sid] = terraform_provider(s["terraform"], top)
+            lock["terraform"]["providers"][pid] = terraform_provider(s["terraform"], top)
+    lock["stars"] = stars([p.get("repo") for p in cfg["operators"]] + [t.get("source") for t in top])
 
     json.dump(lock, open(LOCK, "w"), indent=1)
-    n = len(lock["providers"]["ack"]["controllers"])
+    n = len(lock["operators"]["ack"]["controllers"])
     print(f"kcc {kcc['tag']} · aso {aso['tag']} · {n} ACK controllers · "
           f"{sum(m['behind'] for m in lock['modules'].values())}/{len(ups)} modules behind", file=sys.stderr)
 
