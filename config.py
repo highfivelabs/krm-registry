@@ -18,6 +18,12 @@ registry's build clones it into <src>/<repo>/). Today it carries one field:
       - pick: {Cluster: GKE Standard}  # matched to the install variant on shared axes
         steps: |
           gcloud iam service-accounts create ...
+        package:                       # optional: the same identity as a krm-packages chart
+          chart: gcp/iam-service-account
+          release: <name>-identity
+          vars: PROJECT_ID=my-project NAMESPACE=config-control
+          values: |
+            project_id: $PROJECT_ID
 
 registry.yaml is read first and wins: a provider whose entry there has its own
 `install:` keeps it, which is how the registry describes the repositories we

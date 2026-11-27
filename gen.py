@@ -217,8 +217,35 @@ def install_of(prov, key="install"):
         pick = v.get("pick") or None
         out.append({"name": v.get("name") or " · ".join(pick.values()), "pick": pick, "when": v.get("when"),
                     "note": fill(v.get("note")) or None, "verify": fill(v.get("verify")) or None, "tested": v.get("tested"), "steps": steps,
+                    "package": package_of(v.get("package")),
                     "source": prov.get(key + "_source"), "ours": bool(v.get("oci")) or None})
     return out or None
+
+
+PACKAGES = "https://github.com/highfivelabs/krm-packages"
+
+
+def package_of(pkg):
+    """A credentials variant's package: the same identity as KRM objects, a krm-packages
+    chart that a Config Connector already running (a management cluster's) applies.
+    {chart, release, note, steps}, the steps runnable as they stand. The charts are not on
+    cr.highfivelabs.dev yet, so the steps install from a clone of krm-packages."""
+    if not pkg:
+        return None
+    rel, values = pkg["release"], pkg["values"].rstrip("\n")
+    steps = "\n".join([
+        "# Against a cluster whose Config Connector already manages the project (a management",
+        "# cluster), not the one you are installing on. NAMESPACE is a namespace it manages.",
+        pkg["vars"],
+        f"git clone --depth 1 {PACKAGES}",
+        f"cat > {rel}.yaml <<EOF", values, "EOF",
+        f"helm install {rel} krm-packages/charts/{pkg['chart']} \\",
+        f"  --namespace $NAMESPACE -f {rel}.yaml",
+        f"helm get manifest {rel} --namespace $NAMESPACE \\",
+        "  | kubectl wait --for=condition=Ready --timeout 10m -f -",
+    ])
+    return {"chart": pkg["chart"], "release": rel, "url": f"{PACKAGES}/tree/main/charts/{pkg['chart']}",
+            "note": (pkg.get("note") or "").strip() or None, "steps": steps}
 
 
 def src_url(prov, rel, ctrl, release):

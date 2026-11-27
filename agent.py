@@ -273,7 +273,12 @@ def write_agent_tree(out, cat, full_kinds, charts_full):
                   f"`{{\"provider\": \"{p['id']}\"}}` (add `choice` for a variant), returns the steps below for one variant, "
                   "the placeholders to ask the user for, how to verify, and how to run them with the user.", ""]
         for v in p.get("credentials") or []:
-            L += [f"## Credentials: {v['name']}", "", "```sh", v["steps"], "```", ""] + ([v["note"], ""] if v.get("note") else [])
+            L += [f"## Credentials: {v['name']}", ""]
+            if v.get("package"):
+                k = v["package"]
+                L += [f"As a package ([krm-packages' {k['chart']}]({k['url']})), the KRM-native way, where a Config Connector already manages the project:",
+                      "", "```sh", k["steps"], "```", ""] + ([k["note"], ""] if k.get("note") else []) + ["Or with gcloud:", ""]
+            L += ["```sh", v["steps"], "```", ""] + ([v["note"], ""] if v.get("note") else [])
         if p.get("pending") and not p.get("install"):
             L += ["## Install", "", "Not published yet; once released it installs from "
                   + ", ".join(f"oci://cr.highfivelabs.dev/{o}" for o in p["pending"]) + ".", ""]
