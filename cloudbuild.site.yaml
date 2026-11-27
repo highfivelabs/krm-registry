@@ -38,7 +38,9 @@ substitutions:
 options:
   # Builds run as a named service account, so logs go to Cloud Logging only.
   logging: CLOUD_LOGGING_ONLY
-  # The build fetches ~75 upstream repositories in parallel and writes ~10,000 pages.
-  machineType: E2_HIGHCPU_8
+  # The default machine (e2-standard-2), whose first 2,500 minutes a month are
+  # free: E2_HIGHCPU_8 is never free, and this build (~75 upstream fetches,
+  # ~10,000 pages) took ~4 min on it, well inside the timeout on 2 vCPUs
+  # (HFL-782).
   substitutionOption: MUST_MATCH
 timeout: 3600s
