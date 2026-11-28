@@ -148,8 +148,11 @@ func (r *registry) getInstall(id string, choice map[string]string) (any, error) 
 			}
 		}
 	}
-	plan.Page = "https://registry.highfivelabs.dev/#operator-" + p.ID
-	plan.Markdown = "https://registry.highfivelabs.dev/operators/" + p.ID + ".md"
+	plan.Page = operatorPage(p)
+	plan.Markdown = siteURL + "/operators/" + p.ID + ".md"
+	if p.Namespace != "" {
+		plan.Markdown = plan.Page + ".md"
+	}
 	plan.HowToRun = howToRun
 	var ins, creds []variant
 	if err := decodeRaw(p.Install, &ins); err != nil {

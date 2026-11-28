@@ -5,7 +5,7 @@ If you can connect MCP servers, connect https://registry.highfivelabs.dev/mcp (s
 Otherwise, read the pages:
 
 1. Start at https://registry.highfivelabs.dev/llms.txt. It lists every provider and operator and how the pages are laid out.
-2. Find the kind: https://registry.highfivelabs.dev/<provider>/index.md lists services, then kinds. If you know the Terraform resource type, https://registry.highfivelabs.dev/terraform/<type>.md names the kinds that manage the same resource.
-3. Read the kind page, https://registry.highfivelabs.dev/kinds/<operator>/<api group>/<Kind>.md. It has every spec and status field with its type, required, immutable, enum and default, and its examples, each saying how it was tested.
+2. Find the kind: https://registry.highfivelabs.dev/<provider>.md lists services, and https://registry.highfivelabs.dev/<provider>/<service>.md their kinds. If you know the Terraform resource type, https://registry.highfivelabs.dev/terraform/<type>.md names the kinds that manage the same resource.
+3. Read the kind page, https://registry.highfivelabs.dev/<provider>/<service>/<publisher>/<Kind>.md (the service page links it; the publisher is the operator's: google, aws, highfivelabs...). It has every spec and status field with its type, required, immutable, enum and default, and its examples, each saying how it was tested.
 4. Start from a tested example over the minimal one. Where more than one operator has a kind for the resource, use the one whose operator runs on the cluster, or ask; each kind page names its operator and compares it with a kind of the same name.
 5. Fill in placeholders like ${PROJECT_ID?}, $BUCKET_NAME and <value> with real values, and set references to the objects they point at.

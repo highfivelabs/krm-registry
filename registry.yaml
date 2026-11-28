@@ -54,6 +54,10 @@ providers:
 # kinds carry theirs in the CRD's hfl.dev/terraform annotation).
 terraform_map: terraform-map.yaml
 
+# An operator's `namespace` is its publisher in the registry's URLs
+# (/operators/<namespace>/<id>, and each kind under /<provider>/<service>/<namespace>/):
+# set it where the publisher's name, lower-cased without spaces, is not the short
+# name people know (paths.py).
 operators:
   - id: config-connector
     title: Config Connector
@@ -301,6 +305,7 @@ operators:
     title: AWS Controllers for Kubernetes
     provider: aws
     publisher: Amazon Web Services
+    namespace: aws
     tier: official
     repo: https://github.com/aws-controllers-k8s
     docs: https://aws-controllers-k8s.github.io/community/
@@ -427,6 +432,7 @@ operators:
     title: Grafana Operator
     provider: grafana
     publisher: Grafana Labs
+    namespace: grafana
     tier: official
     manages: external-api
     repo: https://github.com/grafana/grafana-operator
@@ -656,6 +662,7 @@ operators:
     title: vault-config-operator
     provider: vault
     publisher: Red Hat Community of Practice (community)
+    namespace: redhat-cop
     tier: community
     manages: external-api
     repo: https://github.com/redhat-cop/vault-config-operator
@@ -882,6 +889,7 @@ operators:
     title: External Secrets Operator generators
     provider: random
     publisher: External Secrets (CNCF)
+    namespace: external-secrets
     tier: community
     service: generators
     repo: https://github.com/external-secrets/external-secrets
