@@ -1,12 +1,18 @@
 """The registry as Markdown pages an agent can walk, a few KB per step.
 
+Each page is the site's page for the same thing (paths.py) with .md added.
+
   llms.txt                                 what this is, where to start, how to look things up
-  <provider>/index.md                      the provider's services, with each operator tier's counts
-  <provider>/<service>/index.md            every kind of the service, one line each
-  kinds/<operator>/<group>/<Kind>.md       one kind: front matter, example, spec, status
-  operators/index.md, operators/<id>.md    each operator's kinds by service
+  <provider>.md                            the provider's services, with each operator tier's counts
+  <provider>/<service>.md                  every kind of the service, one line each
+  <provider>/<service>/<namespace>/<Kind>.md   one kind: front matter, example, spec, status
+  operators/index.md, operators/<namespace>/<id>.md   each operator's kinds by service
   packages/index.md, packages/<cloud>/<chart>.md
   terraform/<type>.md                      a Terraform type → the kinds that stand in for it
+
+The paths before these (kinds/<operator>/<group>/<Kind>.md, operators/<id>.md,
+<provider>/index.md, <provider>/<service>/index.md) are short pages that link
+to the new one.
 
 Links are relative, so the tree works under any base path (GitHub Pages
 project sites included).
@@ -16,19 +22,30 @@ from collections import defaultdict
 
 import yaml
 
+import paths
+
 PROV = {}  # provider id → title, filled from the catalog's providers
+OPS = {}   # operator id → operator, filled from the catalog's operators
+KIDS = {}  # kind id → kind
 TIER = {"official": "official", "community": "community", "hfl": "High Five Labs"}  # who publishes the operator
 MCP_URL = "https://registry.highfivelabs.dev/mcp"  # the hosted MCP server (README "For agents (MCP)")
 TFNOTE = ("Terraform equivalents manage the same cloud resource. They are not used here: "
           "a kind is a Kubernetes object that its operator's controller keeps in sync, with no state file and no plan/apply.")
 
 
-def svc_slug(s):
-    return re.sub(r"[^a-z0-9-]+", "-", s.lower()).strip("-") or "other"
+svc_slug = paths.slug
 
 
 def kind_path(k):
-    return f"kinds/{k['operator']}/{k['group']}/{k['kind']}.md"
+    return paths.kind(k, paths.namespace(OPS[k["operator"]]))[1:] + ".md"
+
+
+def op_path(i):
+    return paths.operator(OPS[i])[1:] + ".md"
+
+
+def svc_path(s, svc):
+    return paths.service(s, svc)[1:] + ".md"
 
 
 class Writer:
@@ -117,7 +134,7 @@ def example(k):
 def kind_page(k, operators, charts):
     p = operators[k["operator"]]
     fm = {"kind": k["kind"], "apiVersion": f"{k['group']}/{k['version']}", "operator": k["operator"],
-          "tier": k["tier"], "provider": k["operator"], "service": k["service"], "stability": k["stability"],
+          "tier": k["tier"], "provider": k["provider"], "service": k["service"], "stability": k["stability"],
           "scope": k["scope"], "versions": k["versions"]}
     if apis(k):
         fm["cloud_api_resource"] = apis(k)
@@ -140,8 +157,8 @@ def kind_page(k, operators, charts):
         fm["kind_doc"] = f"{p['repo']}/blob/{p['version']}/" + k["doc"]["file"].split("/", 1)[1]
     me = kind_path(k)
     L = ["---", yaml.safe_dump(fm, sort_keys=False, width=200).rstrip(), "---", "", f"# {k['kind']}", "",
-         f"`{k['group']}/{k['version']}` from {link(me, f'operators/{p['id']}.md', p['title'])} ({TIER[k['tier']]}), "
-         f"{k['stability']}, {k['scope'].lower()}. Service: {link(me, f'{k['provider']}/{svc_slug(k['service'])}/index.md', k['service'])}.", ""]
+         f"`{k['group']}/{k['version']}` from {link(me, op_path(p['id']), p['title'])} ({TIER[k['tier']]}), "
+         f"{k['stability']}, {k['scope'].lower()}. Service: {link(me, svc_path(k['provider'], k['service']), k['service'])}.", ""]
     links = ([f"[{p['title']} reference]({k['docsUrl']})"] if k.get("docsUrl") else []) + \
         [f"[source repo]({k['repoUrl']})", f"[CRD]({k['srcUrl']})"] + ([f"[kind doc]({fm['kind_doc']})"] if fm.get("kind_doc") else [])
     L += ["Links: " + " · ".join(links), ""]
@@ -154,7 +171,7 @@ def kind_page(k, operators, charts):
     if k.get("overlays"):
         o = k["overlays"]
         og, okind = o["id"].split("/", 1)[1].rsplit("/", 1)
-        L += [f"**Overlays** `{og}` `{okind}` ({link(me, f'kinds/{o['id']}.md', 'page')}): same kind in this operator's own group. "
+        L += [f"**Overlays** `{og}` `{okind}` ({link(me, kind_path(KIDS[o['id']]) if o['id'] in KIDS else f'kinds/{o['id']}.md', 'page')}): same kind in this operator's own group. "
               f"Adds {len(o['added'])} fields" + (f": {', '.join('`'+a+'`' for a in o['added'][:25])}{' …' if len(o['added']) > 25 else ''}" if o["added"] else "")
               + (f"; does not carry {len(o['removed'])}." if o["removed"] else "."), ""]
     if tfs(k):
@@ -172,7 +189,7 @@ def kind_page(k, operators, charts):
         if ex.get("prereqs"):
             L += ["The live test makes these first; `<...>` values come from them: " + "; ".join(f"`{c}`" for c in ex["prereqs"]) + ".", ""]
         L += [n for n in ex.get("notes") or [] if n] + ([""] if ex.get("notes") else [])
-        L += [f"The object reaches the API through the Connection named `default` in its namespace (see {link(me, f'operators/{p['id']}.md', p['title'])}).", ""]
+        L += [f"The object reaches the API through the Connection named `default` in its namespace (see {link(me, op_path(p['id']), p['title'])}).", ""]
     else:
         L += ["## Example", "", "Every required field, with placeholders; untested.", "", "```yaml", example(k).rstrip(), "```", ""]
     ups = k.get("samples") or []
@@ -216,6 +233,8 @@ def kind_page(k, operators, charts):
 
 def write_agent_tree(out, cat, full_kinds, charts_full):
     PROV.update({k: v["title"] for k, v in cat["providers"].items()})
+    OPS.update({p["id"]: p for p in cat["operators"]})
+    KIDS.update({k["id"]: k for k in full_kinds})
     w = Writer(out)
     operators = {p["id"]: p for p in cat["operators"]}
     by_prov_svc = defaultdict(lambda: defaultdict(list))
@@ -231,20 +250,20 @@ def write_agent_tree(out, cat, full_kinds, charts_full):
         if cat["providers"][s].get("notes") and s not in by_prov_svc:
             by_prov_svc[s] = {}
     for s, svcs in by_prov_svc.items():
-        me = f"{s}/index.md"
+        me = f"{s}.md"
         ps = [p for p in cat["operators"] if p["provider"] == s]
         note = cat["providers"][s].get("notes")
-        L = [f"# {PROV[s]}", "", ("Operators: " + ", ".join(f"{link(me, f'operators/{p['id']}.md', p['title'])} ({TIER[p['tier']]})" for p in ps) + ".") if ps else "No operator indexed.",
+        L = [f"# {PROV[s]}", "", ("Operators: " + ", ".join(f"{link(me, op_path(p['id']), p['title'])} ({TIER[p['tier']]})" for p in ps) + ".") if ps else "No operator indexed.",
              *([f"Not indexed: {note}"] if note else []),
              *(["Every operator's kinds are listed together, by service. Tiers: official (published by the provider itself), community, High Five Labs.", "",
                 "| Service | Official kinds | Community kinds | High Five Labs kinds | |", "| --- | --- | --- | --- | --- |"] if svcs else [])]
         for svc in sorted(svcs):
             ks = svcs[svc]
             n = {t: sum(k["tier"] == t for k in ks) for t in ("official", "community", "hfl")}
-            L.append(f"| {svc} | {n['official']} | {n['community']} | {n['hfl']} | {link(me, f'{s}/{svc_slug(svc)}/index.md', 'kinds')} |")
+            L.append(f"| {svc} | {n['official']} | {n['community']} | {n['hfl']} | {link(me, svc_path(s, svc), 'kinds')} |")
         w(me, "\n".join(L))
         for svc, ks in svcs.items():
-            me = f"{s}/{svc_slug(svc)}/index.md"
+            me = svc_path(s, svc)
             L = [f"# {svc} ({PROV[s]})", "", f"{len(ks)} kinds. {TFNOTE}", "",
                  "| Kind | apiVersion | Operator | Stability | Terraform equivalent | Summary |", "| --- | --- | --- | --- | --- | --- |"]
             for k in sorted(ks, key=lambda k: (k["kind"], k["tier"] != "official")):
@@ -258,18 +277,18 @@ def write_agent_tree(out, cat, full_kinds, charts_full):
     L = ["# Operators", "", "An operator is a set of controllers and the CRDs they install, for one provider.", "",
          "| Operator | Provider | Tier | Version | GitHub stars | Kinds |", "| --- | --- | --- | --- | --- | --- |"]
     for p in cat["operators"]:
-        L.append(f"| {link(me, f'operators/{p['id']}.md', p['title'])} | {p['provider']} | {TIER[p['tier']]}{' (extends ' + p['extends'] + ')' if p.get('extends') else ''} | {p['version']} | {p['stars'] if p.get('stars') is not None else ''} | {p['nkinds']} |")
+        L.append(f"| {link(me, op_path(p['id']), p['title'])} | {p['provider']} | {TIER[p['tier']]}{' (extends ' + p['extends'] + ')' if p.get('extends') else ''} | {p['version']} | {p['stars'] if p.get('stars') is not None else ''} | {p['nkinds']} |")
     w(me, "\n".join(L))
     for p in cat["operators"]:
-        me = f"operators/{p['id']}.md"
+        me = op_path(p['id'])
         mine = [k for k in full_kinds if k["operator"] == p["id"]]
-        L = [f"# {p['title']}", "", f"Provider {p['provider']} · publisher {p['publisher']} · {TIER[p['tier']]}{' · extends ' + link(me, f'operators/{p['extends']}.md', p['extends']) if p.get('extends') else ''}"
+        L = [f"# {p['title']}", "", f"Provider {p['provider']} · publisher {p['publisher']} · {TIER[p['tier']]}{' · extends ' + link(me, op_path(p['extends']), p['extends']) if p.get('extends') else ''}"
              f" · version {p['version']}{' (' + p['commit'][:12] + ')' if p.get('commit') else ''} · source {p['repo']}{f' ({p['stars']:,} GitHub stars)' if p.get('stars') is not None else ''} · {len(mine)} kinds", ""]
         by_ = [x for x in cat["operators"] if x.get("installs") == p["id"]]
         if p.get("installs"):
-            L += [f"Installs {link(me, f'operators/{p['installs']}.md', p['installs'])}.", ""]
+            L += [f"Installs {link(me, op_path(p['installs']), p['installs'])}.", ""]
         if by_:
-            L += ["Installed by " + ", ".join(link(me, f"operators/{x['id']}.md", x["title"]) for x in by_) + ".", ""]
+            L += ["Installed by " + ", ".join(link(me, op_path(x['id']), x["title"]) for x in by_) + ".", ""]
         if p.get("install"):
             L += [f"To install with an agent: the MCP server https://registry.highfivelabs.dev/mcp, tool `get_install` with "
                   f"`{{\"operator\": \"{p['id']}\"}}` (add `choice` for a variant), returns the steps below for one variant, "
@@ -349,7 +368,7 @@ def write_agent_tree(out, cat, full_kinds, charts_full):
          "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     for sid, t in cat["terraform"]["providers"].items():
         b = t["byTier"]
-        L.append(f"| {link(me, f'{sid}/index.md', PROV[sid])} | `{t['name']}` {t['version']} | #{t['rank']} | {t['downloads']:,} | {'' if t.get('stars') is None else f"{t['stars']:,}"} | {t['total']} | "
+        L.append(f"| {link(me, f'{sid}.md', PROV[sid])} | `{t['name']}` {t['version']} | #{t['rank']} | {t['downloads']:,} | {'' if t.get('stars') is None else f"{t['stars']:,}"} | {t['total']} | "
                  f"{t['covered']} ({100 * t['covered'] // max(t['total'], 1)}%) | {b.get('official', 0)} | {b.get('community', 0)} | {b.get('hfl', 0)} |")
     w(me, "\n".join(L))
 
@@ -364,19 +383,35 @@ def write_agent_tree(out, cat, full_kinds, charts_full):
          "`list_providers`, `search_kinds`, `get_kind`, `kinds_for_terraform`, `list_operators`, `get_package`, `get_install`. "
          f"In Claude Code: `claude mcp add --transport http krm-registry {MCP_URL}`.", "",
          "## Start here", "",
-         *[f"- [{PROV[s]}]({s}/index.md): services, then the kinds in each" for s in cat["providers"] if any(k["provider"] == s for k in full_kinds) or cat["providers"][s].get("notes")],
+         *[f"- [{PROV[s]}]({s}.md): services, then the kinds in each" for s in cat["providers"] if any(k["provider"] == s for k in full_kinds) or cat["providers"][s].get("notes")],
          "- [Terraform, by the numbers](terraform/index.md): how much of each Terraform provider the kinds cover",
          "- [Operators](operators/index.md): each operator's kinds by service",
          "- [Packages](packages/index.md): charts, the Terraform module each ports, the kinds each renders", "",
          "## Look up directly", "",
-         "- A kind: `kinds/<operator>/<api group>/<Kind>.md`, e.g. [kinds/config-connector/storage.cnrm.cloud.google.com/StorageBucket.md](kinds/config-connector/storage.cnrm.cloud.google.com/StorageBucket.md)",
+         "- A provider and a service: `<provider>.md`, `<provider>/<service>.md`, e.g. [gcp/storage.md](gcp/storage.md)",
+         "- A kind: `<provider>/<service>/<namespace>/<Kind>.md`, where the namespace is its operator's publisher (`google`, `aws`, `highfivelabs`...), "
+         "e.g. [gcp/storage/google/StorageBucket.md](gcp/storage/google/StorageBucket.md)",
+         "- Each of these is also a page for people at the same path without `.md`, e.g. https://registry.highfivelabs.dev/gcp/storage/google/StorageBucket",
          "- From Terraform: `terraform/<type>.md` lists the kinds that stand in for a Terraform resource type, e.g. [terraform/aws_ec2_tag.md](terraform/aws_ec2_tag.md)",
          "- A package: `packages/<cloud>/<chart>.md`", "",
          "## Operators", ""]
-    L += [f"- `{p['id']}`: {p['title']}, {p['provider']}, {TIER[p['tier']]}{', extends ' + p['extends'] if p.get('extends') else ''}, {p['version']}, {p['nkinds']} kinds" for p in cat["operators"]]
+    L += [f"- [`{p['id']}`]({op_path(p['id'])}): {p['title']}, namespace `{paths.namespace(p)}`, {p['provider']}, {TIER[p['tier']]}{', extends ' + p['extends'] if p.get('extends') else ''}, {p['version']}, {p['nkinds']} kinds" for p in cat["operators"]]
     L += ["", "## Machine-readable", "", "- `data/catalog.json`: every kind and chart without fields (large)",
           "- `data/k/<operator>/<api group>.json`: one API group with every field", "- `data/charts/<cloud>-<chart>.json`: one chart"]
     w("llms.txt", "\n".join(L))
+
+    # The paths before paths.py: a short page that links to the new one.
+    moved = lambda old, new, what: w(old, f"# Moved\n\n{what} is now at {link(old, new, new)}.")
+    for k in full_kinds:  # with the kind's identity, so a reader (or an uptime check) still knows what it was
+        old = f"kinds/{k['operator']}/{k['group']}/{k['kind']}.md"
+        w(old, f"---\nkind: {k['kind']}\ngroup: {k['group']}\noperator: {k['operator']}\nmoved_to: /{kind_path(k)}\n---\n\n"
+               f"# Moved\n\nThe page for {k['kind']} is now at {link(old, kind_path(k), kind_path(k))}.")
+    for p in cat["operators"]:
+        moved(f"operators/{p['id']}.md", op_path(p["id"]), f"The page for {p['title']}")
+    for s, svcs in by_prov_svc.items():
+        moved(f"{s}/index.md", f"{s}.md", f"The page for {PROV[s]}")
+        for svc in svcs:
+            moved(f"{s}/{svc_slug(svc)}/index.md", svc_path(s, svc), f"The page for {PROV[s]} {svc}")
     return w.n
 
 

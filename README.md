@@ -25,17 +25,18 @@ as source, an API the REST runtime does not drive) carries `notes` in
 
 | Path | For | What |
 | --- | --- | --- |
-| `index.html` + `data/` | people | the browsable site: providers, operators, kinds, packages, coverage, search, filters |
+| `/`, `/<provider>`, `/<provider>/<service>`, `/<provider>/<service>/<namespace>/<Kind>`, `/operators/<namespace>/<id>`, `/packages/<cloud>/<chart>`, `/providers`, `/coverage`, `/operators`, `/packages`, `/guide`, `/search` | people | the browsable site, one path per page (`paths.py`): each path has its own small `index.html` with the page's title and description (`pages.py`), and the app (`assets/`, `data/`) draws it. The namespace is the operator's publisher (`google`, `aws`, `highfivelabs`...). Links from before paths (`#k-...`, `#svc-...`, `#operator-...`) redirect |
 | `llms.txt` | agents | the entry point: what this is, where to start, how to look up |
 | `prompt.txt` | people, for their agents | a prompt to paste into a coding agent; the landing page shows it with a copy button (source: `prompt.txt` in this repo) |
-| `<provider>/index.md` → `<provider>/<service>/index.md` → `kinds/<operator>/<group>/<Kind>.md` | agents | drill-down, a few KB per step; a kind page has front matter, links, an example manifest, every spec and status field |
+| the same paths + `.md`: `<provider>.md` → `<provider>/<service>.md` → `<provider>/<service>/<namespace>/<Kind>.md` | agents | drill-down, a few KB per step; a kind page has front matter, links, an example manifest, every spec and status field. The paths before these (`kinds/<operator>/<group>/<Kind>.md`, `operators/<id>.md`, `<provider>/index.md`) link to the new ones |
+| `terraform/<type>.md` | agents | a Terraform resource type → the kinds that stand in for it |
+| `operators/`, `packages/` | agents | each operator's kinds; each chart's source module, kinds, values, outputs |
+| `sitemap.xml`, `robots.txt` | search engines | every page's path |
+| `registry.lock.json` | both | exactly which releases this build documents |
 
 A High Five Labs REST kind's example is the spec its live tests ran against the real API (`hack/live/live.yaml`, with the date from `records.json`), else the sample its fake-API test runs; the page and the front matter (`example_tested: live|live-failing|fake|none`) say which (`examples.py`). A kind also shows its repository's `examples/<Kind>/*.yaml` (krm-rest-runtime's `gen/examples.py`): the kind with the kinds it needs, joined by `spec.fieldRefs`, each tested on the fake API; a kind others need lists those examples under "Also needed by".
 
 An official kind (Config Connector, ACK, ASO) shows the samples from its controller's own tests, at the release indexed (`samples.py`): Config Connector's `config/samples/resources/<kind>/` (one per directory, with the objects it needs), each ACK controller's `test/e2e/resources/*.yaml` (adoption and negative cases left out), and ASO's `v2/samples/<group>/<version>/` at the kind's version, joined with its `refs/` and owner chain. `fetch.sh` adds those paths to the sparse checkouts. The page, the Markdown (`## From the controller's tests`) and `get_kind` (`upstreamSamples`) carry them.
-| `terraform/<type>.md` | agents | a Terraform resource type → the kinds that stand in for it |
-| `operators/`, `packages/` | agents | each operator's kinds; each chart's source module, kinds, values, outputs |
-| `registry.lock.json` | both | exactly which releases this build documents |
 
 ## For agents (MCP)
 

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -163,6 +164,7 @@ type operator struct {
 	Provider  *string  `json:"provider"`
 	Tier      raw      `json:"tier"`
 	Publisher raw      `json:"publisher"`
+	Namespace string   `json:"namespace"` // the publisher in the site's paths (paths.py)
 	Version   raw      `json:"version"`
 	NKinds    raw      `json:"nkinds"`
 	Stars     raw      `json:"stars"`
@@ -191,6 +193,7 @@ type kind struct {
 	Readiness *string `json:"readiness"`
 	Desc      *string `json:"desc"`
 	API       []api   `json:"api"`
+	Path      string  `json:"path"` // set only where paths.py qualifies the kind's path
 
 	// In the per-group shards only.
 	Versions raw       `json:"versions"`
@@ -610,6 +613,8 @@ type kindOut struct {
 	CRD              raw           `json:"crd"`
 	Docs             raw           `json:"docs"`
 	APIPaths         []string      `json:"apiPaths"`
+	Page             string        `json:"page,omitempty"`     // the kind's page on the site
+	Markdown         string        `json:"markdown,omitempty"` // the same page for agents
 	GapItFills       raw           `json:"gapItFills,omitempty"`
 	Overlays         raw           `json:"overlays,omitempty"`
 	References       raw           `json:"references,omitempty"`
@@ -660,6 +665,17 @@ func (r *registry) getKind(name string, fields []string) (any, error) {
 	}
 	for p := range paths {
 		out.APIPaths = append(out.APIPaths, p)
+	}
+	if c, err := r.cat(); err == nil {
+		for i := range c.Operators {
+			if o := &c.Operators[i]; o.ID == k.Operator && o.Namespace != "" && k.Provider != nil && k.Service != nil {
+				out.Page = siteURL + "/" + *k.Provider + "/" + pathSlug(*k.Service) + "/" + o.Namespace + "/" + k.Kind
+				if k.Path != "" {
+					out.Page = siteURL + k.Path
+				}
+				out.Markdown = out.Page + ".md"
+			}
+		}
 	}
 	sort.Strings(out.APIPaths)
 
@@ -750,6 +766,8 @@ type operatorOut struct {
 	Provider  *string `json:"provider"`
 	Tier      raw     `json:"tier"`
 	Publisher raw     `json:"publisher"`
+	Namespace string  `json:"namespace,omitempty"`
+	Page      string  `json:"page"`
 	Version   raw     `json:"version"`
 	Kinds     raw     `json:"kinds"`
 	Stars     raw     `json:"stars"`
@@ -765,7 +783,7 @@ func (r *registry) listOperators() (any, error) {
 	}
 	out := []operatorOut{}
 	for _, o := range c.Operators {
-		out = append(out, operatorOut{o.ID, o.Title, o.Provider, o.Tier, o.Publisher, o.Version, o.NKinds, o.Stars, o.Repo, nullless(o.Install), nullless(o.Creds)})
+		out = append(out, operatorOut{o.ID, o.Title, o.Provider, o.Tier, o.Publisher, o.Namespace, operatorPage(&o), o.Version, o.NKinds, o.Stars, o.Repo, nullless(o.Install), nullless(o.Creds)})
 	}
 	return map[string]any{"operators": out}, nil
 }
@@ -843,4 +861,26 @@ func (r *registry) getPackage(name string) (any, error) {
 		}
 	}
 	return out, nil
+}
+
+// The registry's site; pages' paths follow paths.py.
+const siteURL = "https://registry.highfivelabs.dev"
+
+var nonSlug = regexp.MustCompile(`[^a-z0-9-]+`)
+
+// pathSlug is paths.py's slug: a service's segment of a path.
+func pathSlug(s string) string {
+	if s = strings.Trim(nonSlug.ReplaceAllString(strings.ToLower(s), "-"), "-"); s == "" {
+		return "other"
+	}
+	return s
+}
+
+// operatorPage is an operator's page on the site (a catalog from before
+// namespaces has only the old # route).
+func operatorPage(o *operator) string {
+	if o.Namespace == "" {
+		return siteURL + "/#operator-" + o.ID
+	}
+	return siteURL + "/operators/" + o.Namespace + "/" + o.ID
 }

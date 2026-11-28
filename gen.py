@@ -17,6 +17,8 @@ from collections import defaultdict
 import yaml
 
 import config
+import pages
+import paths
 import examples
 import samples
 
@@ -634,7 +636,7 @@ def build():
     provs = []
     for p in CFG["operators"]:
         mine = [k for k in kinds if k["operator"] == p["id"]]
-        provs.append({x: p.get(x) for x in ("id", "title", "provider", "publisher", "tier", "extends", "repo", "docs", "version", "commit", "manages", "installs")} |
+        provs.append({"namespace": paths.namespace(p)} | {x: p.get(x) for x in ("id", "title", "provider", "publisher", "tier", "extends", "repo", "docs", "version", "commit", "manages", "installs")} |
                      {"install": install_of(p), "credentials": install_of(p, "credentials"),
                       "pending": [v["oci"] for v in p.get("install") or [] if v.get("oci")
                                   and not ((LOCK.get("oci") or {}).get(p["id"]) or {}).get(v["oci"])] or None} |
@@ -681,7 +683,18 @@ def build():
         print(f"{pid}: API coverage {pv['apiCoverage']['official'] + pv['apiCoverage']['hfl']} of {pv['apiCoverage']['total']} resources", file=sys.stderr)
     cat = {"terraform": terraform, "generated": os.environ.get("GEN_DATE", ""), "lock": {"aso": LOCK["operators"]["aso"]["tag"], "config-connector": LOCK["operators"]["config-connector"]["tag"]}, "providers": CFG["providers"], "operators": provs,
            "kinds": kinds, "charts": charts}
+    nss = {p["id"]: p["namespace"] for p in provs}
+    paths.qualify(kinds, nss)
+    qualified = {k["id"]: k["path"] for k in kinds if k.get("path")}
+    for ks in shards.values():
+        for k in ks:
+            if k["id"] in qualified:
+                k["path"] = qualified[k["id"]]
+    bad = paths.check(CFG["providers"], provs, kinds, charts)
+    if bad:
+        sys.exit("gen: the pages' paths (paths.py):\n  " + "\n  ".join(bad))
     write_json("data/catalog.json", cat)
+    print(f"{pages.write(os.path.join(HERE, 'index.html'), OUT, cat)} pages", file=sys.stderr)
     for cf in charts_full:
         cf["upstream"] = next(c for c in charts if c["id"] == cf["id"])["upstream"]
     import agent
